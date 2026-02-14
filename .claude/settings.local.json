@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx wrangler deploy:*)",
+      "Bash(npm install)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(pkill:*)"
+    ]
+  }
+}
