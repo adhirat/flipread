@@ -12,11 +12,12 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
   const authorPlan = getPlanLimits(book.author_plan);
   const showBranding = !authorPlan.removeBranding;
   const fileUrl = `${appUrl}/read/api/file/${book.id}`;
+  const coverUrl = book.cover_key ? `${appUrl}/read/api/cover/${book.id}` : '';
 
   if (book.type === 'pdf') {
-    return pdfViewerHTML(book.title, fileUrl, settings, showBranding);
+    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
   } else {
-    return epubViewerHTML(book.title, fileUrl, settings, showBranding);
+    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
   }
 }
 
