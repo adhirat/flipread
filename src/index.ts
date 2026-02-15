@@ -5,13 +5,42 @@ import { cors } from 'hono/cors';
 import type { Env } from './lib/types';
 import authRoutes from './routes/auth';
 import bookRoutes from './routes/books';
-import viewerRoutes from './routes/viewer';
-import storeRoutes from './routes/store'; // public storefront
 import billingRoutes from './routes/billing';
 import userRoutes from './routes/user';
+import viewerRoutes, { viewerPage } from './routes/viewer';
+import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
 import { dashboardPage } from './views/dashboard';
+import type { Book, Variables } from './lib/types';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// Custom Domain Middleware
+app.use('*', async (c, next) => {
+  const url = new URL(c.req.url);
+  const hostname = url.hostname;
+  const appHostname = new URL(c.env.APP_URL).hostname;
+
+  // If not on main domain or localhost, check for custom domain
+  if (hostname !== appHostname && hostname !== 'localhost' && !hostname.endsWith('.workers.dev')) {
+    // 1. Check for Book Domain
+    const book = await c.env.DB.prepare(
+      `SELECT b.*, u.name as author_name, u.plan as author_plan
+       FROM books b JOIN users u ON b.user_id = u.id
+       WHERE LOWER(b.custom_domain) = ?`
+    ).bind(hostname.toLowerCase()).first<Book & { author_name: string; author_plan: string }>();
+
+    if (book) {
+      c.set('book', book);
+    } else {
+      // 2. Check for Store Domain
+      const user = await getUserByCustomDomain(c.env.DB, hostname);
+      if (user) {
+        c.set('storeUser', user);
+      }
+    }
+  }
+  await next();
+});
 
 // Global middleware
 app.use('/*', cors({
@@ -34,9 +63,51 @@ app.route('/api/user', userRoutes);
 app.route('/read', viewerRoutes);
 app.route('/store', storeRoutes);
 
-// Landing page
-app.get('/', (c) => {
+// Landing page, Custom Store Root, or Custom Book Root
+app.get('/', async (c) => {
+  const book = c.get('book');
+  if (book) {
+    // Render the viewer directly for the book
+    return c.html(viewerPage(book as any, c.env.APP_URL));
+  }
+
+  const storeUser = c.get('storeUser');
+  if (storeUser) {
+    const booksResult = await c.env.DB.prepare(
+      `SELECT id, title, slug, type, cover_url, view_count, created_at
+       FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+    ).bind(storeUser.id).all<Book>();
+    const books = booksResult.results || [];
+    const settings = JSON.parse(storeUser.store_settings || '{}');
+    return c.html(bookstorePage(storeUser, books, settings, c.env.APP_URL, true));
+  }
   return c.html(landingPage(c.env.APP_URL));
+});
+
+// Custom Store Pages (Privacy, Terms, Contact)
+app.get('/:page(privacy|terms|contact)', async (c) => {
+  const storeUser = c.get('storeUser');
+  if (!storeUser) return c.notFound();
+
+  const page = c.req.param('page');
+  const settings = JSON.parse(storeUser.store_settings || '{}');
+  
+  let content = '';
+  let title = '';
+  
+  if (page === 'privacy') {
+    content = settings.privacy_policy_content;
+    title = 'Privacy Policy';
+  } else if (page === 'terms') {
+    content = settings.terms_content;
+    title = 'Terms & Conditions';
+  } else if (page === 'contact') {
+    content = settings.contact_info_content;
+    title = 'Contact Information';
+  }
+
+  if (!content) return c.notFound();
+  return c.html(contentPage(storeUser, title, content, c.env.APP_URL, true));
 });
 
 // Dashboard
@@ -119,6 +190,7 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:20px 4
 .features{padding:120px 40px;max-width:1200px;margin:0 auto;position:relative;z-index:1}
 .features h2{font-family:'Rajdhani',sans-serif;text-align:center;font-size:42px;font-weight:700;margin-bottom:70px;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--text-primary),var(--text-secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px}
+.f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px}
 .f-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:36px;transition:all .4s;position:relative;overflow:hidden;backdrop-filter:blur(10px)}
 .f-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,var(--glow-cyan),var(--glow-magenta));opacity:0;transition:opacity .4s}
 .f-card:hover{border-color:var(--accent-cyan);transform:translateY(-8px);box-shadow:0 20px 60px var(--shadow)}
@@ -189,7 +261,7 @@ footer a:hover{color:var(--accent-magenta)}
 <label style="display:inline-flex;align-items:center;gap:12px;cursor:pointer;font-size:14px;color:#94a3b8">
 Monthly
 <span style="position:relative;display:inline-block;width:48px;height:26px">
-<input type="checkbox" id="billing-toggle" onchange="toggleBilling()" style="opacity:0;width:0;height:0">
+<input type="checkbox" id="billing-toggle" onchange="toggleBilling()" checked style="opacity:0;width:0;height:0">
 <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#334155;border-radius:26px;transition:.3s"></span>
 <span id="toggle-dot" style="position:absolute;content:'';height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s"></span>
 </span>
@@ -210,7 +282,8 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div class="p-card">
 <div class="p-name">Basic</div>
 <div style="color:#64748b;font-size:13px">For getting started</div>
-<div class="p-price"><span class="price-monthly">$2<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$20<span class="p-unit">/yr</span></span></div>
+<div class="p-price"><span class="price-monthly">$2<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$1.67<span class="p-unit">/mo</span></span></div>
+<div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px" class="price-yearly-note">Billed $20 annually</div>
 <ul class="p-list">
 <li>2 published books</li><li>10 MB max file size</li><li>2,000 monthly views</li>
 <li>Bookstore page</li><li>Basic analytics</li>
@@ -220,7 +293,8 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div class="p-card pop">
 <div class="p-name">Pro</div>
 <div style="color:#64748b;font-size:13px">For creators & educators</div>
-<div class="p-price"><span class="price-monthly">$9<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$90<span class="p-unit">/yr</span></span></div>
+<div class="p-price"><span class="price-monthly">$9<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$7.50<span class="p-unit">/mo</span></span></div>
+<div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px" class="price-yearly-note">Billed $90 annually</div>
 <ul class="p-list">
 <li>50 published books</li><li>50 MB max file size</li><li>50,000 monthly views</li>
 <li>Custom slugs & themes</li><li>Password protection</li><li>Remove branding</li><li>Detailed analytics</li>
@@ -230,7 +304,8 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div class="p-card">
 <div class="p-name">Business</div>
 <div style="color:#64748b;font-size:13px">For publishers & teams</div>
-<div class="p-price"><span class="price-monthly">$29<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$290<span class="p-unit">/yr</span></span></div>
+<div class="p-price"><span class="price-monthly">$29<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$24.17<span class="p-unit">/mo</span></span></div>
+<div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px" class="price-yearly-note">Billed $290 annually</div>
 <ul class="p-list">
 <li>Unlimited books</li><li>200 MB max file size</li><li>Unlimited views</li>
 <li>Everything in Pro</li><li>Custom domain</li><li>API access</li><li>Priority support</li>
@@ -262,7 +337,9 @@ var d=document.getElementById('toggle-dot');
 d.style.transform=c?'translateX(22px)':'translateX(0)';
 document.querySelectorAll('.price-monthly').forEach(function(el){el.style.display=c?'none':'inline';});
 document.querySelectorAll('.price-yearly').forEach(function(el){el.style.display=c?'inline':'none';});
+document.querySelectorAll('.price-yearly-note').forEach(function(el){el.style.display=c?'block':'none';});
 }
+toggleBilling(); // Initialize on load
 </script>
 
 <footer>© 2026 <a href="/">FlipRead</a>. Publish beautiful flipbooks from your PDFs and EPUBs.</footer>

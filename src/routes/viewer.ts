@@ -7,6 +7,19 @@ import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
 import { pdfViewerHTML, epubViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
 
+export function viewerPage(book: Book & { author_name: string; author_plan: string }, appUrl: string): string {
+  const settings = JSON.parse(book.settings || '{}');
+  const authorPlan = getPlanLimits(book.author_plan);
+  const showBranding = !authorPlan.removeBranding;
+  const fileUrl = `${appUrl}/read/api/file/${book.id}`;
+
+  if (book.type === 'pdf') {
+    return pdfViewerHTML(book.title, fileUrl, settings, showBranding);
+  } else {
+    return epubViewerHTML(book.title, fileUrl, settings, showBranding);
+  }
+}
+
 const viewer = new Hono<{ Bindings: Env }>();
 
 // GET /read/:slug — public flipbook viewer
@@ -36,16 +49,7 @@ viewer.get('/:slug', async (c) => {
       'This book has reached its monthly view limit. The publisher can upgrade their plan for more views.'), 403);
   }
 
-  const settings = JSON.parse(book.settings || '{}');
-  const authorPlan = getPlanLimits(book.author_plan);
-  const showBranding = !authorPlan.removeBranding;
-  const fileUrl = `/read/api/file/${book.id}`;
-
-  if (book.type === 'pdf') {
-    return c.html(pdfViewerHTML(book.title, fileUrl, settings, showBranding));
-  } else {
-    return c.html(epubViewerHTML(book.title, fileUrl, settings, showBranding));
-  }
+  return c.html(viewerPage(book, c.env.APP_URL));
 });
 
 // GET /api/file/:bookId — serve the actual file from R2

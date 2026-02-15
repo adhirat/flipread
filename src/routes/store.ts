@@ -12,6 +12,13 @@ async function getUserByUsername(db: D1Database, username: string): Promise<User
   ).bind(username.toLowerCase()).first<User>();
 }
 
+export async function getUserByCustomDomain(db: D1Database, domain: string): Promise<User | null> {
+  // SQLite json_extract to find domain in the store_settings JSON field
+  return await db.prepare(
+    'SELECT id, name, avatar_url, plan, store_name, store_logo_url, store_settings FROM users WHERE LOWER(json_extract(store_settings, "$.custom_domain")) = ?'
+  ).bind(domain.toLowerCase()).first<User>();
+}
+
 // GET /store/:username — displays a user's public book collection
 store.get('/:username', async (c) => {
   const username = c.req.param('username');
@@ -69,7 +76,7 @@ store.get('/:username/contact', async (c) => {
   return c.html(contentPage(user, 'Contact Information', settings.contact_info_content, c.env.APP_URL));
 });
 
-function bookstorePage(user: User, books: Book[], settings: any, appUrl: string): string {
+export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false): string {
   const storeName = user.store_name || `${user.name}'s Bookstore`;
   const safeName = esc(storeName);
   const bookCount = books.length;
@@ -682,8 +689,9 @@ ${showSearch ? `(function(){var input=document.getElementById('book-search');var
 </body></html>`;
 }
 
-function contentPage(user: User, title: string, content: string, appUrl: string): string {
+export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false): string {
   const storeName = user.store_name || `${user.name}'s Bookstore`;
+  const backUrl = isCustomDomain ? '/' : `/store/${user.name.toLowerCase().replace(/ /g,'-')}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -721,7 +729,7 @@ h1 { font-family: 'Instrument Serif', serif; font-size: 36px; margin-bottom: 8px
     <div class="meta">${esc(storeName)}</div>
   </header>
   <div class="content">${esc(content)}</div>
-  <a href="/store/${user.name.toLowerCase().replace(/ /g,'-')}" class="back-link">&larr; Back to Store</a>
+  <a href="${backUrl}" class="back-link">&larr; Back to Store</a>
 </body>
 </html>`;
 }

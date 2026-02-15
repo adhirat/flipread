@@ -98,6 +98,19 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
 .close-btn:hover{color:#fff}
 @media(max-width:768px){.layout{flex-direction:column;height:auto;overflow:visible}.sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:16px}.content{padding:20px}.nav-item{display:inline-flex;padding:8px 12px;font-size:13px;margin-right:8px;margin-bottom:0}}
 .hidden{display:none !important}
+.billing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px}
+.toggle-label{font-size:14px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:color .3s}
+.toggle-label.active{color:var(--text-primary)}
+.toggle-switch{width:48px;height:26px;background:var(--bg-elevated);border-radius:13px;position:relative;cursor:pointer;transition:background .3s;border:1px solid var(--border)}
+.toggle-switch.active{background:var(--accent-cyan)}
+.toggle-knob{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+.toggle-switch.active .toggle-knob{transform:translateX(22px)}
+.badge-save{font-size:10px;background:rgba(255,0,110,0.1);color:var(--accent-magenta);padding:2px 6px;border-radius:4px;margin-left:4px;text-transform:uppercase;font-weight:700}
+.price-display{margin-bottom:16px}
+.price-display .currency{font-size:20px;font-weight:700;color:var(--text-primary);vertical-align:top;line-height:1.5}
+.price-display .amount{font-size:36px;font-weight:700;color:inherit}
+.price-display .interval{font-size:14px;color:var(--text-muted);margin-left:2px}
+.billed-text{font-size:12px;color:var(--text-muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -215,7 +228,10 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
         <div class="form-group">
           <label>Custom Domain (Optional)</label>
           <input type="text" id="st-domain" placeholder="e.g. books.mydomain.com">
-          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Feature coming soon. Save your domain to be ready.</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">
+            <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.flipread.workers.dev</code>. <br>
+            Then add the domain here and save.
+          </p>
         </div>
 
         <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Hero Section</h3>
@@ -254,13 +270,25 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
 
     <!-- Subscription View -->
     <div id="view-subscription" class="view-section">
-      <div class="header"><h2>Subscription</h2></div>
+      <div class="header">
+        <h2>Subscription</h2>
+        <div class="billing-toggle">
+          <span id="bill-monthly" class="toggle-label" onclick="setBilling('monthly')">Monthly</span>
+          <div class="toggle-switch active" onclick="toggleBilling()">
+            <div class="toggle-knob"></div>
+          </div>
+          <span id="bill-yearly" class="toggle-label active" onclick="setBilling('yearly')">Yearly <span class="badge-save">Save 20%</span></span>
+        </div>
+      </div>
       
       <div style="display:flex;gap:24px;overflow-x:auto;padding-bottom:20px">
         <!-- Plans -->
         <div class="card" style="flex:1;min-width:280px">
           <h3 style="margin-bottom:8px">Basic</h3>
-          <div style="font-size:32px;font-weight:700;color:var(--accent-cyan);margin-bottom:16px">$2<span style="font-size:14px;color:var(--text-muted)">/mo</span></div>
+          <div class="price-display">
+            <span class="currency">$</span><span class="amount" id="price-basic">1.67</span><span class="interval">/mo</span>
+            <div class="billed-text" id="billed-basic">Billed $20 yearly</div>
+          </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
             <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 2 Books Limit</li>
             <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 10 MB Uploads</li>
@@ -272,7 +300,10 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
         <div class="card" style="flex:1;min-width:280px;border-color:var(--accent-purple);box-shadow:0 0 20px rgba(139,92,246,0.1)">
           <div style="color:var(--accent-purple);font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:4px">Recommended</div>
           <h3 style="margin-bottom:8px">Pro</h3>
-          <div style="font-size:32px;font-weight:700;color:var(--accent-purple);margin-bottom:16px">$9<span style="font-size:14px;color:var(--text-muted)">/mo</span></div>
+          <div class="price-display">
+            <span class="currency">$</span><span class="amount" id="price-pro">7.50</span><span class="interval">/mo</span>
+            <div class="billed-text" id="billed-pro">Billed $90 yearly</div>
+          </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
              <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 Books Limit</li>
             <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 MB Uploads</li>
@@ -283,7 +314,10 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
 
         <div class="card" style="flex:1;min-width:280px">
           <h3 style="margin-bottom:8px">Business</h3>
-          <div style="font-size:32px;font-weight:700;color:var(--accent-magenta);margin-bottom:16px">$29<span style="font-size:14px;color:var(--text-muted)">/mo</span></div>
+          <div class="price-display">
+            <span class="currency">$</span><span class="amount" id="price-business">24.17</span><span class="interval">/mo</span>
+            <div class="billed-text" id="billed-business">Billed $290 yearly</div>
+          </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
              <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Unlimited Books</li>
             <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> 200 MB Uploads</li>
@@ -298,6 +332,7 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
     <div id="view-settings" class="view-section">
       <div class="header"><h2>Settings</h2></div>
       <div class="card" style="max-width:500px">
+        <h3 style="margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px">Preferences</h3>
         <div class="form-group">
           <label>Theme</label>
           <div style="display:flex;gap:12px">
@@ -306,12 +341,40 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
           </div>
         </div>
         <div class="form-group">
-          <label>Account</label>
+          <label>Account Email</label>
           <input type="text" id="set-email" disabled style="opacity:0.6;cursor:not-allowed">
         </div>
-        <button onclick="logout()" class="btn" style="background:var(--bg-elevated);color:var(--text-secondary);width:100%">Sign Out</button>
+        <button onclick="logout()" class="btn" style="background:var(--bg-elevated);color:var(--text-secondary);width:100%;margin-bottom:32px">Sign Out</button>
+
+        <h3 style="margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px;color:var(--accent-magenta)">Danger Zone</h3>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">
+          Deleting your account is irreversible. All your data, books, and store settings will be permanently removed.
+        </p>
+        <button onclick="confirmDeleteAccount()" class="btn-outline" style="width:100%;border-color:var(--accent-magenta);color:var(--accent-magenta)">Delete Account</button>
       </div>
     </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;text-align:center">
+      <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,0,110,0.1);color:var(--accent-magenta);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 style="margin-bottom:12px">Delete Account?</h3>
+      <p style="color:var(--text-secondary);margin-bottom:24px;font-size:14px">
+        This action cannot be undone. All your <b>books, files, store settings, and personal data</b> will be permanently deleted immediately.
+      </p>
+      <div class="form-group" style="text-align:left">
+        <label>Type "DELETE" to confirm</label>
+        <input type="text" id="delete-confirm-input" placeholder="DELETE">
+      </div>
+      <div style="display:flex;gap:12px">
+        <button onclick="hideModal('delete-modal')" class="btn-outline" style="flex:1">Cancel</button>
+        <button onclick="executeDeleteAccount()" class="btn" style="flex:1;background:var(--accent-magenta)">Delete Everything</button>
+      </div>
+    </div>
+  </div>
 
   </main>
 </div>
@@ -336,6 +399,13 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
     <div class="form-group">
       <label>Password (Pro+ only)</label>
       <input type="password" id="edit-pass" placeholder="Optional password">
+    </div>
+    <div class="form-group">
+      <label>Custom Domain (Optional)</label>
+      <input type="text" id="edit-domain" placeholder="e.g. book.mybrand.com">
+      <p style="font-size:12px;color:var(--text-muted);margin-top:4px">
+        <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.flipread.workers.dev</code>.
+      </p>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:12px">
       <button onclick="hideModal('edit-modal')" class="btn-outline" style="border:none">Cancel</button>
@@ -376,6 +446,7 @@ function showDashboard() {
   document.getElementById('dash-view').style.display = 'flex';
   updateUI();
   loadBooks();
+  setBilling('yearly');
 }
 function updateUI() {
   if(!currentUser) return;
@@ -533,19 +604,20 @@ function editBook(id) {
   document.getElementById('edit-title').value = b.title;
   document.getElementById('edit-public').value = b.is_public ? "1" : "0";
   document.getElementById('edit-pass').value = b.password || '';
+  document.getElementById('edit-domain').value = b.custom_domain || '';
   showModal('edit-modal');
 }
 
 async function saveBook() {
   const id = document.getElementById('edit-id').value;
-  const title = document.getElementById('edit-title').value;
   const is_public = document.getElementById('edit-public').value === "1";
   const password = document.getElementById('edit-pass').value || null;
+  const custom_domain = document.getElementById('edit-domain').value || null;
   
   await fetch(API + '/api/books/' + id, {
     method: 'PATCH', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, is_public, password })
+    body: JSON.stringify({ title, is_public, password, custom_domain })
   });
   hideModal('edit-modal');
   loadBooks();
@@ -600,7 +672,7 @@ async function checkout(plan) {
     const res = await fetch(API + '/api/billing/checkout', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, interval: 'monthly' })
+      body: JSON.stringify({ plan, interval: billingInterval })
     });
     const data = await res.json();
     if(data.url) window.location.href = data.url;
@@ -632,6 +704,82 @@ function setTheme(t) {
 // Init
 if(localStorage.getItem('flipread-theme')) setTheme(localStorage.getItem('flipread-theme'));
 checkAuth();
+
+// Subscription Logic
+let billingInterval = 'yearly';
+
+function setBilling(interval) {
+  billingInterval = interval;
+  const isYearly = interval === 'yearly';
+  
+  document.getElementById('bill-monthly').classList.toggle('active', !isYearly);
+  document.getElementById('bill-yearly').classList.toggle('active', isYearly);
+  const sw = document.querySelector('.toggle-switch');
+  if(sw) sw.classList.toggle('active', isYearly);
+
+  if(isYearly) {
+    updatePrice('basic', '1.67', '/mo', 'Billed $20 yearly');
+    updatePrice('pro', '7.50', '/mo', 'Billed $90 yearly');
+    updatePrice('business', '24.17', '/mo', 'Billed $290 yearly');
+  } else {
+    updatePrice('basic', '2.00', '/mo', 'Billed monthly');
+    updatePrice('pro', '9.00', '/mo', 'Billed monthly');
+    updatePrice('business', '29.00', '/mo', 'Billed monthly');
+  }
+}
+
+function updatePrice(plan, amount, interval, text) {
+  const el = document.getElementById('price-'+plan);
+  if(el) el.textContent = amount;
+  const be = document.getElementById('billed-'+plan);
+  if(be) be.textContent = text;
+}
+
+function toggleBilling() {
+  setBilling(billingInterval === 'yearly' ? 'monthly' : 'yearly');
+}
+
+// Initialize billing toggle on load
+document.addEventListener('DOMContentLoaded', () => { setTimeout(() => setBilling('yearly'), 100) });
+
+
+// Account Deletion
+function confirmDeleteAccount() {
+  document.getElementById('delete-confirm-input').value = '';
+  showModal('delete-modal');
+}
+
+async function executeDeleteAccount() {
+  const input = document.getElementById('delete-confirm-input').value;
+  if(input !== 'DELETE') {
+    alert('Please type "DELETE" to confirm.');
+    return;
+  }
+  
+  const btn = document.querySelector('#delete-modal .btn');
+  const oldText = btn.textContent;
+  btn.textContent = 'Deleting...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/user', {
+      method: 'DELETE', credentials: 'include'
+    });
+    const data = await res.json();
+    if(data.success) {
+      window.location.href = '/'; 
+    } else {
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+      btn.textContent = oldText;
+      btn.disabled = false;
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Network error. Please try again.');
+    btn.textContent = oldText;
+    btn.disabled = false;
+  }
+}
 
 </script>
 </body></html>`;

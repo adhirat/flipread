@@ -18,7 +18,7 @@ books.use('/*', authMiddleware());
 books.get('/', async (c) => {
   const user = c.get('user');
   const results = await c.env.DB.prepare(
-    'SELECT id, title, slug, type, file_size_bytes, view_count, max_views, is_public, cover_url, created_at, updated_at FROM books WHERE user_id = ? ORDER BY created_at DESC'
+    'SELECT id, title, slug, type, file_size_bytes, view_count, max_views, is_public, password, custom_domain, cover_url, created_at, updated_at FROM books WHERE user_id = ? ORDER BY created_at DESC'
   ).bind(user.id).all<Book>();
 
   return c.json({ books: results.results || [] });
@@ -115,6 +115,7 @@ books.patch('/:id', async (c) => {
     title?: string;
     is_public?: boolean;
     password?: string | null;
+    custom_domain?: string | null;
     cover_url?: string;
     settings?: Record<string, unknown>;
   }>();
@@ -143,6 +144,10 @@ books.patch('/:id', async (c) => {
   if (updates.password !== undefined && plan.passwordProtection) {
     sets.push('password = ?');
     values.push(updates.password);
+  }
+  if (updates.custom_domain !== undefined && plan.customDomain) {
+    sets.push('custom_domain = ?');
+    values.push(updates.custom_domain);
   }
   if (updates.settings !== undefined) {
     sets.push('settings = ?');

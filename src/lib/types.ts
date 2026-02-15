@@ -10,6 +10,12 @@ export interface Env {
   JWT_SECRET: string;
 }
 
+export interface Variables {
+  user?: User;
+  storeUser?: User;
+  book?: Book;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -39,6 +45,7 @@ export interface Book {
   max_views: number;
   is_public: number;
   password: string | null;
+  custom_domain: string | null;
   settings: string;
   created_at: string;
   updated_at: string;

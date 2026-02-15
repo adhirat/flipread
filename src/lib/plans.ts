@@ -8,6 +8,7 @@ export interface PlanLimits {
   passwordProtection: boolean;
   removeBranding: boolean;
   customBackground: boolean;
+  customDomain: boolean;
   analyticsLevel: 'basic' | 'detailed' | 'detailed_export';
 }
 
@@ -20,6 +21,7 @@ export const PLANS: Record<string, PlanLimits> = {
     passwordProtection: false,
     removeBranding: false,
     customBackground: false,
+    customDomain: false,
     analyticsLevel: 'basic',
   },
   basic: {
@@ -30,6 +32,7 @@ export const PLANS: Record<string, PlanLimits> = {
     passwordProtection: false,
     removeBranding: false,
     customBackground: true,
+    customDomain: false,
     analyticsLevel: 'basic',
   },
   pro: {
@@ -40,6 +43,7 @@ export const PLANS: Record<string, PlanLimits> = {
     passwordProtection: true,
     removeBranding: true,
     customBackground: true,
+    customDomain: true,
     analyticsLevel: 'detailed',
   },
   business: {
@@ -50,6 +54,7 @@ export const PLANS: Record<string, PlanLimits> = {
     passwordProtection: true,
     removeBranding: true,
     customBackground: true,
+    customDomain: true,
     analyticsLevel: 'detailed_export',
   },
 };
