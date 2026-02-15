@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS books (
   type TEXT NOT NULL CHECK(type IN ('pdf', 'epub')),
   file_key TEXT NOT NULL, -- R2 object key
   cover_url TEXT DEFAULT '',
+  cover_key TEXT DEFAULT '',
   file_size_bytes INTEGER NOT NULL DEFAULT 0,
   view_count INTEGER NOT NULL DEFAULT 0,
   max_views INTEGER NOT NULL DEFAULT 500,

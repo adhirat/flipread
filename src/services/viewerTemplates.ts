@@ -96,7 +96,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         <p class="uppercase tracking-[0.2em] text-[10px] font-bold opacity-60">Initializing Reader...</p>
     </div>
 
-    <div id="detect-zone-top"></div>
     <header class="hdr" id="main-hdr">
         <div class="hdr-l">
             <button class="hdr-i" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul"></i></button>
@@ -124,7 +123,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
     </div>
 
-    <div id="detect-zone-bottom"></div>
     <div class="ft" id="main-ft">
         <button id="pb" class="nb"><i class="fas fa-chevron-left"></i></button>
         <div class="flex flex-col items-center gap-1 flex-1 max-w-[300px]">
@@ -141,16 +139,43 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
     </div>
 
-    <div id="bg-modal" class="modal">
-        <div class="modal-c">
-            <div class="modal-h"><strong class="text-xs uppercase tracking-widest opacity-70">Appearance</strong><button class="hdr-i" onclick="toggleModal('bg-modal')" style="width:30px;height:30px">✕</button></div>
-            <div class="modal-b p-6 grid grid-cols-3 gap-4">
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#ffffff" onclick="setBg('#ffffff')"></div>
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#3e2723" onclick="setBg('#3e2723')"></div>
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#111827" onclick="setBg('#111827')"></div>
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#f5f5f5" onclick="setBg('#f5f5f5')"></div>
-                <div class="w-full aspect-square rounded-full cursor-pointer border-2 border-transparent hover:border-white transition" style="background:#000" onclick="setBg('#000')"></div>
+    <div id="bg-modal" class="modal" onclick="toggleModal('bg-modal')">
+        <div class="modal-c !w-[450px]" onclick="event.stopPropagation()">
+            <div class="flex border-b border-white/10 px-4">
+                <div class="tab-btn active" onclick="switchTab(event, 'p-bg')">Appearance</div>
+                <div class="tab-btn" onclick="switchTab(event, 'p-am')">Experience</div>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[60vh]">
+                <div id="p-bg" class="tab-content active">
+                    <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Backgrounds</p>
+                    <div class="grid grid-cols-6 gap-2 mb-6">
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#ffffff" onclick="setBg('#ffffff')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#f3f0e8" onclick="setBg('#f3f0e8')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#fafafa" onclick="setBg('#fafafa')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#111827" onclick="setBg('#111827')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#000000" onclick="setBg('#000000')"></div>
+                    </div>
+                </div>
+                <div id="p-am" class="tab-content">
+                    <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Atmosphere</p>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-2">
+                            <span class="text-[11px]">Ambient Sound</span>
+                            <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded px-2 py-2 outline-none">
+                                <option value="none">None (Silent)</option>
+                                <option value="rain">Gentle Rain</option>
+                                <option value="fire">Crackling Fire</option>
+                                <option value="library">Library Ambience</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-white/5 flex gap-2">
+                    <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
+                        <i class="fas fa-undo mr-2"></i> Reset
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -288,10 +313,12 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 document.getElementById('zo').onclick = () => { this.zoom = Math.max(this.zoom-0.2, 0.5); this.applyZoom(); };
                 document.getElementById('m-btn').onclick = () => this.toggleLayout();
                 
-                document.getElementById('detect-zone-top').onmouseenter = () => this.showUI(true);
-                document.getElementById('detect-zone-bottom').onmouseenter = () => this.showUI(true);
-                document.getElementById('main-hdr').onmouseleave = () => this.showUI(false);
-                document.getElementById('main-ft').onmouseleave = () => this.showUI(false);
+                window.onmousemove = (e) => {
+                    if(!this.full) return;
+                    if(e.clientY < 70) this.showUI(true);
+                    else if(e.clientY > window.innerHeight - 70) this.showUI(true);
+                    else this.showUI(false);
+                };
 
                 document.onkeydown = e => { 
                     if(e.key==='ArrowLeft') this.pf.flipPrev();
@@ -326,6 +353,26 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         }
         window.toggleModal = (id) => document.getElementById(id).classList.toggle('o');
         window.setBg = (c) => document.body.style.background = c;
+        window.switchTab = (e, tabId) => {
+            const m = e.target.closest('.modal-c');
+            m.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            m.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            m.querySelector('#' + tabId).classList.add('active');
+        };
+        window.resetSettings = () => { if(confirm('Reset reader settings to default?')) { localStorage.clear(); location.reload(); } };
+        let amb;
+        window.playAmbient = (type) => {
+            if(amb) { amb.pause(); amb = null; }
+            if(type === 'none') return;
+            const urls = {
+                rain: 'https://cdn.pixabay.com/audio/2022/03/10/audio_51307b0f69.mp3',
+                fire: 'https://cdn.pixabay.com/audio/2021/08/09/audio_65b750170a.mp3',
+                library: 'https://cdn.pixabay.com/audio/2023/10/24/audio_985b8c9d0d.mp3'
+            };
+            amb = new Audio(urls[type]);
+            amb.loop = true; amb.play();
+        };
         new PDFViewer();
     </script>
 </body>
@@ -357,7 +404,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         @media(max-width:768px){ #spine { display: none; } }
         
         .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s ease; cursor: pointer; border: none !important; outline: none !important; }
-        .c-v { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; box-shadow: -15px 15px 40px rgba(0,0,0,0.5); background: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0; font-weight: bold; overflow: hidden; border: none !important; }
+        .c-v { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; box-shadow: -15px 15px 60px rgba(0,0,0,0.8); background: #111111; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0; font-weight: bold; overflow: hidden; border: none !important; }
         .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #333, #111, #333); border-radius: 4px 0 0 4px; }
         
         .a-f-o { animation: fO 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; pointer-events: none; }
@@ -413,10 +460,11 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         .modal.o { display: flex; }
         .modal-c { background: #1c1c1c; width: 90%; max-width: 400px; max-height: 85vh; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); color: #eee; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5); }
         @media(min-width:1024px){ 
-            .modal-c { max-width: 500px; }
-            .modal-c select, .modal-c button, .modal-c .text-[11px] { font-size: 13px !important; }
-            .modal-c .tab-btn { font-size: 11px !important; padding: 12px 20px; }
-            .modal-c p.text-[9px] { font-size: 10px !important; }
+            .modal-c { max-width: 600px; }
+            .modal-c select, .modal-c button, .modal-c .text-[11px] { font-size: 15px !important; }
+            .modal-c .tab-btn { font-size: 12px !important; padding: 16px 24px; }
+            .modal-c p.text-[9px] { font-size: 11px !important; }
+            .modal-c .p-6 { padding: 40px !important; }
         }
         .br { position: fixed; bottom: 52px; right: 12px; z-index: 200; font-size: 10px; color: rgba(255,255,255,0.2); text-decoration: none; }
         
@@ -447,7 +495,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         <div class="flex items-center gap-2">
             <button class="ib" onclick="toggleSearch()" title="Search Box"><i class="fas fa-search"></i></button>
             <button class="ib" onclick="toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up"></i></button>
-            <button class="ib" onclick="toggleModal('bg-m')" title="Reader Settings"><i class="fas fa-cog"></i></button>
+            <button class="ib" onclick="toggleModal('bg-m')" title="Reader Settings"><i class="fas fa-palette"></i></button>
             <div class="flex rounded-full px-2 py-1 gap-2 items-center zoom-pill">
                 <button onclick="zoom(-10)" class="px-1 text-xs">-</button>
                 <span id="z-v" class="text-[10px] font-mono min-w-[30px] text-center">100%</span>
@@ -580,10 +628,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     </div>
                 </div>
                 
-                <div class="pt-4 border-t border-white/5">
+                <div class="pt-4 border-t border-white/5 flex gap-2">
                     <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
-                    <button class="w-full py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
-                        <i class="fas fa-image mr-2"></i> Custom Wallpaper
+                    <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
+                        <i class="fas fa-image mr-2"></i> Wallpaper
+                    </button>
+                    <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
+                        <i class="fas fa-undo mr-2"></i> Reset
                     </button>
                 </div>
              </div>
@@ -605,7 +656,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
 
     <script>
         const FU='${fileUrl}', SLD='fr_pos_${fileUrl}'; let book, rend, z=100, full=false, isAnimating = false;
-        let fz = 100, ff = "Georgia, serif", lh = 1.6;
+        let fz = parseInt(localStorage.getItem('fr_fz') || '100'), ff = localStorage.getItem('fr_ff') || "Georgia, serif", lh = parseFloat(localStorage.getItem('fr_lh') || '1.6');
         let highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU) || '[]');
         let syn = window.speechSynthesis, speaking = false, utter;
         let amb;
@@ -651,28 +702,47 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                         "img": { "max-width": "100%", "height": "auto" }
                     });
                     const hm = document.getElementById('h-m');
-                    const checkSelection = (e) => {
-                        const sel = contents.window.getSelection();
-                        const t = sel.toString().trim();
-                        if(t.length > 3) {
-                            const rect = sel.getRangeAt(0).getBoundingClientRect();
-                            const iframe = document.querySelector('iframe');
-                            const irect = iframe.getBoundingClientRect();
-                            hm.style.left = (irect.left + rect.left + rect.width/2) + 'px';
-                            hm.style.top = (irect.top + rect.top - 40) + 'px';
-                            hm.style.display = 'block';
-                            hm.onclick = () => {
-                                addHighlight(t, rend.currentLocation().start.cfi);
+                    const checkSelection = () => {
+                        setTimeout(() => {
+                            const sel = contents.window.getSelection();
+                            const t = sel.toString().trim();
+                            if(t.length > 3) {
+                                const range = sel.getRangeAt(0);
+                                const rect = range.getBoundingClientRect();
+                                const iframe = document.querySelector('iframe');
+                                const irect = iframe.getBoundingClientRect();
+                                // Position relative to parent window
+                                const left = Math.max(50, Math.min(window.innerWidth - 50, (irect.left + rect.left + rect.width/2)));
+                                const top = (irect.top + rect.top - 50);
+                                hm.style.left = left + 'px';
+                                hm.style.top = top + 'px';
+                                hm.style.display = 'block';
+                                hm.onclick = (e) => {
+                                    e.stopPropagation();
+                                    addHighlight(t, rend.currentLocation().start.cfi);
+                                    hm.style.display = 'none';
+                                    sel.removeAllRanges();
+                                };
+                            } else {
                                 hm.style.display = 'none';
-                                sel.removeAllRanges();
-                            };
-                        } else {
-                            hm.style.display = 'none';
-                        }
+                            }
+                        }, 100);
                     };
                     contents.document.addEventListener('mouseup', checkSelection);
                     contents.document.addEventListener('touchend', checkSelection);
                     contents.document.addEventListener('mousedown', () => hm.style.display = 'none');
+                    contents.document.addEventListener('mousemove', (e) => {
+                        if(!full) return;
+                        const header = document.getElementById('main-hdr');
+                        const footer = document.getElementById('main-ft');
+                        // Use window height relative to iframe for reveal
+                        if(e.clientY < 70) header.classList.add('v');
+                        else if(e.clientY > contents.window.innerHeight - 70) footer.classList.add('v');
+                        else {
+                            header.classList.remove('v');
+                            footer.classList.remove('v');
+                        }
+                    });
                 });
                 book.ready.then(() => {
                     book.locations.generate(1000).then(() => {
@@ -729,20 +799,22 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             document.body.classList.toggle('full-mode', full);
             document.getElementById('s-c').classList.toggle('full', full);
             document.getElementById('m-btn').innerHTML = full ? '<i class="fas fa-compress-alt"></i>' : '<i class="fas fa-expand"></i>';
+            const header = document.getElementById('main-hdr');
+            const footer = document.getElementById('main-ft');
             if(full) {
                 window.onmousemove = (e) => {
                     if(!full) return;
-                    if(e.clientY < 60) document.getElementById('main-hdr').classList.add('v');
-                    else if(e.clientY > window.innerHeight - 60) document.getElementById('main-ft').classList.add('v');
+                    if(e.clientY < 60) header.classList.add('v');
+                    else if(e.clientY > window.innerHeight - 60) footer.classList.add('v');
                     else {
-                        document.getElementById('main-hdr').classList.remove('v');
-                        document.getElementById('main-ft').classList.remove('v');
+                        header.classList.remove('v');
+                        footer.classList.remove('v');
                     }
                 };
             } else {
                 window.onmousemove = null;
-                document.getElementById('main-hdr').classList.remove('v');
-                document.getElementById('main-ft').classList.remove('v');
+                header.classList.remove('v');
+                footer.classList.remove('v');
             }
             setTimeout(() => { if (rend) rend.resize(); }, 500);
         }
@@ -778,6 +850,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             const results = await Promise.all(
                 book.spine.spineItems.map(item => item.load(book.load.bind(book)).then(doc => {
                     const matches = [], regex = new RegExp(q, 'gi');
+                    if(!doc || !doc.body) return [];
                     let text = doc.body.innerText;
                     let m;
                     while((m = regex.exec(text)) !== null) {
@@ -789,7 +862,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     }
                     item.unload();
                     return matches;
-                }))
+                }).catch(() => []))
             );
             const flat = results.flat();
             res.innerHTML = flat.length ? flat.map(r => 
@@ -812,12 +885,18 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             if(amb) { amb.pause(); amb = null; }
             if(type === 'none') return;
             const urls = {
-                rain: 'https://ia802901.us.archive.org/32/items/RainSoundEffect/RainSoundEffect.mp3',
-                fire: 'https://ia800908.us.archive.org/29/items/fireplace-crackling-sound-1.mp3/fireplace-crackling-sound-1.mp3',
-                library: 'https://ia601202.us.archive.org/25/items/coffe-shop-ambience-loop-14-min/COFFE%20SHOP%20AMBIENCE%20LOOP%2014%20min.mp3'
+                rain: 'https://cdn.pixabay.com/audio/2022/03/10/audio_51307b0f69.mp3',
+                fire: 'https://cdn.pixabay.com/audio/2021/08/09/audio_65b750170a.mp3',
+                library: 'https://cdn.pixabay.com/audio/2023/10/24/audio_985b8c9d0d.mp3'
             };
             amb = new Audio(urls[type]);
-            amb.loop = true; amb.play().catch(e => console.error('Audio failed:', e));
+            amb.crossOrigin = "anonymous";
+            amb.loop = true; amb.play().catch(e => {
+                console.error('Audio failed:', e);
+                // Fallback attempt if first fails
+                amb.src = urls[type].replace('https://ia', 'https://archive.org/download/');
+                amb.play().catch(ex => alert('Sound could not be loaded. Please check your browser audio settings.'));
+            });
         }
 
         function toggleNight() { 
@@ -835,9 +914,21 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         
         function applyStyles(){
             if(rend){
-                rend.display(rend.currentLocation()?.start?.cfi);
+                rend.getContents().forEach(c => {
+                    c.addStylesheetRules({
+                        "body": { "font-family": ff + " !important", "font-size": fz + "% !important", "line-height": lh + " !important" }
+                    });
+                });
             }
             document.getElementById('fs-v').textContent = fz + "%";
+            localStorage.setItem('fr_fz', fz);
+            localStorage.setItem('fr_ff', ff);
+            localStorage.setItem('fr_lh', lh);
+        }
+
+        function resetSettings(){
+            localStorage.removeItem('fr_fz'); localStorage.removeItem('fr_ff'); localStorage.removeItem('fr_lh');
+            location.reload();
         }
 
         function setBg(c, isDark){ 

@@ -78,15 +78,28 @@ books.post('/upload', async (c) => {
     slug = generateSlug(title); // Fallback to generated
   }
 
+  // Handle optional cover image (extracted by client)
+  const coverFile = formData.get('cover') as File | null;
+  let coverUrl = null;
+  let coverKey = null;
+
+  const storage = new StorageService(c.env.BUCKET);
+
+  if (coverFile && coverFile.size > 0) {
+    const ext = coverFile.name.split('.').pop() || 'jpg';
+    coverKey = `covers/${user.id}/${bookId}_auto.${ext}`;
+    await storage.upload(coverKey, await coverFile.arrayBuffer(), coverFile.type);
+    coverUrl = `/read/api/cover/${bookId}`;
+  }
+
   // Upload to R2
   const fileKey = StorageService.generateFileKey(user.id, bookId, file.name);
-  const storage = new StorageService(c.env.BUCKET);
   await storage.upload(fileKey, await file.arrayBuffer(), file.type);
 
   // Insert into D1
   await c.env.DB.prepare(
-    `INSERT INTO books (id, user_id, title, slug, type, file_key, file_size_bytes, max_views, is_public)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO books (id, user_id, title, slug, type, file_key, file_size_bytes, max_views, is_public, cover_url, cover_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
     bookId,
     user.id,
@@ -97,6 +110,8 @@ books.post('/upload', async (c) => {
     file.size,
     plan.maxMonthlyViews === Infinity ? -1 : plan.maxMonthlyViews,
     1,
+    coverUrl,
+    coverKey
   ).run();
 
   const viewerUrl = `${c.env.APP_URL}/read/${slug}`;

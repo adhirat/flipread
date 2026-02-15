@@ -6,6 +6,10 @@ export function dashboardPage(appUrl: string): string {
 <title>Dashboard — FlipRead</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <style>
 :root[data-theme="dark"]{
   --bg-primary:#050510;
@@ -569,13 +573,44 @@ async function uploadBook(e) {
   const file = e.target.files[0];
   if (!file) return;
   const msgEl = document.getElementById('upload-msg');
-  msgEl.textContent = 'Uploading...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
+  msgEl.textContent = 'Preparing Cover...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
   
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('title', file.name.replace(/\\.(pdf|epub)$/i, ''));
+  fd.append('title', file.name.replace(/\.(pdf|epub)$/i, ''));
 
   try {
+    // Attempt to extract cover
+    const arrayBuffer = await file.arrayBuffer();
+    let coverBlob = null;
+
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 0.6 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        await page.render({ canvasContext: context, viewport }).promise;
+        coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+      } catch (e) { console.error('PDF Cover Extract Failed', e); }
+    } else if (file.type === 'application/epub+zip' || file.name.endsWith('.epub')) {
+      try {
+        const book = ePub(arrayBuffer);
+        const coverUrl = await book.coverUrl();
+        if (coverUrl) {
+          coverBlob = await fetch(coverUrl).then(r => r.blob());
+        }
+      } catch (e) { console.error('EPUB Cover Extract Failed', e); }
+    }
+
+    if (coverBlob) {
+      fd.append('cover', coverBlob, 'cover.jpg');
+    }
+
+    msgEl.textContent = 'Uploading Book...';
     const res = await fetch(API + '/api/books/upload', {
       method: 'POST', credentials: 'include', body: fd
     });
