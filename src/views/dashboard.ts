@@ -610,6 +610,7 @@ function editBook(id) {
 
 async function saveBook() {
   const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value;
   const is_public = document.getElementById('edit-public').value === "1";
   const password = document.getElementById('edit-pass').value || null;
   const custom_domain = document.getElementById('edit-domain').value || null;
@@ -703,6 +704,15 @@ function setTheme(t) {
 }
 // Init
 if(localStorage.getItem('flipread-theme')) setTheme(localStorage.getItem('flipread-theme'));
+const params = new URLSearchParams(window.location.search);
+if (params.get('mode') === 'register') {
+  isRegister = true;
+  document.getElementById('auth-title').textContent = 'Create Account';
+  document.getElementById('auth-btn').textContent = 'Create Account';
+  document.getElementById('auth-name').classList.remove('hidden');
+  document.getElementById('auth-toggle-text').textContent = 'Already have an account?';
+  document.getElementById('auth-toggle-link').textContent = 'Sign In';
+}
 checkAuth();
 
 // Subscription Logic

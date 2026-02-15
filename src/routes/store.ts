@@ -662,9 +662,9 @@ body::before {
       <span>${safeName}</span>
     </div>
     <div class="footer-links">
-      ${settings.privacy_policy_content ? `<a href="/store/${user.name.toLowerCase().replace(/ /g,'-')}/privacy">Privacy Policy</a>` : ''}
-      ${settings.terms_content ? `<a href="/store/${user.name.toLowerCase().replace(/ /g,'-')}/terms">Terms & Conditions</a>` : ''}
-      ${settings.contact_info_content ? `<a href="/store/${user.name.toLowerCase().replace(/ /g,'-')}/contact">Contact Us</a>` : ''}
+      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/p/privacy' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/privacy'}">Privacy Policy</a>` : ''}
+      ${settings.terms_content ? `<a href="${isCustomDomain ? '/p/terms' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/terms'}">Terms & Conditions</a>` : ''}
+      ${settings.contact_info_content ? `<a href="${isCustomDomain ? '/p/contact' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/contact'}">Contact Us</a>` : ''}
     </div>
     <div class="footer-copy">
       &copy; ${new Date().getFullYear()} ${safeName}. All rights reserved.

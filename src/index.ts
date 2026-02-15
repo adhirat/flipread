@@ -63,6 +63,11 @@ app.route('/api/user', userRoutes);
 app.route('/read', viewerRoutes);
 app.route('/store', storeRoutes);
 
+// Dashboard (Move higher to avoid regex collision)
+app.get('/dashboard', (c) => {
+  return c.html(dashboardPage(c.env.APP_URL));
+});
+
 // Landing page, Custom Store Root, or Custom Book Root
 app.get('/', async (c) => {
   const book = c.get('book');
@@ -85,7 +90,7 @@ app.get('/', async (c) => {
 });
 
 // Custom Store Pages (Privacy, Terms, Contact)
-app.get('/:page(privacy|terms|contact)', async (c) => {
+app.get('/p/:page(privacy|terms|contact)', async (c) => {
   const storeUser = c.get('storeUser');
   if (!storeUser) return c.notFound();
 
@@ -110,10 +115,7 @@ app.get('/:page(privacy|terms|contact)', async (c) => {
   return c.html(contentPage(storeUser, title, content, c.env.APP_URL, true));
 });
 
-// Dashboard
-app.get('/dashboard', (c) => {
-  return c.html(dashboardPage(c.env.APP_URL));
-});
+
 
 function landingPage(appUrl: string): string {
   return `<!DOCTYPE html>
@@ -201,12 +203,14 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:20px 4
 .pricing{padding:120px 40px;background:var(--bg-secondary);position:relative;z-index:1}
 .pricing h2{font-family:'Rajdhani',sans-serif;text-align:center;font-size:42px;font-weight:700;margin-bottom:70px;letter-spacing:-0.5px}
 .p-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px;max-width:1200px;margin:0 auto}
-.p-card{background:var(--bg-card);border:2px solid var(--border);border-radius:24px;padding:40px;transition:all .4s;position:relative;overflow:hidden}
+.p-card{background:var(--bg-card);border:2px solid var(--border);border-radius:24px;padding:40px;transition:all .4s;position:relative}
 .p-card::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,var(--glow-cyan),transparent);opacity:0;animation:rotate 4s linear infinite;pointer-events:none}
 .p-card:hover::after{opacity:0.1}
 @keyframes rotate{to{transform:rotate(360deg)}}
 .p-card.pop{border-color:var(--accent-cyan);box-shadow:0 0 40px var(--glow-cyan);position:relative}
-.p-card.pop::before{content:'POPULAR';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;font-size:11px;font-weight:700;padding:6px 18px;border-radius:50px;letter-spacing:1.5px;box-shadow:0 4px 20px var(--glow-cyan)}
+.p-card.pop::before{content:'POPULAR';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;font-size:11px;font-weight:700;padding:6px 18px;border-radius:50px;letter-spacing:1.5px;box-shadow:0 4px 20px var(--glow-cyan);z-index:2}
+:root[data-theme="dark"] .btn-primary{color:var(--bg-primary)}
+:root[data-theme="light"] .btn-primary{color:#fff}
 .p-card:hover{transform:translateY(-8px);border-color:var(--accent-magenta);box-shadow:0 20px 60px var(--shadow)}
 .p-name{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;letter-spacing:1px}
 .p-price{font-size:48px;font-weight:800;margin:20px 0;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -230,7 +234,7 @@ footer a:hover{color:var(--accent-magenta)}
 <i class="fas fa-sun" id="theme-icon"></i>
 </div>
 <a href="/dashboard" class="btn btn-outline">Login</a>
-<a href="/dashboard" class="btn btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
+<a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
 </div>
 </nav>
 
@@ -238,7 +242,7 @@ footer a:hover{color:var(--accent-magenta)}
 <h1>Turn Your Books into <span class="grad">Stunning Flipbooks</span></h1>
 <p>Upload a PDF or EPUB, get a shareable link instantly. Your readers experience a beautiful page-flipping book — right in their browser, on any device.</p>
 <div class="hero-btns">
-<a href="/dashboard" class="btn btn-primary"><i class="fas fa-rocket"></i> Start Free</a>
+<a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Start Free</a>
 <a href="#features" class="btn btn-outline"><i class="fas fa-play-circle"></i> See How It Works</a>
 </div>
 </section>
@@ -277,7 +281,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <li>1 published book</li><li>5 MB max file size</li><li>500 monthly views</li>
 <li>Bookstore page</li><li>Basic analytics</li>
 </ul>
-<a href="/dashboard" class="btn btn-outline" style="width:100%;justify-content:center">Get Started</a>
+<a href="/dashboard?mode=register" class="btn btn-outline" style="width:100%;justify-content:center">Get Started</a>
 </div>
 <div class="p-card">
 <div class="p-name">Basic</div>
