@@ -25,8 +25,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           #spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; transform: translateX(-50%); background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0) 100%); pointer-events: none; z-index: 50; mix-blend-mode: multiply; }
           @media(max-width:768px){ #spine { display: none; } }
           
-          .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s ease; cursor: pointer; border: none !important; outline: none !important; }
-          .c-v { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; box-shadow: -15px 15px 60px rgba(0,0,0,0.8); background: #111111; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0; font-weight: bold; overflow: hidden; border: none !important; }
+          .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s ease; cursor: pointer; border: none !important; outline: none !important; background: transparent; }
+          .c-v { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0; font-weight: bold; overflow: hidden; border: none !important; }
           .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #333, #111, #333); border-radius: 4px 0 0 4px; }
           
           .a-f-o { animation: fO 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; pointer-events: none; }
@@ -46,8 +46,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .f-n { display: block !important; width: 50%; right: 0; transform-origin: left; animation: fn 0.8s forwards; }
           @keyframes fn { 0% { transform: rotateY(0); } 100% { transform: rotateY(-180deg); } }
           
-          .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; transition: all 0.4s; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); color: white; }
-          .ft { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; height: 48px; display: flex; align-items: center; justify-content: center; gap: 40px; transition: all 0.4s; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+          .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 1500; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; transition: all 0.4s; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); color: white; }
+          .ft { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1500; height: 48px; display: flex; align-items: center; justify-content: center; gap: 40px; transition: all 0.4s; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
           .ft.open-state { opacity: 1; pointer-events: auto; }
           
           /* Tabs */
@@ -98,7 +98,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           @media(max-width:768px){ #b-v { border-right: none; } #f-l { display:none; } }
   
           /* Chat Sidebar */
-          #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
+          #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
+          @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
           #chat-w.o { right: 0; }
           .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
           .chat-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); }
@@ -134,8 +135,11 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .hl-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s; }
           .hl-btn:hover { transform: scale(1.2); border-color: white; }
           
-          .del-btn { opacity: 0; transition: opacity 0.2s; background: transparent; border: none; color: #ff5252; cursor: pointer; font-size: 12px; padding: 4px; }
-          .search-item:hover .del-btn, .chat-m:hover .del-btn { opacity: 1; }
+          .del-btn, .edit-btn { opacity: 0.8 !important; transition: opacity 0.2s; background: transparent; border: none; cursor: pointer; font-size: 11px; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+          @media (min-width: 1024px) { .del-btn, .edit-btn { opacity: 0.4 !important; } }
+          .del-btn { color: #ff5252; }
+          .edit-btn { color: ${accent}; }
+          .chat-item:hover .del-btn, .chat-item:hover .edit-btn { opacity: 1 !important; background: rgba(255,255,255,0.05); }
 
           @media(max-width:768px){ 
               #chat-w { width: 100vw !important; right: -100vw !important; border-left: none; } 
@@ -148,8 +152,11 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           }
           @media(min-width:769px) {
               .swipe-del { display: none !important; }
-              .del-btn { opacity: 1 !important; color: #ff5252; background: rgba(255, 82, 82, 0.1); border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-left: 8px; transition: 0.2s; }
+              .del-btn, .edit-btn { opacity: 1 !important; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-left: 8px; transition: 0.2s; background: rgba(255,255,255,0.05); }
+              .del-btn { color: #ff5252; }
               .del-btn:hover { background: #ff5252; color: white; }
+              .edit-btn { color: ${accent}; }
+              .edit-btn:hover { background: ${accent}; color: white; }
           }
           #pi { transition: opacity 0.5s; opacity: 0; }
           #pi.v { opacity: 0.7; }
@@ -191,32 +198,32 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       </div>
   
       <div id="detect-zone-top"></div>
-      <header class="hdr" id="main-hdr">
+      <header class="hdr" id="main-hdr" onclick="event.stopPropagation()">
           <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
               <div class="flex items-center gap-2 min-w-0">
                   ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
                   <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
               </div>
           </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
               
               <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
-                  <button onclick="zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
+                  <button onclick="event.stopPropagation();zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                   <span id="z-v" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</span>
-                  <button onclick="zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
+                  <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
               </div>
 
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-m')" title="Settings"><i class="fas fa-palette text-xs"></i></button>
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" onclick="toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleModal('bg-m')" title="Settings"><i class="fas fa-palette text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
           </div>
       </header>
   
       <div id="s-c">
           <div id="c-b" class="c-b" onclick="openBook()">
               <div class="c-v" id="c-v-inner">
-                  ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">READ NOW</span></div>'}
+                  ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:contain;background:transparent;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">READ NOW</span></div>'}
               </div>
           </div>
           <div id="back-c" class="c-b !hidden" onclick="openFromBack()">
@@ -239,13 +246,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       </div>
   
       <div id="detect-zone-bottom"></div>
-      <div id="nav-l" class="fixed top-[50px] bottom-[50px] left-0 w-[15%] z-[80] cursor-pointer" onclick="prev()"></div>
-      <div id="nav-r" class="fixed top-[50px] bottom-[50px] right-0 w-[15%] z-[80] cursor-pointer" onclick="next()"></div>
-      <footer class="ft" id="main-ft">
-          <button class="ib rounded-full" onclick="prev()"><i class="fas fa-chevron-left"></i></button>
+      <div id="nav-l" class="fixed top-[50px] bottom-[50px] left-0 w-[15%] z-[600] cursor-pointer" onclick="event.stopPropagation();prev()"></div>
+      <div id="nav-r" class="fixed top-[50px] bottom-[50px] right-0 w-[15%] z-[600] cursor-pointer" onclick="event.stopPropagation();next()"></div>
+      <footer class="ft" id="main-ft" onclick="event.stopPropagation()">
+          <button class="ib rounded-full" onclick="event.stopPropagation();prev()"><i class="fas fa-chevron-left"></i></button>
           <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase">Page -- / --</div>
-          <button class="ib rounded-full" onclick="next()"><i class="fas fa-chevron-right"></i></button>
-          <button class="ib rounded-full !ml-2" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+          <button class="ib rounded-full" onclick="event.stopPropagation();next()"><i class="fas fa-chevron-right"></i></button>
+          <button class="ib rounded-full !ml-2" onclick="event.stopPropagation();toggleChat()"><i class="fas fa-comment-dots"></i></button>
       </footer>
   
       <div id="chat-w">
@@ -400,6 +407,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           let highlights = [];
           try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
           let syn = window.speechSynthesis, utter, speaking=false;
+          let startingIndex = 0;
   
           async function init(){
               try {
@@ -606,12 +614,21 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           function openBook() {
               const cb = document.getElementById('c-b');
               const bt = document.getElementById('b-t');
-              cb.classList.add('a-f-o');
-              setTimeout(() => {
-                  cb.style.display = 'none';
-                  bt.classList.add('open');
-                  document.getElementById('pi').classList.add('v'); // Show page number
-              }, 800);
+               cb.classList.add('a-f-o');
+               setTimeout(() => {
+                   cb.style.display = 'none';
+                   bt.classList.add('open');
+                   document.getElementById('pi').classList.add('v'); // Show page number
+                   
+                   // Skip cover/blank page if at start
+                   const loc = rend.currentLocation();
+                   if(loc && loc.start && loc.start.index === 0) {
+                      rend.next();
+                      startingIndex = 1;
+                   } else {
+                      startingIndex = loc ? loc.start.index : 0;
+                   }
+               }, 800);
           }
   
           function toggleLayout() {
@@ -705,6 +722,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               document.getElementById('chat-footer').style.display = tabId === 'chat-highlights' ? 'none' : 'flex';
           };
   
+          let editingNoteIndex = -1;
           window.renderNotes = () => {
               const b = document.getElementById('chat-notes');
               if(!b) return;
@@ -717,18 +735,30 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                   if(legacy) notes = [{text: legacy, time: 'Legacy'}];
               }
               b.innerHTML = notes.map((n, i) => 
-                  '<div class=\"search-item flex justify-between items-start group w-full\">' +
+                  '<div class=\"chat-item flex justify-between items-start group w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/5\">' +
                   '<div class=\"flex-1 pr-2\">' +
-                  '<div class=\"w-2 h-2 rounded-full mb-2\" style=\"background: #ffffff\"></div>' +
-                  '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full\" style=\"border-left: 2px solid #ffffff; padding-left: 8px\">' + n.text.replace(/\\n/g, '<br>') + '</p>' +
-                  '<p class=\"text-[9px] opacity-40 mt-1 pl-2\">' + n.time + '</p></div>' +
-                  '<div class=\"flex shrink-0\">' +
-                  '<div class=\"swipe-del\" onclick=\"deleteNote(' + i + ')\"><i class=\"fas fa-trash\"></i></div>' +
-                  '<button class=\"del-btn\" onclick=\"deleteNote(' + i + ')\" title=\"Delete Note\"><i class=\"fas fa-trash\"></i></button>' +
+                  '<div class=\"flex items-center gap-2 mb-2\">' +
+                      '<div class=\"w-1.5 h-1.5 rounded-full bg-white/40\"></div>' +
+                      '<span class=\"text-[9px] opacity-30\">' + n.time + '</span>' +
+                  '</div>' +
+                  '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full whitespace-pre-wrap\">' + n.text + '</p></div>' +
+                  '<div class=\"flex gap-1 shrink-0 ml-2\">' +
+                  '<button class=\"edit-btn\" onclick=\"window.editNote(' + i + ')\" title=\"Edit Note\"><i class=\"fas fa-edit\"></i></button>' +
+                  '<button class=\"del-btn\" onclick=\"window.deleteNote(' + i + ')\" title=\"Delete Note\"><i class=\"fas fa-trash text-[10px]\"></i></button>' +
                   '</div>' +
                   '</div>'
               ).join('');
               b.scrollTop = b.scrollHeight;
+          };
+
+          window.editNote = (i) => {
+              let notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
+              if(!notes[i]) return;
+              const input = document.getElementById('chat-i');
+              input.value = notes[i].text;
+              input.focus();
+              editingNoteIndex = i;
+              document.querySelector('#chat-footer .chat-s i').className = 'fas fa-check';
           };
           
           window.deleteNote = (i) => {
@@ -900,7 +930,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               if(!rend || isAnimating) return;
               const loc = rend.currentLocation();
               if(!loc) return;
-              if(d === 'p' && loc.atStart && loc.start.index <= 0) { closeToFront(); return; }
+              
+              // Closing to cover logic
+              const isTrulyAtStart = loc.atStart && (loc.start.index <= startingIndex);
+              if(d === 'p' && isTrulyAtStart) {
+                  closeToFront();
+                  return;
+              }
               if(d === 'n' && loc.atEnd && loc.end.index >= book.spine.length - 1) { closeToBack(); return; }
               isAnimating = true;
               const mobile = window.innerWidth < 768;
@@ -976,7 +1012,15 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                       const legacy = localStorage.getItem('fr_nt_'+FU);
                       if(legacy) notes = [{text: legacy, time: 'Legacy'}];
                   }
-                  notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+                  
+                  if(editingNoteIndex > -1) {
+                      notes[editingNoteIndex].text = v;
+                      editingNoteIndex = -1;
+                      document.querySelector('#chat-footer .chat-s i').className = 'fas fa-paper-plane';
+                  } else {
+                      notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+                  }
+                  
                   localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
                   i.value = '';
                   renderNotes();

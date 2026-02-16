@@ -28,7 +28,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; }
         .c-b:hover { transform: scale(1.03) rotateY(-5deg); }
-        .c-v { width: 100%; height: 100%; object-fit: cover; border-radius: 2px 4px 4px 2px; box-shadow: -15px 15px 40px rgba(0,0,0,0.5); background: ${accent}; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; font-weight: bold; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .c-v { width: 100%; height: 100%; object-fit: contain; border-radius: 2px 4px 4px 2px; box-shadow: -15px 15px 40px rgba(0,0,0,0.5); background: ${accent}; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; font-weight: bold; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
         .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #444, #222, #444); border-radius: 4px 0 0 4px; }
         
         .a-f-o { animation: fO 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
@@ -155,7 +155,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <div id="s-c">
         <div id="c-b" class="c-b" onclick="openBook()">
             <div class="c-v" id="c-v-inner">
-                ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">FLIP TO OPEN</span></div>'}
+                ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:contain;background:#1a1a1a;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">FLIP TO OPEN</span></div>'}
             </div>
         </div>
         <div id="b-t">
@@ -296,7 +296,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                         const cv = document.createElement('canvas');
                         cv.width = vp.width; cv.height = vp.height;
                         await pg.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
-                        document.getElementById('c-v-inner').innerHTML = \`<img src="\${cv.toDataURL()}" style="width:100%;height:100%;object-fit:cover;">\`;
+                        document.getElementById('c-v-inner').innerHTML = \`<img src="\${cv.toDataURL()}" style="width:100%;height:100%;object-fit:contain;background:#1a1a1a;">\`;
                     }
                     
                     const lpg = await this.pdf.getPage(this.tp);

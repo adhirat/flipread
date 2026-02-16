@@ -72,9 +72,9 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         }
         #toc-menu.open { opacity: 1; pointer-events: auto; }
         #toc-panel {
-            position: absolute; right: 0; top: 0; bottom: 0; width: 320px; max-width: 80vw;
-            background: white; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; flex-direction: column;
+            position: absolute; left: 0; top: 0; bottom: 0; width: 320px; max-width: 80vw;
+            background: white; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.1);
         }
         #toc-menu.open #toc-panel { transform: translateX(0); }
         
@@ -99,7 +99,8 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .hl-btn:hover { transform: scale(1.2); border-color: white; }
 
         /* Chat Sidebar */
-        #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
+        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
+        @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
         #chat-w.o { right: 0; }
         .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
@@ -109,11 +110,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .chat-tab-c { display: none; width: 100%; flex-direction: column; gap: 12px; }
         .chat-tab-c.active { display: flex; }
         .chat-item { background: white; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
-        .chat-del { position: absolute; top: 8px; right: 8px; opacity: 0; color: #ef4444; cursor: pointer; transition: 0.2s; }
-        .chat-item:hover .chat-del { opacity: 1; }
+        .chat-del, .chat-edit { opacity: 0.6; cursor: pointer; transition: 0.2s; padding: 4px; }
+        @media (min-width: 1024px) { .chat-del, .chat-edit { opacity: 0; } }
+        .chat-del { color: #ef4444; }
+        .chat-edit { color: var(--accent); }
+        .chat-item:hover .chat-del, .chat-item:hover .chat-edit { opacity: 1; }
         
         .chat-f { padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; background: rgba(0,0,0,0.02); }
-        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; }
+        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; }
         .chat-s { width: 40px; border-radius: 8px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
         
         /* Loading */
@@ -153,6 +157,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <nav id="sticky-nav">
         <div id="nav-content">
             <div class="flex items-center gap-3 min-w-0 flex-1 mr-2">
+                 <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 transition shrink-0" onclick="toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
                  ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
                  <div id="nav-title" class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
             </div>
@@ -160,10 +165,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <a href="?mode=standard" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 p-2 sm:px-3 sm:py-1.5 rounded-full transition flex items-center gap-2" title="Return to Standard View">
                     <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Standard</span>
                 </a>
-                <div class="nav-btn" onclick="toggleTOC()">
-                    <i class="fas fa-list-ul"></i>
-                    <span class="hidden sm:inline">Contents</span>
-                </div>
                 <div class="nav-btn" onclick="toggleSettings()">
                     <i class="fas fa-font"></i>
                     <span class="hidden sm:inline">Aa</span>
@@ -209,7 +210,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             </div>
         </div>
         <div class="chat-f" id="chat-footer">
-            <input type="text" id="chat-i" placeholder="Add a note..." class="chat-i" onkeydown="if(event.key==='Enter') sendNote()">
+            <textarea id="chat-i" placeholder="Add a multi-line note..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNote()}"></textarea>
             <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
@@ -492,6 +493,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         };
         
         // --- Notes Logic ---
+        let editingNoteIndex = -1;
         window.sendNote = () => {
             const i = document.getElementById('chat-i'), v = i.value.trim();
             if(!v) return;
@@ -499,7 +501,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             try { 
                 notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
             } catch(e) {}
-            notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+            
+            if(editingNoteIndex > -1) {
+                notes[editingNoteIndex].text = v;
+                editingNoteIndex = -1;
+                document.querySelector('#chat-footer .chat-s i').className = 'fas fa-paper-plane';
+            } else {
+                notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+            }
             localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
             i.value = '';
             renderNotes();
@@ -512,12 +521,27 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
              b.innerHTML = notes.map((n, i) => 
                  '<div class=\"chat-item\">' +
-                 '<p>' + n.text + '</p>' +
-                 '<span class=\"text-[10px] opacity-40 mt-2 block\">' + n.time + '</span>' +
-                 '<i class=\"fas fa-trash chat-del\" onclick=\"deleteNote('+i+')\"></i>' +
+                 '<p class=\"whitespace-pre-wrap\">' + n.text + '</p>' +
+                 '<div class=\"flex justify-between items-center mt-2\">' +
+                     '<span class=\"text-[10px] opacity-40\">' + n.time + '</span>' +
+                     '<div class=\"flex gap-2\">' +
+                         '<i class=\"fas fa-edit chat-edit\" onclick=\"editNote('+i+')\"></i>' +
+                         '<i class=\"fas fa-trash chat-del\" onclick=\"deleteNote('+i+')\"></i>' +
+                     '</div>' +
+                 '</div>' +
                  '</div>'
              ).join('');
              b.scrollTop = b.scrollHeight;
+        };
+
+        window.editNote = (i) => {
+             let notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
+             if(!notes[i]) return;
+             const input = document.getElementById('chat-i');
+             input.value = notes[i].text;
+             input.focus();
+             editingNoteIndex = i;
+             document.querySelector('#chat-footer .chat-s i').className = 'fas fa-check';
         };
         
         window.deleteNote = (i) => {
