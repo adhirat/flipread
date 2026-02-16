@@ -137,6 +137,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .set-btn:hover { background: white; shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .set-val { font-size: 0.8rem; font-weight: 600; min-width: 40px; text-align: center; }
         select.set-sel { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.85rem; outline: none; }
+
+        @media(max-width:768px){ 
+            #standard-btn, #notes-btn { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -162,14 +166,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                  <div id="nav-title" class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
             </div>
             <div class="flex items-center gap-1 sm:gap-3 shrink-0">
-                <a href="?mode=standard" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 p-2 sm:px-3 sm:py-1.5 rounded-full transition flex items-center gap-2" title="Return to Standard View">
+                <a href="?mode=standard" id="standard-btn" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 p-2 sm:px-3 sm:py-1.5 rounded-full transition flex items-center gap-2" title="Return to Standard View">
                     <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Standard</span>
                 </a>
                 <div class="nav-btn" onclick="toggleSettings()">
                     <i class="fas fa-font"></i>
                     <span class="hidden sm:inline">Aa</span>
                 </div>
-                <div class="nav-btn" onclick="toggleChat()">
+                <div class="nav-btn" id="notes-btn" onclick="toggleChat()">
                     <i class="fas fa-pen-fancy"></i>
                     <span class="hidden sm:inline">Notes</span>
                 </div>
@@ -237,6 +241,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <option value="Arial, sans-serif">Sans-Serif (Arial)</option>
                 <option value="Courier New, monospace">Monospace</option>
             </select>
+        </div>
+        <div class="md:hidden pt-4 border-t border-gray-100 flex flex-col gap-3">
+             <button onclick="toggleChat();toggleSettings()" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[11px] font-bold uppercase tracking-wider transition">
+                <i class="fas fa-pen-fancy mr-2"></i> Open Notes
+             </button>
+             <a href="?mode=standard" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[11px] font-bold uppercase tracking-wider transition text-center">
+                <i class="fas fa-book-open mr-2"></i> Standard View
+             </a>
         </div>
     </div>
 

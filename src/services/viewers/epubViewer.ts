@@ -140,10 +140,45 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .del-btn { color: #ff5252; }
           .edit-btn { color: ${accent}; }
           .chat-item:hover .del-btn, .chat-item:hover .edit-btn { opacity: 1 !important; background: rgba(255,255,255,0.05); }
+          #zoom-cluster { display: flex; }
+          #tts-btn { display: flex; }
+          
+          .side-nav {
+              position: fixed;
+              top: 50.5%;
+              transform: translateY(-50%);
+              z-index: 1000;
+              width: 44px;
+              height: 44px;
+              background: rgba(255,255,255,0.05);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255,255,255,0.1);
+              border-radius: 50%;
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              opacity: 0.3;
+          }
+          .side-nav:hover {
+              opacity: 1;
+              background: rgba(255,255,255,0.15);
+              transform: translateY(-50%) scale(1.1);
+          }
+          #side-prev { left: 24px; }
+          #side-next { right: 24px; }
+          @media(max-width:768px) {
+              .side-nav { width: 36px; height: 36px; opacity: 0.15; }
+              #side-prev { left: 12px; }
+              #side-next { right: 12px; }
+          }
 
           @media(max-width:768px){ 
               #chat-w { width: 100vw !important; right: -100vw !important; border-left: none; } 
               #chat-w.o { right: 0 !important; }
+              #zoom-cluster, #tts-btn, #search-btn { display: none !important; }
               
               /* Swipe Actions */
               .search-item, .chat-m { transition: transform 0.2s; touch-action: pan-y; position: relative; }
@@ -165,21 +200,40 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   <body class="fit-mode">
       <div id="texture-overlay"></div>
       <script>
-        // Touch Handlers for Swipe Deletion
-        let ts=0;
-        document.addEventListener('touchstart', e => { ts = e.touches[0].clientX; }, {passive: true});
+        // Touch Handlers for Swipe Deletion & Page Flipping
+        let ts=0, ty=0;
+        document.addEventListener('touchstart', e => { 
+            ts = e.touches[0].clientX; 
+            ty = e.touches[0].clientY;
+        }, {passive: true});
+        
         document.addEventListener('touchmove', e => {
             if(!ts) return;
             const te = e.touches[0].clientX;
             const diff = ts - te;
-            if(Math.abs(diff) < 10) return;
-            
             const el = e.target.closest('.search-item') || e.target.closest('.chat-m');
-            if(el) {
+            if(el && Math.abs(diff) > 10) {
                 if(diff > 50) el.classList.add('swiped');
                 else if(diff < -50) el.classList.remove('swiped');
             }
-            ts = 0;
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            if(!ts) return;
+            const te = e.changedTouches[0].clientX;
+            const tye = e.changedTouches[0].clientY;
+            const dx = ts - te;
+            const dy = ty - tye;
+            
+            // horizontal swipe threshold = 50px, must be more horizontal than vertical
+            if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                // Check if we swiped on a chat/search item
+                const el = e.target.closest('.search-item') || e.target.closest('.chat-m') || e.target.closest('#chat-w') || e.target.closest('.modal-c');
+                if(!el) {
+                    if(dx > 0) next(); else prev();
+                }
+            }
+            ts = 0; ty = 0;
         }, {passive: true});
       </script>
       <div id="hl-menu">
@@ -209,7 +263,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
               
-              <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+              <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
                   <button onclick="event.stopPropagation();zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                   <span id="z-v" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</span>
                   <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
@@ -248,11 +302,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <div id="detect-zone-bottom"></div>
       <div id="nav-l" class="fixed top-[50px] bottom-[50px] left-0 w-[15%] z-[600] cursor-pointer" onclick="event.stopPropagation();prev()"></div>
       <div id="nav-r" class="fixed top-[50px] bottom-[50px] right-0 w-[15%] z-[600] cursor-pointer" onclick="event.stopPropagation();next()"></div>
+      <button id="side-prev" class="side-nav" onclick="event.stopPropagation();prev()"><i class="fas fa-chevron-left text-xs"></i></button>
+      <button id="side-next" class="side-nav" onclick="event.stopPropagation();next()"><i class="fas fa-chevron-right text-xs"></i></button>
+
       <footer class="ft" id="main-ft" onclick="event.stopPropagation()">
-          <button class="ib rounded-full" onclick="event.stopPropagation();prev()"><i class="fas fa-chevron-left"></i></button>
           <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase">Page -- / --</div>
-          <button class="ib rounded-full" onclick="event.stopPropagation();next()"><i class="fas fa-chevron-right"></i></button>
-          <button class="ib rounded-full !ml-2" onclick="event.stopPropagation();toggleChat()"><i class="fas fa-comment-dots"></i></button>
+          <button class="ib rounded-full" onclick="event.stopPropagation();toggleChat()"><i class="fas fa-comment-dots"></i></button>
+          <button class="ib rounded-full" onclick="event.stopPropagation();toggleModal('bg-m')"><i class="fas fa-palette"></i></button>
       </footer>
   
       <div id="chat-w">
@@ -366,6 +422,23 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                                   <option value="fire">Crackling Fire</option>
                                   <option value="library">Library Ambience</option>
                               </select>
+                          </div>
+                          <!-- Mobile Only Controls -->
+                          <div class="md:hidden pt-4 border-t border-white/5 flex flex-col gap-4">
+                               <div class="flex items-center justify-between">
+                                  <span class="text-[11px]">Text to Speech</span>
+                                  <button onclick="toggleTTS()" class="px-4 py-1.5 bg-white/10 rounded-full text-[10px] font-bold">ACTIVATE</button>
+                              </div>
+                              <div class="flex items-center justify-between">
+                                  <span class="text-[11px]">Container Zoom</span>
+                                  <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
+                                      <button onclick="zoom(-10)" class="px-3 py-1 hover:bg-white/10 text-xs border-r border-white/10">-</button>
+                                      <button onclick="zoom(10)" class="px-3 py-1 hover:bg-white/10 text-xs">+</button>
+                                  </div>
+                              </div>
+                               <button onclick="toggleModal('bg-modal');toggleSearch()" class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition mt-2">
+                                  <i class="fas fa-search mr-2"></i> SEARCH BOOK
+                              </button>
                           </div>
                       </div>
                   </div>

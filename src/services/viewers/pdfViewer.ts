@@ -58,9 +58,11 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         
         .sl{flex:1;max-width:250px;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;outline:none}
         .sl::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:${accent};border-radius:50%;cursor:pointer;box-shadow:0 0 5px rgba(0,0,0,0.5)}
-        .nb{background:rgba(255,255,255,0.1);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .3s;border:none}
-        .nb:hover:not(:disabled){background:rgba(255,255,255,0.23);transform:scale(1.1)}
-        .nb:disabled{opacity:0.2;cursor:not-allowed}
+        .nb{position:fixed;top:50.5%;transform:translateY(-50%);z-index:1000;background:rgba(255,255,255,0.05);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .3s;border:1px solid rgba(255,255,255,0.1);opacity:0.3}
+        .nb:hover:not(:disabled){background:rgba(255,255,255,0.23);transform:translateY(-50%) scale(1.1);opacity:1}
+        .nb:disabled{opacity:0.05;cursor:not-allowed}
+        #pb{left:24px} #nb{right:24px}
+        @media(max-width:768px){.nb{width:36px;height:36px;opacity:0.15} #pb{left:12px} #nb{right:12px}}
         .pi{color:#fff;font-size:11px;min-width:60px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.8);font-weight:600}
         
         .zc{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:12px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
@@ -80,8 +82,9 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         #detect-zone-top, #detect-zone-bottom { position: fixed; left: 0; right: 0; height: 60px; z-index: 95; }
         #detect-zone-top { top: 0; }
         #detect-zone-bottom { bottom: 0; }
+        #zoom-cluster { display: flex; }
 
-        @media(max-width:768px){.zc,#f-btn{display:none!important}}
+        @media(max-width:768px){.zc,#f-btn,#zoom-cluster{display:none!important}}
 
         /* Chat Sidebar */
         #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
@@ -141,7 +144,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-            <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+            <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
                 <button id="zo" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                 <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
                 <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
@@ -163,14 +166,14 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
     </div>
 
+    <button id="pb" class="nb"><i class="fas fa-chevron-left"></i></button>
+    <button id="nb" class="nb"><i class="fas fa-chevron-right"></i></button>
     <div class="ft" id="main-ft">
-        <button id="pb" class="nb"><i class="fas fa-chevron-left"></i></button>
         <div class="flex flex-col items-center gap-1 flex-1 max-w-[300px]">
             <input type="range" id="ps" class="sl" min="0" max="0" value="0">
             <div class="pi" id="pi">-- / --</div>
         </div>
-        <button id="nb" class="nb"><i class="fas fa-chevron-right"></i></button>
-        <button class="nb !ml-2" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
     </div>
 
     <div id="chat-w">
@@ -245,6 +248,19 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                             </select>
                         </div>
                     </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile Only Zoom -->
+                <div class="sm:hidden px-6 pb-6 pt-2 border-t border-white/5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px]">Dynamic Zoom</span>
+                        <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
+                            <button onclick="document.getElementById('zo').click()" class="px-4 py-2 hover:bg-white/10 text-xs border-r border-white/10">-</button>
+                            <button onclick="document.getElementById('zi').click()" class="px-4 py-2 hover:bg-white/10 text-xs">+</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="pt-4 border-t border-white/5 flex flex-col gap-4">
                     <p class="text-[9px] uppercase opacity-40 tracking-widest font-bold text-center mt-2">Personal Desk Integrated</p>
                     <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="toggleChat();toggleModal('bg-modal')">
@@ -447,12 +463,19 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     if(e.key==='ArrowRight') this.pf.flipNext();
                     if(e.key==='f') this.toggleLayout();
                 };
-                let sx=0; document.ontouchstart=e=> { sx=e.touches[0].clientX; };
-                document.ontouchend=e=>{
+                let sx=0, sy=0; 
+                document.addEventListener('touchstart', e => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive: true});
+                document.addEventListener('touchend', e => {
                     if(this.zoom > 1) return;
-                    let dx=sx-e.changedTouches[0].clientX;
-                    if(Math.abs(dx)>50) dx>0?this.pf.flipNext():this.pf.flipPrev();
-                };
+                    let dx = sx - e.changedTouches[0].clientX;
+                    let dy = sy - e.changedTouches[0].clientY;
+                    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                        const el = e.target.closest('#chat-w') || e.target.closest('.modal-c');
+                        if(!el) {
+                            dx > 0 ? this.pf.flipNext() : this.pf.flipPrev();
+                        }
+                    }
+                }, {passive: true});
                 window.onresize = () => this.build();
             }
             toggleLayout() {

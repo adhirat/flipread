@@ -50,8 +50,41 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
         
         .br{position:fixed;bottom:60px;right:15px;z-index:200;font-size:10px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color 0.2s}
         .br:hover{color:rgba(255,255,255,0.6)}
+        #zoom-cluster { display: flex; }
         
-        @media(max-width:768px){.zc,#f-btn{display:none!important}}
+        .side-nav {
+            position: fixed;
+            top: 50.5%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.3;
+        }
+        .side-nav:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-50%) scale(1.1);
+        }
+        #side-prev { left: 24px; }
+        #side-next { right: 24px; }
+        @media(max-width:768px) {
+            .side-nav { width: 36px; height: 36px; opacity: 0.15; }
+            #side-prev { left: 12px; }
+            #side-next { right: 12px; }
+        }
+        
+        @media(max-width:768px){.zc,#f-btn,#zoom-cluster{display:none!important}}
 
         /* Chat Sidebar */
         #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
@@ -88,7 +121,7 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
             <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-            <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+            <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
                 <button id="zo" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                 <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
                 <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
@@ -98,6 +131,9 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
             <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
         </div>
     </header>
+
+    <button id="side-prev" class="side-nav" onclick="prevDoc()"><i class="fas fa-chevron-left text-xs"></i></button>
+    <button id="side-next" class="side-nav" onclick="nextDoc()"><i class="fas fa-chevron-right text-xs"></i></button>
 
     <div id="doc-v">
         <div id="doc-c"></div>
@@ -169,8 +205,20 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
                                 <option value="fire">Crackling Fire</option>
                                 <option value="library">Library Ambience</option>
                             </select>
+                            </select>
                         </div>
                     </div>
+                </div>
+                <!-- Mobile Only Zoom -->
+                <div class="sm:hidden px-6 pb-6 pt-2 border-t border-white/5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px]">Dynamic Zoom</span>
+                        <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
+                            <button onclick="document.getElementById('zo').click()" class="px-4 py-2 hover:bg-white/10 text-xs border-r border-white/10">-</button>
+                            <button onclick="document.getElementById('zi').click()" class="px-4 py-2 hover:bg-white/10 text-xs">+</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="pt-4 border-t border-white/5 flex flex-col gap-4">
                     <p class="text-[9px] uppercase opacity-40 tracking-widest font-bold text-center mt-2">Personal Desk Integrated</p>
                     <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="toggleChat();toggleModal('bg-modal')">
@@ -217,6 +265,27 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
         }
 
         // Zoom Logic
+        function prevDoc() {
+            const container = document.getElementById('doc-v');
+            const pages = document.getElementById('doc-c').children;
+            if(pages.length > 0) {
+                let current = 0;
+                const sTop = container.scrollTop;
+                for(let i=0; i<pages.length; i++) if(pages[i].offsetTop - 100 <= sTop) current = i;
+                if(current > 0) pages[current-1].scrollIntoView({behavior: 'smooth'});
+            }
+        }
+        function nextDoc() {
+            const container = document.getElementById('doc-v');
+            const pages = document.getElementById('doc-c').children;
+            if(pages.length > 0) {
+                let current = 0;
+                const sTop = container.scrollTop;
+                for(let i=0; i<pages.length; i++) if(pages[i].offsetTop - 100 <= sTop) current = i;
+                if(current < pages.length - 1) pages[current+1].scrollIntoView({behavior: 'smooth'});
+            }
+        }
+
         function applyZoom() {
             document.getElementById('doc-c').style.transform = 'scale(' + zoom + ')';
             document.getElementById('ztxt').textContent = Math.round(zoom*100)+'%';
@@ -244,6 +313,41 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
             URL.revokeObjectURL(url);
         };
         window.toggleModal = (id) => document.getElementById(id).classList.toggle('o');
+        
+        // Touch Swiping for Document Pages/Sections
+        let ts=0, ty=0;
+        document.addEventListener('touchstart', e => { ts = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive: true});
+        document.addEventListener('touchend', e => {
+            if(!ts || zoom > 1) return;
+            const te = e.changedTouches[0].clientX;
+            const tye = e.changedTouches[0].clientY;
+            const dx = ts - te;
+            const dy = ty - tye;
+            
+            if(Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
+                const el = e.target.closest('#chat-w') || e.target.closest('.modal-c');
+                if(!el) {
+                    const container = document.getElementById('doc-v');
+                    const pages = document.getElementById('doc-c').children;
+                    if(pages.length > 0) {
+                        // Find current page based on scroll position
+                        let current = 0;
+                        const sTop = container.scrollTop;
+                        for(let i=0; i<pages.length; i++) {
+                            if(pages[i].offsetTop - 100 <= sTop) current = i;
+                        }
+                        
+                        if(dx > 0 && current < pages.length - 1) {
+                            pages[current+1].scrollIntoView({behavior: 'smooth'});
+                        } else if(dx < 0 && current > 0) {
+                            pages[current-1].scrollIntoView({behavior: 'smooth'});
+                        }
+                    }
+                }
+            }
+            ts = 0; ty = 0;
+        }, {passive: true});
+
         window.switchSidebarTab = (el) => {
             const tabId = el.getAttribute('data-tab');
             document.querySelectorAll('#chat-w .chat-tab').forEach(t => t.classList.remove('active'));
