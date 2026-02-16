@@ -28,8 +28,12 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
           /* Override PPTXJS styles slightly to fit */
           .pptx-div { margin: 0 auto !important; margin-bottom: 20px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
           
-          .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);color:#fff;height:50px;z-index:100;position:fixed;top:0;left:0;width:100%;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
-          .ft{display:flex;align-items:center;justify-content:center;gap:15px;padding:10px;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);position:fixed;bottom:0;left:0;width:100%;z-index:100;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+          .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);color:#fff;height:50px;z-index:1500;position:fixed;top:0;left:0;width:100%;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+          .ft{display:flex;align-items:center;justify-content:center;gap:15px;padding:10px;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);position:fixed;bottom:0;left:0;width:100%;z-index:1500;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+          body.light-ui .hdr { background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
+          body.light-ui .ft { background: linear-gradient(to top, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
+          body.light-ui .hdr-i { background: rgba(0,0,0,0.05); color: #1a1a1a; }
+          body.light-ui #ztxt { color: #1a1a1a; }
           
           body.full-mode .hdr { transform: translateY(-100%); opacity: 0; }
           body.full-mode .ft { transform: translateY(100%); opacity: 0; }
@@ -47,7 +51,7 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
           .zc{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:12px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
           .zt{color:#fff;font-size:11px;min-width:35px;text-align:center;font-mono}
           
-          .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(8px)}
+          .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:2500;backdrop-filter:blur(8px)}
           .modal.o{display:flex}
           .modal-c{background:#1c1c1c;border-radius:16px;width:95%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
           .modal-h{padding:18px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center}
@@ -84,6 +88,9 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
           #side-prev { left: 24px; }
           #side-next { right: 24px; }
           @media(max-width:768px) {
+              #ppt-v { padding: 40px 15px; }
+              #ppt-c { width: 92%; margin: 0 auto; }
+              .pptx-div { box-shadow: none !important; }
               .side-nav { width: 36px; height: 36px; opacity: 0.15; }
               #side-prev { left: 12px; }
               #side-next { right: 12px; }
@@ -92,8 +99,8 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
           @media(max-width:768px){.zc,#f-btn,#zoom-cluster{display:none!important}}
   
           /* Chat Sidebar */
-          #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
-          #chat-w.o { right: 0; }
+          #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; color: white; }
+          #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
           .chat-h { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
           .chat-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); }
           .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
@@ -109,9 +116,32 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
           .chat-i:focus { border-color: ${accent}; }
           .chat-s { width: 38px; height: 38px; border-radius: 10px; background: ${accent}; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: transform 0.2s; }
           .chat-s:hover { transform: scale(1.05); }
-      </style>
+        body.light-ui #chat-w { background: rgba(248, 248, 248, 0.95); color: #1a1a1a; border-left-color: rgba(0,0,0,0.1); }
+        body.light-ui .chat-h, body.light-ui .chat-tabs, body.light-ui .chat-export { border-bottom-color: rgba(0,0,0,0.1); }
+        body.light-ui .chat-tab { color: #111; }
+        body.light-ui .chat-m { background: white; color: #333; border-color: rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        body.light-ui .chat-f { background: rgba(0,0,0,0.05); border-top-color: rgba(0,0,0,0.1); }
+        body.light-ui .chat-i { background: #fff; border-color: rgba(0,0,0,0.2); color: #111; }
+        
+        body.light-ui .modal-c { background: #ffffff; color: #1a1a1a; border-color: rgba(0,0,0,0.1); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.15); }
+        body.light-ui .modal-c .tab-btn { color: #555; }
+        body.light-ui .modal-c .tab-btn.active { color: #000; }
+        body.light-ui .modal-c select { background: #f5f5f5; color: #111; border-color: rgba(0,0,0,0.1); }
+        body.light-ui .modal-c .bg-white\/5 { background: rgba(0,0,0,0.05); }
+        body.light-ui .modal-c .border-white\/10 { border-color: rgba(0,0,0,0.1); }
+        body.light-ui .modal-c .text-white\/40, body.light-ui .modal-c .opacity-40 { opacity: 0.6; color: #666; }
+        @media(max-width:768px){ 
+            #bg-modal .modal-c { 
+                width: 100vw !important; 
+                height: 100dvh !important; 
+                max-width: none !important; 
+                max-height: none !important; 
+                border-radius: 0 !important; 
+            }
+        }
+    </style>
   </head>
-  <body class="fit-mode">
+  <body class="fit-mode light-ui" style="background: #ffffff">
       <div id="ld" class="fixed inset-0 bg-black/95 z-[1000] flex flex-col items-center justify-center text-white gap-6">
           <div class="relative w-16 h-16">
               <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
@@ -132,7 +162,7 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                   <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
               </div>
 
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-palette text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-cog text-xs"></i></button>
               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
           </div>
       </header>
@@ -153,6 +183,9 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
               <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Desk</span>
               <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
           </div>
+          <div class="chat-export px-5 py-2 border-b border-white/5 flex justify-end">
+              <button onclick="exportNotes()" class="text-[10px] uppercase font-bold tracking-widest opacity-60 hover:opacity-100 hover:text-${accent} transition"><i class="fas fa-file-export mr-1"></i> Export Data</button>
+          </div>
           <div class="chat-tabs">
               <div class="chat-tab active" data-tab="chat-notes" onclick="switchSidebarTab(this)">Notes</div>
               <div class="chat-tab" data-tab="chat-highlights" onclick="switchSidebarTab(this)">Highlights</div>
@@ -168,50 +201,57 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                   <textarea id="chat-i" placeholder="Add a multi-line note..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNote()}"></textarea>
                   <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
               </div>
-              <button onclick="exportNotes()" class="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] uppercase font-bold tracking-widest transition">
-                  <i class="fas fa-file-export mr-2"></i> Export All Notes
-              </button>
           </div>
       </div>
   
       <div id="bg-modal" class="modal" onclick="toggleModal('bg-modal')">
           <div class="modal-c !w-[450px]" onclick="event.stopPropagation()">
-              <div class="flex border-b border-white/10 px-4">
-                  <div class="tab-btn active" onclick="switchTab(event, 'p-bg')">Appearance</div>
-                  <div class="tab-btn" onclick="switchTab(event, 'p-am')">Experience</div>
+              <div class="flex border-b border-white/10 px-4 items-center justify-between">
+                  <div class="flex overflow-x-auto no-scrollbar">
+                      <div class="tab-btn active" onclick="switchTab(event, 'p-bg')">Appearance</div>
+                      <div class="tab-btn" onclick="switchTab(event, 'p-am')">Experience</div>
+                      <div class="tab-btn" onclick="switchTab(event, 'p-in')">Guide</div>
+                  </div>
+                  <button onclick="toggleModal('bg-modal')" class="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition mr-2">✕</button>
               </div>
               <div class="p-6 overflow-y-auto max-h-[60vh]">
                   <div id="p-bg" class="tab-content active">
                       <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Backgrounds</p>
                       <div class="grid grid-cols-5 gap-3 mb-6">
                         <!-- Light -->
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6', false)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7', false)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)', false)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7', false)"></div>
                         
                         <!-- Dark -->
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50', true)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a', true)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)', true)"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e', true)"></div>
                       </div>
                   </div>
-                  <div id="p-am" class="tab-content">
-                      <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Atmosphere</p>
-                      <div class="flex flex-col gap-4">
-                          <div class="flex flex-col gap-2">
-                              <span class="text-[11px]">Ambient Sound</span>
-                              <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded px-2 py-2 outline-none">
-                                  <option value="none">None (Silent)</option>
-                                  <option value="rain">Gentle Rain</option>
-                                  <option value="fire">Crackling Fire</option>
-                                  <option value="library">Library Ambience</option>
-                              </select>
+                  </div>
+                  <!-- Guide Tab -->
+                  <div id="p-in" class="tab-content">
+                      <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Quick Guide</p>
+                      <div class="flex flex-col gap-4 text-[11px] leading-relaxed opacity-80">
+                          <div class="flex gap-3">
+                              <i class="fas fa-desktop mt-1 text-${accent}"></i>
+                              <p><b>Navigation:</b> Use the side buttons or arrow keys to flip through slides.</p>
                           </div>
+                          <div class="flex gap-3">
+                              <i class="fas fa-magic mt-1 text-${accent}"></i>
+                              <p><b>AI Chat:</b> Click the conversation bubble to ask the AI about the slides, summarize content, or clarify points.</p>
                           </div>
+                          <div class="flex gap-3">
+                              <i class="fas fa-cog mt-1 text-${accent}"></i>
+                              <p><b>Customization:</b> Use this menu to adjust the environment and atmospheric focus sounds.</p>
+                          </div>
+                      </div>
+                  </div>
                           <!-- Mobile Only Zoom -->
                           <div class="md:hidden pt-4 border-t border-white/5 flex flex-col gap-4">
                               <div class="flex items-center justify-between">
@@ -410,7 +450,10 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             ).join('');
               b.scrollTop = b.scrollHeight;
           };
-          window.setBg = (c) => document.body.style.background = c;
+          window.setBg = (c, isDark) => {
+              document.body.style.background = c;
+              document.body.classList.toggle('light-ui', !isDark);
+          };
           window.loadBg = (e) => {
               const f = e.target.files[0];
               if(!f) return;

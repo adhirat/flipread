@@ -33,30 +33,13 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1em; color: #111; }
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
         
-        /* Navigation */
-        #sticky-nav {
-            position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding: 0 20px; height: 60px; display: flex; align-items: center;
-        }
-        #nav-content {
-            width: 100%; max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
-        }
-        #nav-title { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
-        
-        .nav-btn {
-            display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; padding: 8px 16px; border-radius: 20px; background: rgba(0,0,0,0.05);
-            transition: 0.2s;
-        }
-        .nav-btn:hover { background: rgba(0,0,0,0.1); }
-        
         /* Main Content */
-        #content-wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: calc(100vh - 60px); overflow-y: auto; }
+        #content-wrapper { width: 100%; margin: 0 auto; padding: 0; min-height: calc(100vh - 60px); }
         
         /* Dynamic Sections */
+        .page-content { margin: 0; padding: 0; }
         .section-header { 
-            margin-top: 80px; margin-bottom: 40px; padding-bottom: 20px; 
+            margin-top: 0; margin-bottom: 20px; padding: 20px; 
             border-bottom: 1px solid rgba(0,0,0,0.1); 
         }
         .section-header h2 { font-size: 2rem; margin: 0; color: var(--accent); }
@@ -99,9 +82,9 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .hl-btn:hover { transform: scale(1.2); border-color: white; }
 
         /* Chat Sidebar */
-        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
+        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; }
         @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
-        #chat-w.o { right: 0; }
+        #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
         .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
         .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
@@ -129,6 +112,9 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             width: 300px; display: none; flex-direction: column; gap: 16px;
             border: 1px solid rgba(0,0,0,0.05);
         }
+        #nav-content {
+            width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+        }
         #set-m.open { display: flex; }
         .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .set-lbl { font-size: 0.85rem; font-weight: 600; color: #555; }
@@ -141,6 +127,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         @media(max-width:768px){ 
             #standard-btn, #notes-btn { display: none !important; }
         }
+        
+        /* Ensure EPUB canvas/iframe fills space */
+        .epub-container { height: calc(100vh - 60px) !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        #content-wrapper iframe { border: none !important; }
     </style>
 </head>
 <body>
@@ -250,6 +240,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <i class="fas fa-book-open mr-2"></i> Standard View
              </a>
         </div>
+    </div>
+
+    <div id="status-bar" class="hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-4 py-1 text-[10px] font-mono opacity-60 z-[50]">
+        Scroll to navigate • <span id="w-pi">Loading...</span>
     </div>
 
     <script>
@@ -394,10 +388,20 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 flow: "scrolled",
                 manager: "continuous",
                 width: "100%",
-                height: "100%",
-                spread: "none"
+                height: "100%"
             });
             await bookRender.display();
+            
+            // Remove margin/padding from internal EPUB body
+            bookRender.hooks.content.register(contents => {
+                const style = contents.document.createElement('style');
+                style.innerHTML = \`
+                    body { margin: 0 !important; padding: 0 !important; }
+                    html { height: auto !important; margin: 0 !important; padding: 0 !important; }
+                    .epubjs-view { margin: 0 !important; padding: 0 !important; }
+                \`;
+                contents.document.head.appendChild(style);
+            });
             
             // TOC
             const navigation = await book.loaded.navigation;

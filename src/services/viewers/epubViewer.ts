@@ -21,7 +21,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           #s-c.full { inset: 0 !important; height: 100dvh !important; }
           #b-t { position: relative; width: 98%; height: 98%; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease; transform-style: preserve-3d; opacity: 0; pointer-events: none; }
           #b-t.open { opacity: 1; pointer-events: auto; }
-          #b-v { width: 100%; height: 100%; background: white; box-shadow: 0 30px 70px rgba(0,0,0,0.4); position: relative; border-left: 6px solid #e0e0e0; border-right: 6px solid #e0e0e0; transition: transform 0.15s ease, opacity 0.15s ease; }
+          #b-v { width: 100%; height: 100%; background: white; box-shadow: none; position: relative; border-left: 6px solid #e0e0e0; border-right: 6px solid #e0e0e0; transition: transform 0.15s ease, opacity 0.15s ease; }
           #spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; transform: translateX(-50%); background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0) 100%); pointer-events: none; z-index: 50; mix-blend-mode: multiply; }
           @media(max-width:768px){ #spine { display: none; } }
           
@@ -48,6 +48,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           
           .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 1500; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; transition: all 0.4s; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); color: white; }
           .ft { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1500; height: 48px; display: flex; align-items: center; justify-content: center; gap: 40px; transition: all 0.4s; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+          body.light-ui .hdr { background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
+          body.light-ui .ft { background: linear-gradient(to top, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
+          body.light-ui .ib { background: rgba(0,0,0,0.05); color: #1a1a1a; }
+          body.light-ui .ib:hover { background: rgba(0,0,0,0.1); }
           .ft.open-state { opacity: 1; pointer-events: auto; }
           
           /* Tabs */
@@ -78,7 +82,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
           .ib { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: all 0.2s; outline: none !important; background: rgba(255,255,255,0.1); color: white; }
           .ib:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
-          .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 500; display: none; align-items: center; justify-content: center; }
+          .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 2500; display: none; align-items: center; justify-content: center; }
           .modal.o { display: flex; }
           .modal-c { background: #1c1c1c; width: 90%; max-width: 400px; max-height: 85vh; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); color: #eee; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5); }
           @media(min-width:1024px){ 
@@ -95,12 +99,24 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .eb { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
           .eb:hover { background: white; color: black; }
   
-          @media(max-width:768px){ #b-v { border-right: none; } #f-l { display:none; } }
+          @media(max-width:768px){ 
+              #b-t { width: 92%; height: 92%; }
+              #b-v { border: none; box-shadow: none; } 
+              #f-l { display:none; }
+              #bg-m .modal-c { 
+                  width: 100vw !important; 
+                  height: 100dvh !important; 
+                  max-width: none !important; 
+                  max-height: none !important; 
+                  border-radius: 0 !important; 
+              }
+              #bg-m .modal-c .p-6 { max-height: none !important; flex: 1; }
+          }
   
           /* Chat Sidebar */
-          #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5); color: white; }
+          #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; color: white; }
           @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
-          #chat-w.o { right: 0; }
+          #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
           .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
           .chat-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); }
           .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
@@ -117,12 +133,20 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .chat-i:focus { border-color: ${accent}; }
           .chat-s { width: 40px; height: 40px; min-width: 40px; border-radius: 12px; background: ${accent}; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; align-self: flex-end; }
           
-          body.light-ui #chat-w { background: rgba(248, 248, 248, 0.9); color: #1a1a1a; border-left-color: rgba(0,0,0,0.1); }
-          body.light-ui .chat-h, body.light-ui .chat-tabs { border-bottom-color: rgba(0,0,0,0.05); }
+          body.light-ui #chat-w { background: rgba(248, 248, 248, 0.95); color: #1a1a1a; border-left-color: rgba(0,0,0,0.1); }
+          body.light-ui .chat-h, body.light-ui .chat-tabs, body.light-ui .chat-export { border-bottom-color: rgba(0,0,0,0.1); }
           body.light-ui .chat-tab { color: #111; }
-          body.light-ui .chat-m { background: white; color: #333; border-color: rgba(0,0,0,0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-          body.light-ui .chat-f { background: rgba(0,0,0,0.02); border-top-color: rgba(0,0,0,0.05); }
-          body.light-ui .chat-i { background: #fff; border-color: rgba(0,0,0,0.1); color: #111; }
+          body.light-ui .chat-m { background: white; color: #333; border-color: rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          body.light-ui .chat-f { background: rgba(0,0,0,0.05); border-top-color: rgba(0,0,0,0.1); }
+          body.light-ui .chat-i { background: #fff; border-color: rgba(0,0,0,0.2); color: #111; }
+          
+          body.light-ui .modal-c { background: #ffffff; color: #1a1a1a; border-color: rgba(0,0,0,0.1); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.15); }
+          body.light-ui .modal-c .tab-btn { color: #555; }
+          body.light-ui .modal-c .tab-btn.active { color: #000; }
+          body.light-ui .modal-c select { background: #f5f5f5; color: #111; border-color: rgba(0,0,0,0.1); }
+          body.light-ui .modal-c .bg-white\/5 { background: rgba(0,0,0,0.05); }
+          body.light-ui .modal-c .border-white\/10 { border-color: rgba(0,0,0,0.1); }
+          body.light-ui .modal-c .text-white\/40, body.light-ui .modal-c .opacity-40 { opacity: 0.6; color: #666; }
       <style>
           /* ... existing styles ... */
           .hl-yellow { background-color: rgba(255, 235, 59, 0.4); border-bottom: 2px solid #fdd835; cursor: pointer; }
@@ -195,9 +219,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           }
           #pi { transition: opacity 0.5s; opacity: 0; }
           #pi.v { opacity: 0.7; }
+          #nav-l, #nav-r { box-shadow: none !important; -webkit-tap-highlight-color: transparent; outline: none !important; }
       </style>
   </head>
-  <body class="fit-mode">
+  <body class="fit-mode light-ui" style="background: #ffffff">
       <div id="texture-overlay"></div>
       <script>
         // Touch Handlers for Swipe Deletion & Page Flipping
@@ -257,7 +282,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
               <div class="flex items-center gap-2 min-w-0">
                   ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
-                  <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
+                   <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
               </div>
           </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -269,8 +294,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                   <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
               </div>
 
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleModal('bg-m')" title="Settings"><i class="fas fa-palette text-xs"></i></button>
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
           </div>
       </header>
   
@@ -305,19 +329,19 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <button id="side-prev" class="side-nav" onclick="event.stopPropagation();prev()"><i class="fas fa-chevron-left text-xs"></i></button>
       <button id="side-next" class="side-nav" onclick="event.stopPropagation();next()"><i class="fas fa-chevron-right text-xs"></i></button>
 
-      <footer class="ft" id="main-ft" onclick="event.stopPropagation()">
-          <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase">Page -- / --</div>
+      <footer class="ft !justify-between px-6" id="main-ft" onclick="event.stopPropagation()">
+          <button class="ib rounded-full" onclick="event.stopPropagation();toggleModal('bg-m')"><i class="fas fa-cog"></i></button>
+          <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase text-center flex-1">Page -- / --</div>
           <button class="ib rounded-full" onclick="event.stopPropagation();toggleChat()"><i class="fas fa-comment-dots"></i></button>
-          <button class="ib rounded-full" onclick="event.stopPropagation();toggleModal('bg-m')"><i class="fas fa-palette"></i></button>
       </footer>
   
       <div id="chat-w">
           <div class="chat-h">
               <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Desk</span>
-              <div class="flex gap-4">
-                  <button onclick="exportAll()" class="text-[10px] uppercase font-bold tracking-widest opacity-60 hover:opacity-100 hover:text-${accent} transition"><i class="fas fa-file-export mr-1"></i> Export</button>
-                  <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
-              </div>
+              <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
+          </div>
+          <div class="chat-export px-5 py-2 border-b border-white/5 flex justify-end">
+              <button onclick="exportAll()" class="text-[10px] uppercase font-bold tracking-widest opacity-60 hover:opacity-100 hover:text-${accent} transition"><i class="fas fa-file-export mr-1"></i> Export Data</button>
           </div>
           <div class="chat-tabs">
               <div class="chat-tab active" data-tab="chat-notes" onclick="switchSidebarTab(this)">Notes</div>
@@ -360,9 +384,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
       <div id="bg-m" class="modal" onclick="toggleModal('bg-m')">
           <div class="modal-c !w-[450px]" onclick="event.stopPropagation()">
-               <div class="flex border-b border-white/10 px-4">
-                  <div class="tab-btn active" onclick="switchTab(event, 't-ty')">Display</div>
-                  <div class="tab-btn" onclick="switchTab(event, 't-am')">Experience</div>
+               <div class="flex border-b border-white/10 px-4 items-center justify-between">
+                   <div class="flex overflow-x-auto no-scrollbar">
+                       <div class="tab-btn active" onclick="switchTab(event, 't-ty')">Display</div>
+                       <div class="tab-btn" onclick="switchTab(event, 't-am')">Atmosphere</div>
+                       <div class="tab-btn" onclick="switchTab(event, 't-in')">Guide</div>
+                   </div>
+                   <button onclick="toggleModal('bg-m')" class="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition mr-2">✕</button>
                </div>
                <div class="p-6 overflow-y-auto max-h-[60vh]">
                   <!-- Display Tab -->
@@ -868,7 +896,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               document.getElementById(id).classList.add('active');
           }
           window.toggleModal = (id) => document.getElementById(id).classList.toggle('o');
-          function toggleTOC(){ document.getElementById('bg-modal').classList.toggle('o'); }
+          function toggleTOC(){ document.getElementById('toc-m').classList.toggle('o'); }
           function toggleSearch(){ document.getElementById('search-m').classList.toggle('o'); }
           async function doSearch(){
               const q = document.getElementById('s-q').value, res = document.getElementById('s-r');
@@ -982,7 +1010,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
           function setBg(c, isDark){ 
               document.body.style.background = c; document.body.style.backgroundImage = 'none';
-              document.body.classList.toggle('light-ui', isDark);
+              document.body.classList.toggle('light-ui', !isDark);
           }
           function loadBg(e){
               const f = e.target.files[0]; if(!f) return;
