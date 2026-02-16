@@ -27,7 +27,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           
           .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s ease; cursor: pointer; border: none !important; outline: none !important; background: transparent; }
           .c-v { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0; font-weight: bold; overflow: hidden; border: none !important; }
-          .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #333, #111, #333); border-radius: 4px 0 0 4px; }
+        .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #333, #111, #333); border-radius: 4px 0 0 4px; opacity: 0; transition: opacity 0.3s; }
+        .c-b:hover::before { opacity: 1; }
           
           .a-f-o { animation: fO 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; pointer-events: none; }
           .a-f-c { animation: fC 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; }
@@ -55,7 +56,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           .ft.open-state { opacity: 1; pointer-events: auto; }
           
           /* Tabs */
-          .tab-btn { padding: 8px 16px; font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.5; transition: 0.2s; }
+        .tab-btn { padding: 12px 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.7; transition: 0.2s; }
           .tab-btn.active { opacity: 1; border-color: ${accent}; }
           .tab-content { display: none; padding: 20px 0; }
           .tab-content.active { display: block; }
@@ -199,7 +200,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               #side-next { right: 12px; }
           }
 
-          @media(max-width:768px){ 
+          @media(max-width:768px) {
               #chat-w { width: 100vw !important; right: -100vw !important; border-left: none; } 
               #chat-w.o { right: 0 !important; }
               #zoom-cluster, #tts-btn, #search-btn { display: none !important; }
@@ -211,7 +212,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           }
           @media(min-width:769px) {
               .swipe-del { display: none !important; }
-              .del-btn, .edit-btn { opacity: 1 !important; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-left: 8px; transition: 0.2s; background: rgba(255,255,255,0.05); }
+              .del-btn, .edit-btn { opacity: 1 !important; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify: center; margin-left: 8px; transition: 0.2s; background: rgba(255,255,255,0.05); }
               .del-btn { color: #ff5252; }
               .del-btn:hover { background: #ff5252; color: white; }
               .edit-btn { color: ${accent}; }
@@ -277,25 +278,24 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       </div>
   
       <div id="detect-zone-top"></div>
-      <header class="hdr" id="main-hdr" onclick="event.stopPropagation()">
-          <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
-              <div class="flex items-center gap-2 min-w-0">
-                  ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
-                   <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
-              </div>
-          </div>
+       <header class="hdr" id="main-hdr" onclick="event.stopPropagation()">
+           <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
+               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
+               <div class="flex items-center gap-2 min-w-0">
+                   ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+                    <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
+               </div>
+           </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
               
               <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
                   <button onclick="event.stopPropagation();zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                   <span id="z-v" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</span>
-                  <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
-              </div>
-
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
-          </div>
+                   <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
+               </div>
+               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
+           </div>
       </header>
   
       <div id="s-c">
@@ -329,11 +329,17 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <button id="side-prev" class="side-nav" onclick="event.stopPropagation();prev()"><i class="fas fa-chevron-left text-xs"></i></button>
       <button id="side-next" class="side-nav" onclick="event.stopPropagation();next()"><i class="fas fa-chevron-right text-xs"></i></button>
 
-      <footer class="ft !justify-between px-6" id="main-ft" onclick="event.stopPropagation()">
-          <button class="ib rounded-full" onclick="event.stopPropagation();toggleModal('bg-m')"><i class="fas fa-cog"></i></button>
-          <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase text-center flex-1">Page -- / --</div>
-          <button class="ib rounded-full" onclick="event.stopPropagation();toggleChat()"><i class="fas fa-comment-dots"></i></button>
-      </footer>
+       <footer class="ft !justify-between px-4 gap-2" id="main-ft" onclick="event.stopPropagation()">
+           <div class="flex items-center gap-2">
+               <button class="ib rounded-full" onclick="event.stopPropagation();toggleModal('bg-m')" title="Settings"><i class="fas fa-cog"></i></button>
+           </div>
+           
+           <div id="pi" class="text-[10px] opacity-70 font-bold tracking-widest uppercase text-center flex-1 truncate mx-2">Page -- / --</div>
+           
+           <div class="flex items-center gap-2">
+               <button class="ib rounded-full" onclick="event.stopPropagation();toggleChat()" title="Chat"><i class="fas fa-comment-dots"></i></button>
+           </div>
+       </footer>
   
       <div id="chat-w">
           <div class="chat-h">
@@ -390,105 +396,97 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                        <div class="tab-btn" onclick="switchTab(event, 't-am')">Atmosphere</div>
                        <div class="tab-btn" onclick="switchTab(event, 't-in')">Guide</div>
                    </div>
-                   <button onclick="toggleModal('bg-m')" class="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition mr-2">✕</button>
-               </div>
-               <div class="p-6 overflow-y-auto max-h-[60vh]">
-                  <!-- Display Tab -->
-                  <div id="t-ty" class="tab-content active">
-                      <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Typography</p>
-                      <div class="flex flex-col gap-4 mb-8">
-                          <div class="flex items-center justify-between">
-                              <span class="text-[11px]">Font Size</span>
-                              <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                                  <button onclick="changeFontSize(-10)" class="px-3 py-1 hover:bg-white/10 text-xs border-r border-white/10">-</button>
-                                  <span id="fs-v" class="px-3 py-1 text-[10px] min-w-[45px] text-center">100%</span>
-                                  <button onclick="changeFontSize(10)" class="px-3 py-1 hover:bg-white/10 text-xs">+</button>
-                              </div>
-                          </div>
-                          <div class="flex items-center justify-between">
-                              <span class="text-[11px]">Line Height</span>
-                              <input type="range" min="1" max="2.5" step="0.1" value="1.6" oninput="setLH(this.value)" class="w-24 accent-${accent}">
-                          </div>
-                          <div class="flex items-center justify-between">
-                              <span class="text-[11px]">Font Style</span>
-                              <select onchange="setFF(this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded px-2 py-1 outline-none">
-                                  <option value="Georgia, serif">Serif (Georgia)</option>
-                                  <option value="Inter, sans-serif">Sans (Inter)</option>
-                                  <option value="Monaco, monospace">Mono (Clean)</option>
-                                  <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
-                              </select>
-                          </div>
-                      </div>
-                      <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Backgrounds</p>
+                    <button onclick="toggleModal('bg-m')" class="w-8 h-8 flex items-center justify-center opacity-60 hover:opacity-100 transition mr-2 text-lg">✕</button>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[60vh]">
+                   <!-- Display Tab -->
+                   <div id="t-ty" class="tab-content active">
+                       <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Typography</p>
+                        <div class="flex flex-col gap-6 mb-8">
+                           <div class="flex items-center justify-between">
+                               <span class="text-[13px] font-medium opacity-90">Font Size</span>
+                               <div class="flex bg-white/10 rounded-lg overflow-hidden border border-white/20">
+                                   <button onclick="changeFontSize(-10)" class="px-3 py-2 hover:bg-white/10 text-sm border-r border-white/20">-</button>
+                                   <span id="fs-v" class="px-3 py-2 text-[12px] min-w-[50px] text-center font-bold">100%</span>
+                                   <button onclick="changeFontSize(10)" class="px-3 py-2 hover:bg-white/10 text-sm">+</button>
+                               </div>
+                           </div>
+                           <div class="flex items-center justify-between">
+                               <span class="text-[13px] font-medium opacity-90">Line Height</span>
+                               <input type="range" min="1" max="2.5" step="0.1" value="1.6" oninput="setLH(this.value)" class="w-32 accent-${accent} h-2 bg-white/20 rounded-lg appearance-none cursor-pointer">
+                           </div>
+                           <div class="flex items-center justify-between">
+                               <span class="text-[13px] font-medium opacity-90">Font Style</span>
+                               <select onchange="setFF(this.value)" class="bg-black/40 text-[12px] border border-white/20 rounded-lg px-3 py-2 outline-none font-medium">
+                                   <option value="Georgia, serif">Serif (Georgia)</option>
+                                   <option value="Inter, sans-serif">Sans (Inter)</option>
+                                   <option value="Monaco, monospace">Mono (Clean)</option>
+                                   <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
+                               </select>
+                           </div>
+                       </div>
+                       <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Backgrounds</p>
                       <div class="grid grid-cols-6 gap-2 mb-4">
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#f3f0e8" onclick="setBg('#f3f0e8', false)"></div>
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#fafafa" onclick="setBg('#fafafa', false)"></div>
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#111827" onclick="setBg('#111827', true)"></div>
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
-                          <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#000000" onclick="setBg('#000000', true)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#f3f0e8" onclick="setBg('#f3f0e8', false)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#fafafa" onclick="setBg('#fafafa', false)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#111827" onclick="setBg('#111827', true)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
+                           <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" style="background:#000000" onclick="setBg('#000000', true)"></div>
                       </div>
                   </div>
-  
-                  <!-- Experience Tab -->
-                  <div id="t-am" class="tab-content">
-                      <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Atmosphere</p>
-                      <div class="flex flex-col gap-4 mb-6">
-                          <div class="flex items-center justify-between">
-                              <span class="text-[11px]">Night Shift</span>
-                              <button onclick="toggleNight()" id="ns-btn" class="px-4 py-1.5 bg-white/5 rounded-full text-[10px] font-bold uppercase transition">NOT ACTIVE</button>
-                          </div>
-                          <div class="flex items-center justify-between">
-                              <span class="text-[11px]">Paper Texture</span>
-                              <button onclick="toggleTexture()" id="pt-btn" class="px-4 py-1.5 bg-white/5 rounded-full text-[10px] font-bold uppercase transition">OFF</button>
-                          </div>
-                          <div class="flex flex-col gap-2">
-                              <span class="text-[11px]">Ambient Sound</span>
-                              <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded px-2 py-2 outline-none">
+                    <!-- Experience Tab -->
+                   <div id="t-am" class="tab-content">
+                       <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Atmosphere</p>
+                       <div class="flex flex-col gap-6 mb-6">
+                           <div class="flex items-center justify-between">
+                               <span class="text-[13px] font-medium opacity-90">Night Shift</span>
+                               <button onclick="toggleNight()" id="ns-btn" class="px-5 py-2 bg-white/10 rounded-full text-[11px] font-bold uppercase transition hover:bg-white/20">NOT ACTIVE</button>
+                           </div>
+                           <div class="flex items-center justify-between">
+                               <span class="text-[13px] font-medium opacity-90">Paper Texture</span>
+                               <button onclick="toggleTexture()" id="pt-btn" class="px-5 py-2 bg-white/10 rounded-full text-[11px] font-bold uppercase transition hover:bg-white/20">OFF</button>
+                           </div>
+                           <div class="flex flex-col gap-3">
+                               <span class="text-[13px] font-medium opacity-90">Ambient Sound</span>
+                               <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[12px] border border-white/20 rounded-lg px-3 py-3 outline-none font-medium">
                                   <option value="none">None (Silent)</option>
                                   <option value="rain">Gentle Rain</option>
                                   <option value="fire">Crackling Fire</option>
                                   <option value="library">Library Ambience</option>
                               </select>
                           </div>
-                          <!-- Mobile Only Controls -->
-                          <div class="md:hidden pt-4 border-t border-white/5 flex flex-col gap-4">
+                           <!-- Mobile Only Controls -->
+                           <div class="md:hidden pt-6 border-t border-white/10 flex flex-col gap-6">
+                                <div class="flex items-center justify-between">
+                                   <span class="text-[13px] font-medium opacity-90">Text to Speech</span>
+                                   <button onclick="toggleTTS()" class="px-5 py-2 bg-white/10 rounded-full text-[11px] font-bold uppercase transition hover:bg-white/20">ACTIVATE</button>
+                               </div>
                                <div class="flex items-center justify-between">
-                                  <span class="text-[11px]">Text to Speech</span>
-                                  <button onclick="toggleTTS()" class="px-4 py-1.5 bg-white/10 rounded-full text-[10px] font-bold">ACTIVATE</button>
-                              </div>
-                              <div class="flex items-center justify-between">
-                                  <span class="text-[11px]">Container Zoom</span>
-                                  <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                                      <button onclick="zoom(-10)" class="px-3 py-1 hover:bg-white/10 text-xs border-r border-white/10">-</button>
-                                      <button onclick="zoom(10)" class="px-3 py-1 hover:bg-white/10 text-xs">+</button>
-                                  </div>
-                              </div>
-                               <button onclick="toggleModal('bg-modal');toggleSearch()" class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition mt-2">
-                                  <i class="fas fa-search mr-2"></i> SEARCH BOOK
-                              </button>
-                          </div>
+                                   <span class="text-[13px] font-medium opacity-90">Container Zoom</span>
+                                   <div class="flex bg-white/10 rounded-lg overflow-hidden border border-white/20">
+                                       <button onclick="zoom(-10)" class="px-3 py-2 hover:bg-white/10 text-sm border-r border-white/20">-</button>
+                                       <button onclick="zoom(10)" class="px-3 py-2 hover:bg-white/10 text-sm">+</button>
+                                   </div>
+                               </div>
+                                <button onclick="toggleModal('bg-modal');toggleSearch()" class="w-full py-4 bg-white/10 hover:bg-white/20 rounded-xl text-[11px] uppercase font-bold tracking-widest transition mt-2 border border-white/10">
+                                   <i class="fas fa-search mr-2"></i> SEARCH BOOK
+                               </button>
+                           </div>
                       </div>
                   </div>
   
-                  <div class="pt-4 border-t border-white/5 flex flex-col gap-4">
-                      <p class="text-[9px] uppercase opacity-40 tracking-widest font-bold text-center mt-2">Personal Desk Integrated</p>
-                      <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="toggleChat();toggleModal('bg-m')">
-                          <i class="fas fa-comments mr-2"></i> Open Personal Desk
-                      </button>
-                  </div>
-                  
-                  <div class="pt-4 border-t border-white/5 flex gap-2">
-                      <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
-                      <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
-                          <i class="fas fa-image mr-2"></i> Wallpaper
-                      </button>
-                      <a href="?mode=web" class="flex-1 text-center py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition">
-                           <i class="fas fa-globe mr-2"></i> Web View
-                      </a>
-                      <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
-                          <i class="fas fa-undo mr-2"></i> Reset
-                      </button>
+                                      <div class="pt-6 border-t border-white/10 flex gap-3">
+                       <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
+                       <button class="flex-1 py-4 bg-white/10 hover:bg-white/20 rounded-xl text-[11px] uppercase font-bold tracking-widest transition border border-white/10" onclick="document.getElementById('bg-in').click()">
+                           <i class="fas fa-image mr-2"></i> Wallpaper
+                       </button>
+                       <a href="?mode=web" class="flex-1 text-center py-4 bg-white/10 hover:bg-white/20 rounded-xl text-[11px] uppercase font-bold tracking-widest transition border border-white/10">
+                            <i class="fas fa-globe mr-2"></i> Web View
+                       </a>
+                       <button class="flex-1 py-4 bg-white/10 hover:bg-red-500/20 rounded-xl text-[11px] uppercase font-bold tracking-widest transition border border-white/10" onclick="resetSettings()">
+                           <i class="fas fa-undo mr-2"></i> Reset
+                       </button>
                   </div>
                </div>
           </div>
@@ -674,14 +672,16 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               bt.classList.remove('open'); // Hide book before animation
               
               b.style.display = 'block';
-              b.classList.remove('!hidden');
-              b.classList.remove('a-b-h');
-              b.classList.add('a-b-a'); // Show back cover
-              
-              setTimeout(() => {
-                  b.classList.remove('a-b-a');
-              }, 1200);
-          }
+            b.classList.remove('!hidden');
+            b.classList.remove('a-b-h');
+            b.classList.add('a-b-a'); // Show back cover
+            
+            // Ensure buttons are interactable
+            setTimeout(() => {
+                b.style.pointerEvents = 'auto';
+            }, 100);
+        }
+      
           function restartBook() {
               rend.display(0);
               const b = document.getElementById('back-c');

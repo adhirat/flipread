@@ -20,6 +20,12 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;background:${bg};background-size:cover;background-position:center;height:100dvh;width:100vw;position:fixed;transition:background 0.3s ease}
         
+        /* Tabs */
+        .tab-btn { padding: 12px 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.7; transition: 0.2s; }
+        .tab-btn.active { opacity: 1; border-color: ${accent}; }
+        .tab-content { display: none; padding: 20px 0; }
+        .tab-content.active { display: block; }
+        
         #s-c { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 4000px; overflow: hidden; z-index: 10; width: 100vw; height: 100dvh; }
         #s-c.full { inset: 0 !important; z-index: 2000; height: 100dvh !important; }
         #b-t { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease; transform-style: preserve-3d; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
@@ -161,8 +167,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
                 <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
             </div>
-            
-            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-modal')"><i class="fas fa-cog text-xs"></i></button>
             <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
         </div>
     </header>
@@ -180,12 +184,19 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
     <button id="pb" class="nb"><i class="fas fa-chevron-left"></i></button>
     <button id="nb" class="nb"><i class="fas fa-chevron-right"></i></button>
-    <div class="ft" id="main-ft">
+    <div class="ft flex justify-between gap-2 px-4" id="main-ft">
+        <div class="flex items-center gap-2">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-cog"></i></button>
+        </div>
+
         <div class="flex flex-col items-center gap-1 flex-1 max-w-[300px]">
             <input type="range" id="ps" class="sl" min="0" max="0" value="0">
             <div class="pi" id="pi">-- / --</div>
         </div>
-        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+
+        <div class="flex items-center gap-2">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleChat()" title="Chat"><i class="fas fa-comment-dots"></i></button>
+        </div>
     </div>
 
     <div id="chat-w">
@@ -230,33 +241,33 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     <div class="tab-btn" onclick="switchTab(event, 'p-am')">Experience</div>
                     <div class="tab-btn" onclick="switchTab(event, 'p-in')">Guide</div>
                 </div>
-                <button onclick="toggleModal('bg-modal')" class="w-8 h-8 flex items-center justify-center opacity-40 hover:opacity-100 transition mr-2">✕</button>
+                <button onclick="toggleModal('bg-modal')" class="w-8 h-8 flex items-center justify-center opacity-60 hover:opacity-100 transition mr-2 text-lg">✕</button>
             </div>
             <div class="p-6 overflow-y-auto max-h-[60vh]">
                 <div id="p-bg" class="tab-content active">
-                    <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Backgrounds</p>
+                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Backgrounds</p>
                     <div class="grid grid-cols-5 gap-3 mb-6">
                         <!-- Light -->
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6', false)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7', false)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)', false)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7', false)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6', false)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7', false)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)', false)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7', false)"></div>
                         
                         <!-- Dark -->
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50', true)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a', true)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)', true)"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e', true)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50', true)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a', true)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)', true)"></div>
+                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e', true)"></div>
                     </div>
                 </div>
                 <div id="p-am" class="tab-content">
-                    <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Atmosphere</p>
-                    <div class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-2">
-                            <span class="text-[11px]">Ambient Sound</span>
-                            <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[10px] border border-white/10 rounded px-2 py-2 outline-none">
+                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Atmosphere</p>
+                    <div class="flex flex-col gap-6">
+                        <div class="flex flex-col gap-3">
+                            <span class="text-[13px] font-medium opacity-90">Ambient Sound</span>
+                            <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[12px] border border-white/20 rounded-lg px-3 py-3 outline-none font-medium">
                                 <option value="none">None (Silent)</option>
                                 <option value="rain">Gentle Rain</option>
                                 <option value="fire">Crackling Fire</option>
@@ -267,38 +278,34 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 </div>
                 <!-- Guide Tab -->
                 <div id="p-in" class="tab-content">
-                    <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Quick Guide</p>
-                    <div class="flex flex-col gap-4 text-[11px] leading-relaxed opacity-80">
-                        <div class="flex gap-3">
-                            <i class="fas fa-hand-pointer mt-1 text-${accent}"></i>
+                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Quick Guide</p>
+                    <div class="flex flex-col gap-4 text-[13px] leading-relaxed opacity-90">
+                        <div class="flex gap-4">
+                            <i class="fas fa-hand-pointer mt-1 text-${accent} text-lg"></i>
                             <p><b>Navigation:</b> Tap the left or right sides of the screen to turn pages. On desktop, use terminal arrows or mouse.</p>
                         </div>
-                        <div class="flex gap-3">
-                            <i class="fas fa-magic mt-1 text-${accent}"></i>
+                        <div class="flex gap-4">
+                            <i class="fas fa-magic mt-1 text-${accent} text-lg"></i>
                             <p><b>AI Chat:</b> Click the conversation bubble to ask the AI about the document, summarize pages, or clarify text.</p>
                         </div>
-                        <div class="flex gap-3">
-                            <i class="fas fa-cog mt-1 text-${accent}"></i>
+                        <div class="flex gap-4">
+                            <i class="fas fa-cog mt-1 text-${accent} text-lg"></i>
                             <p><b>Customization:</b> Use this menu to adjust background colors and atmospheric focus sounds.</p>
                         </div>
                     </div>
                 </div>
                 <!-- Mobile Only Zoom -->
-                <div class="sm:hidden px-6 pb-6 pt-2 border-t border-white/5">
+                <div class="sm:hidden px-6 pb-6 pt-6 border-t border-white/10">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px]">Dynamic Zoom</span>
-                        <div class="flex bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                            <button onclick="document.getElementById('zo').click()" class="px-4 py-2 hover:bg-white/10 text-xs border-r border-white/10">-</button>
-                            <button onclick="document.getElementById('zi').click()" class="px-4 py-2 hover:bg-white/10 text-xs">+</button>
+                        <span class="text-[13px] font-medium opacity-90">Dynamic Zoom</span>
+                        <div class="flex bg-white/10 rounded-lg overflow-hidden border border-white/20">
+                            <button onclick="document.getElementById('zo').click()" class="px-3 py-2 hover:bg-white/10 text-sm border-r border-white/20">-</button>
+                            <button onclick="document.getElementById('zi').click()" class="px-3 py-2 hover:bg-white/10 text-sm">+</button>
                         </div>
                     </div>
                 </div>
                 <div class="pt-4 border-t border-white/5 flex flex-col gap-4">
-                    <p class="text-[9px] uppercase opacity-40 tracking-widest font-bold text-center mt-2">Personal Desk Integrated</p>
-                    <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="toggleChat();toggleModal('bg-modal')">
-                        <i class="fas fa-comments mr-2"></i> Open Personal Desk
-                    </button>
-                    <a href="?mode=web" class="w-full text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition">
+                    <a href="?mode=web" class="w-full text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs uppercase font-bold tracking-widest transition">
                         <i class="fas fa-globe mr-2"></i> Try Web View (Experimental)
                     </a>
                 </div>
