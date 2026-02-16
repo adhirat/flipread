@@ -133,20 +133,22 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     </div>
 
     <header class="hdr" id="main-hdr">
-        <div class="hdr-l">
-            <button class="hdr-i" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul"></i></button>
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm ml-2" />` : ''}
-            <div class="hdr-t">${safeTitle}</div>
-        </div>
-        <div class="hdr-r">
-            <button class="hdr-i" onclick="toggleModal('bg-modal')"><i class="fas fa-palette"></i></button>
-            <div class="zc">
-                <button class="hdr-i" id="zo" style="width:26px;height:26px;font-size:10px"><i class="fas fa-minus"></i></button>
-                <div class="zt" id="ztxt">100%</div>
-                <button class="hdr-i" id="zi" style="width:26px;height:26px;font-size:10px"><i class="fas fa-plus"></i></button>
-                <button class="hdr-i" onclick="resetZoom()" style="width:26px;height:26px;font-size:10px;opacity:0.6"><i class="fas fa-redo-alt"></i></button>
+        <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul text-sm"></i></button>
+            <div class="flex items-center gap-2 min-w-0">
+                ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+                <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
             </div>
-            <button class="hdr-i" id="m-btn" title="Toggle Layout"><i class="fas fa-expand"></i></button>
+        </div>
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+            <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+                <button id="zo" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
+                <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
+                <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
+            </div>
+            
+            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-modal')"><i class="fas fa-palette text-xs"></i></button>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
         </div>
     </header>
 

@@ -152,13 +152,13 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
     <nav id="sticky-nav">
         <div id="nav-content">
-            <div class="flex items-center gap-3 overflow-hidden">
-                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm" />` : ''}
-                 <div id="nav-title">${safeTitle}</div>
+            <div class="flex items-center gap-3 min-w-0 flex-1 mr-2">
+                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+                 <div id="nav-title" class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="?mode=standard" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 px-3 py-1.5 rounded-full transition flex items-center gap-2" title="Return to View">
-                    <i class="fas fa-book-open"></i> Standard
+            <div class="flex items-center gap-1 sm:gap-3 shrink-0">
+                <a href="?mode=standard" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 p-2 sm:px-3 sm:py-1.5 rounded-full transition flex items-center gap-2" title="Return to Standard View">
+                    <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Standard</span>
                 </a>
                 <div class="nav-btn" onclick="toggleTOC()">
                     <i class="fas fa-list-ul"></i>
@@ -432,7 +432,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                       .hl-purple { background-color: rgba(206, 147, 216, 0.4); }
                   \`;
                   contents.document.head.appendChild(style);
-                  contents.document.body.onclick = () => { document.getElementById('hl-menu').style.display = 'none'; };
+                  contents.document.body.onclick = () => { 
+                      if(contents.window.getSelection().toString().length > 0) return;
+                      document.getElementById('hl-menu').style.display = 'none'; 
+                  };
             });
             
             // Restore Highlights
@@ -545,11 +548,19 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              const b = document.getElementById('hi-list');
              if(!b) return;
              if(highlights.length === 0) { b.innerHTML = ''; return; }
+             
+             const getColorCode = (c) => {
+                 const map = { yellow:'#fdd835', green:'#66bb6a', blue:'#42a5f5', pink:'#ec407a', purple:'#ab47bc' };
+                 return map[c] || map['yellow'];
+             };
+
              b.innerHTML = highlights.map((h, i) => 
-                 '<div class=\"chat-item\">' +
-                 '<div class=\"w-2 h-2 rounded-full mb-2\" style=\"background: var(--hl-' + (h.c||'yellow') + ')\"></div>' +
-                 '<p class=\"italic opacity-80\">\"' + h.t + '\"</p>' +
-                 '<i class=\"fas fa-trash chat-del\" onclick=\"deleteHighlight('+i+')\"></i>' +
+                 '<div class=\"chat-item flex justify-between items-start group cursor-pointer hover:bg-gray-50\" onclick=\"if(bookRender) bookRender.display(\\\'' + h.cfi + '\\\')\">' +
+                 '<div class=\"flex-1\">' +
+                 '<div class=\"w-2 h-2 rounded-full mb-2\" style=\"background: ' + getColorCode(h.c||'yellow') + '\"></div>' +
+                 '<p class=\"text-xs line-clamp-2 italic opacity-80\" style=\"border-left: 2px solid ' + getColorCode(h.c||'yellow') + '; padding-left: 8px\">\"' + h.t + '\"</p>' +
+                 '<p class=\"text-[9px] opacity-40 mt-1\">' + (h.d || '') + '</p></div>' +
+                 '<button class=\"opacity-0 group-hover:opacity-100 transition p-2 text-red-500 hover:text-red-700\" onclick=\"event.stopPropagation();deleteHighlight(' + i + ')\"><i class=\"fas fa-trash\"></i></button>' +
                  '</div>'
              ).join('');
         };

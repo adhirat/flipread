@@ -10,6 +10,8 @@ export function dashboardPage(appUrl: string): string {
 <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <style>
 :root[data-theme="dark"]{
   --bg-primary:#050510;
@@ -115,6 +117,20 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
 .price-display .amount{font-size:36px;font-weight:700;color:inherit}
 .price-display .interval{font-size:14px;color:var(--text-muted);margin-left:2px}
 .billed-text{font-size:12px;color:var(--text-muted);margin-top:4px}
+/* Cropper Modal */
+.crop-modal-content {
+  background: var(--bg-card);
+  padding: 0;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 600px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.crop-area { height: 400px; background: #000; }
+.crop-controls { padding: 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -376,6 +392,23 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
       <div style="display:flex;gap:12px">
         <button onclick="hideModal('delete-modal')" class="btn-outline" style="flex:1">Cancel</button>
         <button onclick="executeDeleteAccount()" class="btn" style="flex:1;background:var(--accent-magenta)">Delete Everything</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crop Logo Modal -->
+  <div id="crop-modal" class="modal">
+    <div class="crop-modal-content">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Crop Logo</h3>
+        <i class="fas fa-times" onclick="cancelCrop()" style="cursor:pointer;color:var(--text-secondary)"></i>
+      </div>
+      <div class="crop-area">
+        <img id="crop-img" style="max-width:100%;display:none">
+      </div>
+      <div class="crop-controls">
+        <button onclick="cancelCrop()" class="btn-outline">Cancel</button>
+        <button onclick="applyCrop()" class="btn">Apply & Upload</button>
       </div>
     </div>
   </div>
@@ -688,19 +721,84 @@ async function saveStoreSettings() {
   }
 }
 
+// Logo Cropping
+let cropper;
+
 async function uploadLogo(e) {
   const file = e.target.files[0];
   if(!file) return;
-  const fd = new FormData();
-  fd.append('logo', file);
-  const res = await fetch(API + '/api/user/store/logo', {
-    method: 'POST', credentials: 'include', body: fd
-  });
-  const data = await res.json();
-  if(data.logo_url) {
-    document.getElementById('st-logo-preview').innerHTML = '<img src="'+esc(data.logo_url)+'" style="width:100%;height:100%;object-fit:cover">';
-    currentUser.store_logo_url = data.logo_url;
-  }
+
+  // 1. Read file to display in cropper
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = document.getElementById('crop-img');
+    img.src = ev.target.result;
+    
+    // Show Modal
+    document.getElementById('crop-modal').style.display = 'flex';
+    img.style.display = 'block';
+
+    // Init Cropper
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(img, {
+      aspectRatio: 1,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 1,
+      restore: false,
+      guides: false,
+      center: false,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false,
+    });
+  };
+  reader.readAsDataURL(file);
+  e.target.value = ''; // Reset input
+}
+
+function cancelCrop() {
+  document.getElementById('crop-modal').style.display = 'none';
+  if(cropper) { cropper.destroy(); cropper = null; }
+}
+
+async function applyCrop() {
+  if(!cropper) return;
+  
+  // Get cropped blob
+  cropper.getCroppedCanvas({ width: 512, height: 512 }).toBlob(async (blob) => {
+    if(!blob) return;
+    
+    // Upload logic
+    const fd = new FormData();
+    fd.append('logo', blob, 'logo.jpg');
+    
+    const btn = document.querySelector('#crop-modal .btn');
+    const oldText = btn.textContent;
+    btn.textContent = 'Uploading...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(API + '/api/user/store/logo', {
+        method: 'POST', credentials: 'include', body: fd
+      });
+      const data = await res.json();
+      
+      if(data.logo_url) {
+        document.getElementById('st-logo-preview').innerHTML = '<img src="'+esc(data.logo_url)+'" style="width:100%;height:100%;object-fit:cover">';
+        currentUser.store_logo_url = data.logo_url;
+        cancelCrop();
+      } else {
+        alert('Upload failed');
+      }
+    } catch(e) {
+      alert('Network error');
+    }
+    
+    btn.textContent = oldText;
+    btn.disabled = false;
+  }, 'image/jpeg', 0.9);
 }
 
 async function checkout(plan) {

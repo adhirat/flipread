@@ -192,21 +192,24 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
       <div id="detect-zone-top"></div>
       <header class="hdr" id="main-hdr">
-          <div class="flex items-center gap-4">
-              <button class="ib" onclick="toggleTOC()"><i class="fas fa-list-ul"></i></button>
-              ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm mr-2" />` : ''}
-              <h1 class="font-bold text-xs truncate max-w-[150px] sm:max-w-none opacity-80">${safeTitle}</h1>
-          </div>
-          <div class="flex items-center gap-2">
-              <button class="ib" onclick="toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up"></i></button>
-              <button class="ib" onclick="toggleModal('bg-m')" title="Reader Settings"><i class="fas fa-palette"></i></button>
-              <div class="flex rounded-full px-2 py-1 gap-2 items-center zoom-pill">
-                  <button onclick="zoom(-10)" class="px-1 text-xs">-</button>
-                  <span id="z-v" class="text-[10px] font-mono min-w-[30px] text-center">100%</span>
-                  <button onclick="zoom(10)" class="px-1 text-xs">+</button>
-                  <button onclick="resetZoom()" class="ml-1 opacity-40 hover:opacity-100 flex items-center justify-center" style="height: 100%;" title="Reset Zoom"><i class="fas fa-redo-alt text-[8px]"></i></button>
+          <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
+              <div class="flex items-center gap-2 min-w-0">
+                  ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+                  <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
               </div>
-              <button class="ib" id="m-btn" onclick="toggleLayout()"><i class="fas fa-expand"></i></button>
+          </div>
+          <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
+              
+              <div class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+                  <button onclick="zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
+                  <span id="z-v" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</span>
+                  <button onclick="zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
+              </div>
+
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="toggleModal('bg-m')" title="Settings"><i class="fas fa-palette text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" onclick="toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
           </div>
       </header>
   
@@ -507,6 +510,9 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
               rend.hooks.content.register(contents => {
                   contents.document.body.onclick = () => {
+                      // Prevent closing if selection exists
+                      if(contents.window.getSelection().toString().length > 0) return;
+                      
                       const full = document.body.classList.contains('full-mode');
                       if(full) {
                            const h = document.getElementById('main-hdr'), f = document.getElementById('main-ft');
