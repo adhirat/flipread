@@ -466,7 +466,7 @@ body::before {
   box-shadow: var(--shadow-book-hover);
 }
 
-.bk-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bk-cover img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; background: var(--bg-card); }
 
 .bk-spine {
   position: absolute;

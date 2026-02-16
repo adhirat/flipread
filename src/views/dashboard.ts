@@ -81,8 +81,8 @@ h2{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;letter-spaci
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
 .book-item{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all .3s;position:relative}
 .book-item:hover{border-color:var(--accent-cyan);transform:translateY(-6px);box-shadow:0 10px 40px var(--shadow)}
-.book-cover{height:180px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--border)}
-.book-cover img{width:100%;height:100%;object-fit:cover}
+.book-cover{height:220px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--border);padding:12px}
+.book-cover img{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 6px 16px rgba(0,0,0,0.15);border-radius:4px}
 .book-content{padding:20px}
 .book-title{font-weight:700;font-size:16px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .book-actions{display:flex;gap:8px;margin-top:16px}
