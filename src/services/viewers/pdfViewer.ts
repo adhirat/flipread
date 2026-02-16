@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean): string {
+export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
   const bg = (settings.background as string) || '#1a1a1a';
   const accent = (settings.accent_color as string) || '#4CAF50';
   const safeTitle = escapeHtml(title);
@@ -135,6 +135,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <header class="hdr" id="main-hdr">
         <div class="hdr-l">
             <button class="hdr-i" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul"></i></button>
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm ml-2" />` : ''}
             <div class="hdr-t">${safeTitle}</div>
         </div>
         <div class="hdr-r">
@@ -247,6 +248,10 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     <button class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="toggleChat();toggleModal('bg-modal')">
                         <i class="fas fa-comments mr-2"></i> Open Personal Desk
                     </button>
+                    <a href="?mode=web" class="w-full text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest transition">
+                        <i class="fas fa-globe mr-2"></i> Try Web View (Experimental)
+                    </a>
+                </div>
                 <div class="pt-4 border-t border-white/5 flex gap-2">
                     <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
                     <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
@@ -512,14 +517,20 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             i.value = '';
             renderNotes();
         };
-            b.innerHTML = notes.map(n => 
-                '<div class=\"search-item flex justify-between items-start group\">' +
-                '<div>' +
-                '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full\" style=\"border-left: 2px solid #ffffff; padding-left: 8px\">' + n.text.replace(/\\n/g, '<br>') + '</p>' +
-                '<p class=\"text-[9px] opacity-40 mt-1 pl-2\">' + n.time + '</p></div>' +
-                '</div>'
-            ).join('');
-            b.scrollTop = b.scrollHeight;
+        window.renderNotes = () => {
+             const b = document.getElementById('chat-notes');
+             if(!b) return;
+             let notes = [];
+             try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
+
+             b.innerHTML = notes.map(n => 
+                 '<div class=\"search-item flex justify-between items-start group\">' +
+                 '<div>' +
+                 '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full\" style=\"border-left: 2px solid #ffffff; padding-left: 8px\">' + n.text.replace(/\\n/g, '<br>') + '</p>' +
+                 '<p class=\"text-[9px] opacity-40 mt-1 pl-2\">' + n.time + '</p></div>' +
+                 '</div>'
+             ).join('');
+             b.scrollTop = b.scrollHeight;
         };
         window.loadBg = (e) => {
             const f = e.target.files[0];

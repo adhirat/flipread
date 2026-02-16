@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean): string {
+export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
     const bg = (settings.background as string) || '#f3f0e8';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -194,6 +194,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <header class="hdr" id="main-hdr">
           <div class="flex items-center gap-4">
               <button class="ib" onclick="toggleTOC()"><i class="fas fa-list-ul"></i></button>
+              ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm mr-2" />` : ''}
               <h1 class="font-bold text-xs truncate max-w-[150px] sm:max-w-none opacity-80">${safeTitle}</h1>
           </div>
           <div class="flex items-center gap-2">
@@ -371,6 +372,9 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                       <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
                           <i class="fas fa-image mr-2"></i> Wallpaper
                       </button>
+                      <a href="?mode=web" class="flex-1 text-center py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition">
+                           <i class="fas fa-globe mr-2"></i> Web View
+                      </a>
                       <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
                           <i class="fas fa-undo mr-2"></i> Reset
                       </button>

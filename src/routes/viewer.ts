@@ -7,25 +7,26 @@ import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
 import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
 
-export function viewerPage(book: Book & { author_name: string; author_plan: string }, appUrl: string, mode: string = 'standard'): string {
+export function viewerPage(book: Book & { author_name: string; author_plan: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
   const authorPlan = getPlanLimits(book.author_plan);
   const showBranding = !authorPlan.removeBranding;
   const fileUrl = `${appUrl}/read/api/file/${book.id}`;
   const coverUrl = book.cover_key ? `${appUrl}/read/api/cover/${book.id}` : '';
+  const logoUrl = book.store_logo_key ? `${appUrl}/read/api/logo/${book.user_id}` : '';
 
   if (mode === 'web') {
-    return webViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+    return webViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   }
 
   if (book.type === 'pdf') {
-    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   } else if (['doc', 'docx'].includes(book.type)) {
-    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   } else if (['ppt', 'pptx'].includes(book.type)) {
-    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   } else {
-    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   }
 }
 
@@ -36,10 +37,10 @@ viewer.get('/:slug', async (c) => {
   const slug = c.req.param('slug');
 
   const book = await c.env.DB.prepare(
-    `SELECT b.*, u.name as author_name, u.plan as author_plan
+    `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_logo_key
      FROM books b JOIN users u ON b.user_id = u.id
      WHERE b.slug = ? AND b.is_public = 1`
-  ).bind(slug).first<Book & { author_name: string; author_plan: string }>();
+  ).bind(slug).first<Book & { author_name: string; author_plan: string; store_logo_key?: string }>();
 
   if (!book) {
     return c.html(errorPage('Book Not Found', 'This book does not exist or has been made private.'), 404);

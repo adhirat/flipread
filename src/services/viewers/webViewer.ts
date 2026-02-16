@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean): string {
+export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -33,39 +33,26 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1em; color: #111; }
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
         
-        /* Structure */
-        #hero { 
-            position: relative; height: 60vh; min-height: 400px; 
-            background-size: cover; background-position: center; 
-            display: flex; align-items: flex-end; justify-content: center;
-            color: white; text-align: center;
-        }
-        #hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8)); }
-        #hero-content { position: relative; z-index: 10; padding: 40px 20px; max-width: 800px; }
-        #hero-title { font-size: clamp(2rem, 5vw, 4rem); text-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 10px; }
-        #hero-meta { opacity: 0.9; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; }
-
         /* Navigation */
         #sticky-nav {
             position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding: 0 20px; transition: transform 0.3s;
+            padding: 0 20px; height: 60px; display: flex; align-items: center;
         }
         #nav-content {
-            max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 60px;
+            width: 100%; max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
         }
-        #nav-title { font-weight: 700; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-        #nav-title.visible { opacity: 1; }
+        #nav-title { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
         
-        #toc-btn {
+        .nav-btn {
             display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600;
             cursor: pointer; padding: 8px 16px; border-radius: 20px; background: rgba(0,0,0,0.05);
             transition: 0.2s;
         }
-        #toc-btn:hover { background: rgba(0,0,0,0.1); }
+        .nav-btn:hover { background: rgba(0,0,0,0.1); }
         
         /* Main Content */
-        #content-wrapper { max-width: 800px; margin: 0 auto; padding: 60px 20px 100px; min-height: 100vh; }
+        #content-wrapper { max-width: 1200px; margin: 0 auto; padding: 40px 20px 100px; min-height: 100vh; }
         
         /* Dynamic Sections */
         .section-header { 
@@ -100,9 +87,34 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .toc-item:hover { background: #f9f9f9; color: var(--accent); }
         .toc-item.active { border-left-color: var(--accent); background: #f0f0f0; font-weight: 600; color: black; }
         
-        /* Format Specific Overrides */
-        .docx-wrapper { background: transparent !important; padding: 0 !important; }
-        .docx { box-shadow: none !important; margin-bottom: 0 !important; padding: 0 !important; }
+        /* Highlights Menu */
+        .hl-yellow { background-color: rgba(255, 235, 59, 0.4); border-bottom: 2px solid #fdd835; cursor: pointer; }
+        .hl-green { background-color: rgba(165, 214, 167, 0.4); border-bottom: 2px solid #66bb6a; cursor: pointer; }
+        .hl-blue { background-color: rgba(144, 202, 249, 0.4); border-bottom: 2px solid #42a5f5; cursor: pointer; }
+        .hl-pink { background-color: rgba(244, 143, 177, 0.4); border-bottom: 2px solid #ec407a; cursor: pointer; }
+        .hl-purple { background-color: rgba(206, 147, 216, 0.4); border-bottom: 2px solid #ab47bc; cursor: pointer; }
+        
+        #hl-menu { position: absolute; z-index: 1000; background: rgba(30,30,30,0.95); backdrop-filter: blur(10px); padding: 8px; border-radius: 50px; display: none; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); transform: translateX(-50%); }
+        .hl-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s; }
+        .hl-btn:hover { transform: scale(1.2); border-color: white; }
+
+        /* Chat Sidebar */
+        #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
+        #chat-w.o { right: 0; }
+        .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
+        .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .chat-tab.active { opacity: 1; border-color: ${accent}; background: rgba(0,0,0,0.05); }
+        .chat-b { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .chat-tab-c { display: none; width: 100%; flex-direction: column; gap: 12px; }
+        .chat-tab-c.active { display: flex; }
+        .chat-item { background: white; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
+        .chat-del { position: absolute; top: 8px; right: 8px; opacity: 0; color: #ef4444; cursor: pointer; transition: 0.2s; }
+        .chat-item:hover .chat-del { opacity: 1; }
+        
+        .chat-f { padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; background: rgba(0,0,0,0.02); }
+        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; }
+        .chat-s { width: 40px; border-radius: 8px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
         
         /* Loading */
         #ld { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s; }
@@ -114,19 +126,33 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         <p class="text-xs font-bold tracking-widest uppercase opacity-50">Generating Web Experience...</p>
     </div>
 
-    <div id="hero" style="background-image: url('${coverUrl || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80'}')">
-        <div id="hero-content">
-            <h1 id="hero-title">${safeTitle}</h1>
-            <p id="hero-meta">SCROLL TO READ</p>
-        </div>
+    <!-- Highlight Menu -->
+    <div id="hl-menu">
+         <div class="hl-btn" style="background:#ffeb3b" onclick="addHighlight('yellow')"></div>
+         <div class="hl-btn" style="background:#a5d6a7" onclick="addHighlight('green')"></div>
+         <div class="hl-btn" style="background:#90caf9" onclick="addHighlight('blue')"></div>
+         <div class="hl-btn" style="background:#f48fb1" onclick="addHighlight('pink')"></div>
+         <div class="hl-btn" style="background:#ce93d8" onclick="addHighlight('purple')"></div>
     </div>
 
     <nav id="sticky-nav">
         <div id="nav-content">
-            <div id="nav-title">${safeTitle}</div>
-            <div id="toc-btn" onclick="toggleTOC()">
-                <i class="fas fa-list-ul"></i>
-                <span>Table of Contents</span>
+            <div class="flex items-center gap-3 overflow-hidden">
+                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto object-contain rounded-sm" />` : ''}
+                 <div id="nav-title">${safeTitle}</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="?mode=standard" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 px-3 py-1.5 rounded-full transition flex items-center gap-2" title="Return to View">
+                    <i class="fas fa-book-open"></i> Standard
+                </a>
+                <div class="nav-btn" onclick="toggleTOC()">
+                    <i class="fas fa-list-ul"></i>
+                    <span class="hidden sm:inline">Contents</span>
+                </div>
+                <div class="nav-btn" onclick="toggleChat()">
+                    <i class="fas fa-pen-fancy"></i>
+                    <span class="hidden sm:inline">Notes</span>
+                </div>
             </div>
         </div>
     </nav>
@@ -146,31 +172,52 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
     </div>
     
+    <!-- Chat/Notes Sidebar -->
+    <div id="chat-w">
+        <div class="chat-h">
+            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">My Notes</span>
+            <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
+        </div>
+        <div class="chat-tabs">
+            <div class="chat-tab active" data-tab="chat-notes" onclick="switchSidebarTab(this)">Notes</div>
+            <div class="chat-tab" data-tab="chat-highlights" onclick="switchSidebarTab(this)">Highlights</div>
+        </div>
+        <div class="chat-b">
+            <div id="chat-notes" class="chat-tab-c active"></div>
+            <div id="chat-highlights" class="chat-tab-c">
+                <p class="text-xs text-center opacity-40 py-10">Select text in the book to highlight (EPUB only).</p>
+                <div id="hi-list"></div>
+            </div>
+        </div>
+        <div class="chat-f" id="chat-footer">
+            <input type="text" id="chat-i" placeholder="Add a note..." class="chat-i" onkeydown="if(event.key==='Enter') sendNote()">
+            <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    
     ${showBranding ? '<a href="https://flipread.pages.dev" target="_blank" style="position:fixed;bottom:20px;right:20px;font-size:10px;text-decoration:none;opacity:0.5;color:black;">Powered by FlipRead</a>' : ''}
 
     <script>
-        // Init Vars
         const FU='${fileUrl}';
-        const TYPE = FU.split('.').pop().toLowerCase(); // Ideally passed from backend but inferred here
-        // We actually need the type passed properly, lets assume the caller handles logic or extends 
-        // Logic to detect type via fetch content-type if not explicit.
-        // For this demo we'll try to detect based on file extension from URL or specific rendering logic.
-        
-        // Sticky Header Logic
-        const navTitle = document.getElementById('nav-title');
-        const hero = document.getElementById('hero');
-        window.addEventListener('scroll', () => {
-            const h = hero.getBoundingClientRect().height;
-            if(window.scrollY > h - 100) navTitle.classList.add('visible');
-            else navTitle.classList.remove('visible');
-            
-            // Highlight active TOC
-            highlightActiveSection();
-        });
+        let bookRender = null;
+        let highlights = [];
+        try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
 
-        function toggleTOC() {
-            document.getElementById('toc-menu').classList.toggle('open');
+        function toggleTOC() { document.getElementById('toc-menu').classList.toggle('open'); }
+        function toggleChat() { 
+            const w = document.getElementById('chat-w');
+            w.classList.toggle('o');
+            if(w.classList.contains('o')) { renderNotes(); renderHighlights(); }
         }
+        
+        window.switchSidebarTab = (el) => {
+             const tabId = el.getAttribute('data-tab');
+             document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
+             document.querySelectorAll('.chat-tab-c').forEach(c => c.classList.remove('active'));
+             el.classList.add('active');
+             document.getElementById(tabId).classList.add('active');
+             document.getElementById('chat-footer').style.display = tabId === 'chat-highlights' ? 'none' : 'flex';
+        };
 
         async function init() {
             try {
@@ -179,10 +226,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 const type = res.headers.get('content-type');
                 
                 if(type.includes('pdf')) await renderPDF(blob);
-                else if(type.includes('epub')) await renderEPUB(blob); // EpubJS usually takes url/arraybuffer
+                else if(type.includes('epub')) await renderEPUB(blob);
                 else if(type.includes('document') || FU.endsWith('.docx') || FU.endsWith('.doc')) await renderDOCX(blob);
-                else if(type.includes('presentation') || FU.endsWith('.pptx')) await renderPPTX(FU); // PPTXJS needs URL
-                else await renderEPUB(blob); // Default fallback
+                else if(type.includes('presentation') || FU.endsWith('.pptx')) await renderPPTX(FU);
+                else await renderEPUB(blob);
 
                 document.getElementById('ld').style.opacity = '0';
                 setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
@@ -200,12 +247,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             const tocList = document.getElementById('toc-list');
 
             for (let i = 1; i <= pdf.numPages; i++) {
-                // Create Section
                 const section = document.createElement('div');
                 section.id = 'page-' + i;
                 section.className = 'page-content';
                 
-                // Add header for 'Page X' treating it as a chapter
                 const head = document.createElement('div');
                 head.className = 'section-header';
                 head.innerHTML = '<h2>Page ' + i + '</h2>';
@@ -216,7 +261,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 section.appendChild(canvas);
                 container.appendChild(section);
 
-                // Render
                 pdf.getPage(i).then(page => {
                     const vp = page.getViewport({ scale: 1.5 });
                     canvas.width = vp.width;
@@ -224,7 +268,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
                 });
 
-                // Add TOC
                 const item = document.createElement('div');
                 item.className = 'toc-item';
                 item.innerText = 'Page ' + i;
@@ -238,74 +281,47 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         async function renderDOCX(blob) {
             const container = document.getElementById('content-wrapper');
-            // docx-preview renders everything into a div. We can't easily split by pages/sections purely.
-            // But we can try to inject it and then maybe parse headers for TOC.
-            
             const wrapper = document.createElement('div');
             container.appendChild(wrapper);
-            
             await docx.renderAsync(blob, wrapper);
             
-            // Post-process for TOC based on headers
             const headers = wrapper.querySelectorAll('h1, h2, h3');
             const tocList = document.getElementById('toc-list');
-            
             if(headers.length === 0) {
                  tocList.innerHTML = '<div class="p-4 text-xs opacity-50">No sections found.</div>';
                  return;
             }
-
             headers.forEach((h, i) => {
                 h.id = 'section-' + i;
                 const item = document.createElement('div');
                 item.className = 'toc-item';
                 item.innerText = h.innerText;
                 item.style.paddingLeft = (parseInt(h.tagName[1]) * 10) + 'px';
-                item.onclick = () => {
-                    h.scrollIntoView({behavior:'smooth'});
-                    toggleTOC();
-                };
+                item.onclick = () => { h.scrollIntoView({behavior:'smooth'}); toggleTOC(); };
                 tocList.appendChild(item);
             });
         }
         
         async function renderPPTX(url) {
              const container = document.getElementById('content-wrapper');
-             // PPTXJS renders typically as slides.
-             // We will try to force it to render slides vertically?
-             // pptxjs default is a slide container.
-             // Limitation: customization is harder here without parsing manually.
-             // For web view, let's just make it a list of slide images if possible or use the div method.
-             
-             // Since PPTXJS is mainly for slideshows, let's use a workaround:
-             // We can't easily extract "one page website" feel from standard PPTX JS libs without converting to images.
-             // Fallback: Just render the standard viewer logic but injected into our container
              $(container).pptxToHtml({
                  pptxFileUrl: url,
                  slideMode: false,
                  slidesScale: "100%",
                  keyBoardShortCut: false
              });
-             
-             // Wait for render then build TOC from slides
              setTimeout(() => {
                  const slides = container.querySelectorAll('.slide');
                  const tocList = document.getElementById('toc-list');
                  slides.forEach((s, i) => {
                      let title = "Slide " + (i+1);
-                     // try to find text
                      const t = s.innerText.substring(0, 20);
                      if(t.length > 2) title = t + "...";
-                     
                      s.id = 'slide-' + i;
-                     
                      const item = document.createElement('div');
                      item.className = 'toc-item';
                      item.innerText = title;
-                     item.onclick = () => {
-                         s.scrollIntoView({behavior:'smooth'});
-                         toggleTOC();
-                     };
+                     item.onclick = () => { s.scrollIntoView({behavior:'smooth'}); toggleTOC(); };
                      tocList.appendChild(item);
                  });
              }, 3000);
@@ -313,79 +329,160 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         async function renderEPUB(blob) {
             const container = document.getElementById('content-wrapper');
+            container.innerHTML = '';
             const book = ePub(blob);
             const tocList = document.getElementById('toc-list');
-            
-            // Web View for Epub is tricky because Epub.js is designed for pagination/spreads.
-            // To make it continuous vertical scroll: 
-            // We need to load each section (spine item) and append it to the DOM.
-            // This is heavy for large books. "Flow: scrolled" might work but it's an iframe usually.
-            
-            // Approach: Load spine items one by one and append their content.
-            
-            await book.ready;
-            const spine = book.spine;
-            
-            for (const item of spine.spineItems) {
-                const doc = await item.load(book.load.bind(book));
-                // Extract body content
-                const content = document.createElement('div');
-                content.className = 'page-content';
-                content.id = 'chapter-' + item.index;
-                
-                // Sanitized injection? Epub content is usually safe-ish HTML, but be careful.
-                // We'll trust the source for now or assume internal books.
-                // Better: iterate body children and clone.
-                const body = doc.body;
-                
-                // Fix image paths (they are relative in epub)
-                // Epub.js handles this inside its renderer/iframe. Doing it manually is hard.
-                // BETTER APPROACH: Use book.renderTo with flow: "scrolled-doc" if supported or multiple renderers.
-                
-                // Let's use the standard "scrolled" flow in a tall div.
-                // Actually, simply using manager: "continuous" flow: "scrolled" in one big div 
-                // is the official way for vertical scroll.
-                break; // Switch strategy
-            }
-            
-            // Correct Strategy for Vertical Scrolling Epub
-            container.innerHTML = ''; // clear
-            const rend = book.renderTo(container, {
+
+            // Continuous Scrolled View
+            // 'scrolled' flow creates a continuous vertical view.
+            bookRender = book.renderTo(container, {
                 flow: "scrolled",
                 manager: "continuous",
                 width: "100%",
-                height: "100%" 
+                height: "100%"
             });
-            await rend.display();
+            await bookRender.display();
             
-            // Generate TOC
-            const toc = await book.loaded.navigation;
-            toc.toc.forEach(chapter => {
+            // TOC
+            const navigation = await book.loaded.navigation;
+            navigation.toc.forEach(chapter => {
                const item = document.createElement('div');
                item.className = 'toc-item';
                item.innerText = chapter.label.trim();
                item.onclick = () => {
-                   rend.display(chapter.href);
+                   bookRender.display(chapter.href);
                    toggleTOC();
                };
                tocList.appendChild(item);
             });
+            
+            // Selection / Highlight Hook
+            bookRender.on("selected", (cfiRange, contents) => {
+                  book.getRange(cfiRange).then(range => {
+                      const sel = contents.window.getSelection();
+                      if(!sel.rangeCount) return;
+                      
+                      // Using the iframe's rect to position
+                      const iframe = container.querySelector('iframe');
+                      const iframeRect = iframe.getBoundingClientRect();
+                      const rect = sel.getRangeAt(0).getBoundingClientRect();
+                      
+                      const menu = document.getElementById('hl-menu');
+                      // Position menu near selection (accounting for iframe offset)
+                      menu.style.top = (window.scrollY + iframeRect.top + rect.top - 50) + 'px';
+                      menu.style.left = (iframeRect.left + rect.left + rect.width/2) + 'px';
+                      menu.style.display = 'flex';
+                      
+                      window.currentSelection = { cfiRange, text: range.toString(), contents };
+                  });
+            });
+            
+            // Inject Highlight CSS
+            bookRender.hooks.content.register(contents => {
+                  const style = contents.document.createElement('style');
+                  style.innerHTML = \`
+                      ::selection { background: rgba(255, 165, 0, 0.3); }
+                      .hl-yellow { background-color: rgba(255, 235, 59, 0.4); }
+                      .hl-green { background-color: rgba(165, 214, 167, 0.4); }
+                      .hl-blue { background-color: rgba(144, 202, 249, 0.4); }
+                      .hl-pink { background-color: rgba(244, 143, 177, 0.4); }
+                      .hl-purple { background-color: rgba(206, 147, 216, 0.4); }
+                  \`;
+                  contents.document.head.appendChild(style);
+                  contents.document.body.onclick = () => { document.getElementById('hl-menu').style.display = 'none'; };
+            });
+            
+            // Restore Highlights
+            book.ready.then(() => {
+                highlights.forEach(h => {
+                    try { bookRender.annotations.add("highlight", h.cfi, {}, null, 'hl-' + (h.c || 'yellow')); } catch(e){}
+                });
+            });
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                if(bookRender) bookRender.resize(); 
+            });
         }
         
-        function highlightActiveSection() {
-            // Find which section is in view
-            // Implementation depends on format (div IDs)
-            // generic logic:
-            const headers = document.querySelectorAll('.section-header, .slide, .page-content');
-            let current = '';
-            headers.forEach(h => {
-                const rect = h.getBoundingClientRect();
-                if(rect.top < 100) current = h.innerText || h.id; 
-            });
-            // highlight corresponding toc item...
-        }
+        // --- Notes Logic ---
+        window.sendNote = () => {
+            const i = document.getElementById('chat-i'), v = i.value.trim();
+            if(!v) return;
+            let notes = [];
+            try { 
+                notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
+            } catch(e) {}
+            notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+            localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
+            i.value = '';
+            renderNotes();
+        };
+
+        window.renderNotes = () => {
+             const b = document.getElementById('chat-notes');
+             if(!b) return;
+             let notes = [];
+             try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
+             b.innerHTML = notes.map((n, i) => 
+                 '<div class=\"chat-item\">' +
+                 '<p>' + n.text + '</p>' +
+                 '<span class=\"text-[10px] opacity-40 mt-2 block\">' + n.time + '</span>' +
+                 '<i class=\"fas fa-trash chat-del\" onclick=\"deleteNote('+i+')\"></i>' +
+                 '</div>'
+             ).join('');
+             b.scrollTop = b.scrollHeight;
+        };
+        
+        window.deleteNote = (i) => {
+             if(!confirm('Delete note?')) return;
+             let notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
+             notes.splice(i, 1);
+             localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
+             renderNotes();
+        };
+
+        // --- Highlight Logic (EPUB) ---
+        window.addHighlight = (color) => {
+              const sel = window.currentSelection;
+              if(!sel) return;
+              document.getElementById('hl-menu').style.display='none';
+              
+              if(bookRender) {
+                  bookRender.annotations.add("highlight", sel.cfiRange, {}, null, 'hl-' + color);
+                  sel.contents.window.getSelection().removeAllRanges();
+                  
+                  highlights.push({t: sel.text, cfi: sel.cfiRange, d: new Date().toLocaleDateString(), c: color});
+                  localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
+                  renderHighlights();
+              }
+        };
+        
+        window.renderHighlights = () => {
+             const b = document.getElementById('hi-list');
+             if(!b) return;
+             if(highlights.length === 0) { b.innerHTML = ''; return; }
+             b.innerHTML = highlights.map((h, i) => 
+                 '<div class=\"chat-item\">' +
+                 '<div class=\"w-2 h-2 rounded-full mb-2\" style=\"background: var(--hl-' + (h.c||'yellow') + ')\"></div>' +
+                 '<p class=\"italic opacity-80\">\"' + h.t + '\"</p>' +
+                 '<i class=\"fas fa-trash chat-del\" onclick=\"deleteHighlight('+i+')\"></i>' +
+                 '</div>'
+             ).join('');
+        };
+        
+        window.deleteHighlight = (i) => {
+              if(!confirm('Delete highlight?')) return;
+              const h = highlights[i];
+              if(bookRender) bookRender.annotations.remove(h.cfi, "highlight");
+              highlights.splice(i, 1);
+              localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
+              renderHighlights();
+        };
 
         init();
+        // Render initial notes
+        renderNotes();
     </script>
 </body>
 </html>`;
