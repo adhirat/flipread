@@ -280,21 +280,21 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <div id="detect-zone-top"></div>
        <header class="hdr" id="main-hdr" onclick="event.stopPropagation()">
            <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
+                <button class="ib rounded-full" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
                <div class="flex items-center gap-2 min-w-0">
                    ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
                     <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
                </div>
            </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
+              <button class="ib rounded-full" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
               
-              <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
+              <div id="zoom-cluster" class="flex bg-white/10 rounded-full p-0.5 gap-0.5 items-center mx-1">
                   <button onclick="event.stopPropagation();zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                   <span id="z-v" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</span>
                    <button onclick="event.stopPropagation();zoom(10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
                </div>
-               <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
+               <button class="ib rounded-full flex" id="m-btn" onclick="event.stopPropagation();toggleLayout()"><i class="fas fa-expand text-xs"></i></button>
            </div>
       </header>
   
@@ -389,15 +389,20 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       </div>
   
       <div id="bg-m" class="modal" onclick="toggleModal('bg-m')">
-          <div class="modal-c !w-[450px]" onclick="event.stopPropagation()">
-               <div class="flex border-b border-white/10 px-4 items-center justify-between">
-                   <div class="flex overflow-x-auto no-scrollbar">
-                       <div class="tab-btn active" onclick="switchTab(event, 't-ty')">Display</div>
-                       <div class="tab-btn" onclick="switchTab(event, 't-am')">Atmosphere</div>
-                       <div class="tab-btn" onclick="switchTab(event, 't-in')">Guide</div>
-                   </div>
-                    <button onclick="toggleModal('bg-m')" class="w-8 h-8 flex items-center justify-center opacity-60 hover:opacity-100 transition mr-2 text-lg">✕</button>
-                </div>
+        <div class="modal-c !w-[500px] !max-w-[95vw]" onclick="event.stopPropagation()">
+             
+             <!-- Modern Header with Segmented Tabs -->
+             <div class="p-4 border-b border-white/10 flex flex-col gap-4 bg-white/5">
+                 <div class="flex items-center justify-between">
+                     <span class="text-[11px] uppercase font-bold tracking-[0.2em] opacity-60">Reader Settings</span>
+                     <button onclick="toggleModal('bg-m')" class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition opacity-60 hover:opacity-100"><i class="fas fa-times"></i></button>
+                 </div>
+                 <div class="flex p-1 bg-black/20 rounded-lg border border-white/5">
+                     <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition active" onclick="switchTab(event, 't-ty')">Display</div>
+                     <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 't-am')">Experience</div>
+                     <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 't-in')">Guide</div>
+                 </div>
+             </div>
                 <div class="p-6 overflow-y-auto max-h-[60vh]">
                    <!-- Display Tab -->
                    <div id="t-ty" class="tab-content active">

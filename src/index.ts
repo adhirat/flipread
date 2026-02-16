@@ -119,7 +119,7 @@ app.get('/p/:page(privacy|terms|contact)', async (c) => {
 
 function landingPage(appUrl: string): string {
   return `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>FlipRead — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
@@ -127,24 +127,7 @@ function landingPage(appUrl: string): string {
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-:root[data-theme="dark"]{
-  --bg-primary:#050510;
-  --bg-secondary:#0d0d1a;
-  --bg-card:#1a1a2e;
-  --bg-elevated:#252540;
-  --text-primary:#f0f4ff;
-  --text-secondary:#a0aec0;
-  --text-muted:#64748b;
-  --accent-cyan:#00d4ff;
-  --accent-magenta:#ff006e;
-  --accent-purple:#8b5cf6;
-  --accent-blue:#3b82f6;
-  --border:rgba(255,255,255,0.08);
-  --glow-cyan:rgba(0,212,255,0.4);
-  --glow-magenta:rgba(255,0,110,0.3);
-  --shadow:rgba(0,0,0,0.5)
-}
-:root[data-theme="light"]{
+:root {
   --bg-primary:#ffffff;
   --bg-secondary:#f8fafc;
   --bg-card:#ffffff;
@@ -152,14 +135,31 @@ function landingPage(appUrl: string): string {
   --text-primary:#0f172a;
   --text-secondary:#334155;
   --text-muted:#64748b;
-  --accent-cyan:#0891b2;
-  --accent-magenta:#db2777;
-  --accent-purple:#7c3aed;
-  --accent-blue:#2563eb;
-  --border:rgba(0,0,0,0.1);
-  --glow-cyan:rgba(8,145,178,0.2);
-  --glow-magenta:rgba(219,39,119,0.2);
-  --shadow:rgba(0,0,0,0.1)
+  --accent-cyan:#4f46e5;
+  --accent-magenta:#ec4899;
+  --accent-purple:#8b5cf6;
+  --accent-blue:#3b82f6;
+  --border:rgba(0,0,0,0.06);
+  --glow-cyan:rgba(79, 70, 229, 0.25);
+  --glow-magenta:rgba(236, 72, 153, 0.25);
+  --shadow:rgba(0,0,0,0.08)
+}
+:root[data-theme="dark"]{
+  --bg-primary:#0a0a0f;
+  --bg-secondary:#12121a;
+  --bg-card:#1a1a24;
+  --bg-elevated:#252538;
+  --text-primary:#fcfcfc;
+  --text-secondary:#a0aec0;
+  --text-muted:#64748b;
+  --accent-cyan:#6366f1;
+  --accent-magenta:#f472b6;
+  --accent-purple:#a78bfa;
+  --accent-blue:#60a5fa;
+  --border:rgba(255,255,255,0.08);
+  --glow-cyan:rgba(99, 102, 241, 0.4);
+  --glow-magenta:rgba(244, 114, 182, 0.3);
+  --shadow:rgba(0,0,0,0.5)
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Work Sans',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;transition:background 0.3s,color 0.3s}
@@ -221,22 +221,53 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:20px 4
 footer{text-align:center;padding:50px;color:var(--text-muted);font-size:14px;border-top:1px solid var(--border);position:relative;z-index:1;background:var(--bg-secondary)}
 footer a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
 footer a:hover{color:var(--accent-magenta)}
-@media(max-width:768px){nav{padding:16px 20px}.nav-links a:not(.btn){display:none}.hero{padding:120px 20px 80px}.features,.pricing{padding:80px 20px}}
+.nav-right{display:flex;align-items:center;gap:20px}
+.menu-btn{display:none;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
+.mobile-menu{position:fixed;top:0;right:-100%;width:280px;height:100%;background:var(--bg-secondary);z-index:200;transition:right 0.3s cubic-bezier(0.16, 1, 0.3, 1);padding:30px;box-shadow:-10px 0 40px var(--shadow);border-left:1px solid var(--border);backdrop-filter:blur(30px)}
+.mobile-menu.active{right:0}
+.mobile-menu-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.close-btn{background:none;border:none;font-size:20px;color:var(--text-secondary);cursor:pointer;padding:5px}
+.mobile-links{display:flex;flex-direction:column;gap:4px}
+.mobile-links a{padding:15px;color:var(--text-secondary);text-decoration:none;font-size:16px;font-weight:600;border-radius:12px;transition:all 0.2s}
+.mobile-links a:hover{background:var(--bg-elevated);color:var(--text-primary)}
+@media(max-width:768px){
+  nav{padding:16px 24px}
+  .nav-links{display:none}
+  .menu-btn{display:block}
+  .hero{padding:120px 20px 80px}
+  .features,.pricing{padding:80px 20px}
+}
 </style>
 </head>
 <body>
 <nav>
 <div class="logo">FlipRead</div>
-<div class="nav-links">
-<a href="#features">Features</a>
-<a href="#pricing">Pricing</a>
+<div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
 <i class="fas fa-sun" id="theme-icon"></i>
 </div>
+<div class="nav-links">
+<a href="#features">Features</a>
+<a href="#pricing">Pricing</a>
 <a href="/dashboard" class="btn btn-outline">Login</a>
 <a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
 </div>
+<button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+</div>
 </nav>
+
+<div class="mobile-menu" id="mobile-menu">
+<div class="mobile-menu-header">
+<span class="logo">FlipRead</span>
+<button class="close-btn" onclick="toggleMenu()">✕</button>
+</div>
+<div class="mobile-links">
+<a href="#features" onclick="toggleMenu()">Features</a>
+<a href="#pricing" onclick="toggleMenu()">Pricing</a>
+<a href="/dashboard" onclick="toggleMenu()" style="margin-top:20px;border:1px solid var(--border);text-align:center">Login</a>
+<a href="/dashboard?mode=register" onclick="toggleMenu()" style="background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:white;text-align:center">Get Started</a>
+</div>
+</div>
 
 <section class="hero">
 <h1>Turn Your Books into <span class="grad">Stunning Flipbooks</span></h1>
@@ -286,8 +317,8 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div class="p-card">
 <div class="p-name">Basic</div>
 <div style="color:#64748b;font-size:13px">For getting started</div>
-<div class="p-price"><span class="price-monthly">$2<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$1.67<span class="p-unit">/mo</span></span></div>
-<div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px" class="price-yearly-note">Billed $20 annually</div>
+<div class="p-price"><span class="price-monthly">$2.50<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$2.08<span class="p-unit">/mo</span></span></div>
+<div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px;display:none" class="price-yearly-note">Billed $25 annually</div>
 <ul class="p-list">
 <li>2 published books</li><li>10 MB max file size</li><li>2,000 monthly views</li>
 <li>Bookstore page</li><li>Basic analytics</li>
@@ -329,11 +360,15 @@ localStorage.setItem('flipread-theme',next);
 document.getElementById('theme-icon').className=next==='dark'?'fas fa-sun':'fas fa-moon';
 }
 function loadTheme(){
-const saved=localStorage.getItem('flipread-theme')||'dark';
+const saved=localStorage.getItem('flipread-theme')||'light';
 document.documentElement.setAttribute('data-theme',saved);
 document.getElementById('theme-icon').className=saved==='dark'?'fas fa-sun':'fas fa-moon';
 }
 loadTheme();
+
+function toggleMenu(){
+document.getElementById('mobile-menu').classList.toggle('active');
+}
 
 function toggleBilling(){
 var c=document.getElementById('billing-toggle').checked;

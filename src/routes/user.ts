@@ -64,9 +64,20 @@ user.post('/store/logo', async (c) => {
     return c.json({ error: 'Logo must be under 1MB' }, 400);
   }
 
+  const storage = new StorageService(c.env.BUCKET);
+
+  // Delete old logo if exists
+  const oldLogoKey = currentUser.store_logo_key;
+  if (oldLogoKey) {
+    try {
+      await storage.delete(oldLogoKey);
+    } catch (e) {
+      console.warn('Failed to delete old logo:', e);
+    }
+  }
+
   const ext = file.name.split('.').pop() || 'png';
   const logoKey = `logos/${currentUser.id}.${ext}`;
-  const storage = new StorageService(c.env.BUCKET);
   await storage.upload(logoKey, await file.arrayBuffer(), file.type);
 
   const logoUrl = `/read/api/logo/${currentUser.id}`;
@@ -89,14 +100,14 @@ user.delete('/', async (c) => {
   
   const fileKeys = books.results?.map(b => b.file_key) || [];
 
-  // 2. Delete files from R2 (in batches if needed, but simple loop for now)
-  // Also try to delete potential logo file
-  const logoKey = `logos/${currentUser.id}`; // Attempt to delete base name or use existing pattern
-  // Note: Since we don't store exact extension for logo in all cases, we might miss it, 
-  // but we can try common ones if we wanted. For now, we'll skip complex logo deletion 
-  // unless store_logo_key was actually used.
-  
+  // 2. Delete files from R2
   const deletionPromises = fileKeys.map(key => storage.delete(key));
+  
+  // Also delete store logo if exists
+  if (currentUser.store_logo_key) {
+      deletionPromises.push(storage.delete(currentUser.store_logo_key));
+  }
+
   await Promise.allSettled(deletionPromises);
 
   // 3. Cancel Stripe subscription if exists
@@ -115,8 +126,6 @@ user.delete('/', async (c) => {
   await db.prepare('DELETE FROM users WHERE id = ?').bind(currentUser.id).run();
 
   // 5. Logout (Clear cookie)
-  // Since this is an API, the frontend should handle the redirect and cookie clearing,
-  // but we can set the cookie to expire here to be safe.
   c.header('Set-Cookie', 'auth_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
 
   return c.json({ success: true });

@@ -34,7 +34,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
         
         /* Main Content */
-        #content-wrapper { width: 100%; margin: 0 auto; padding: 0; min-height: calc(100vh - 60px); }
+        #content-wrapper { width: 100%; margin: 0 auto; padding: 40px 0 200px 0; min-height: calc(100vh - 60px); }
         
         /* Dynamic Sections */
         .page-content { margin: 0; padding: 0; }
@@ -112,9 +112,11 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             width: 300px; display: none; flex-direction: column; gap: 16px;
             border: 1px solid rgba(0,0,0,0.05);
         }
-        #nav-content {
-            width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
-        }
+        /* Header & Icons */
+        .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 1500; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        
+        .ib { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: all 0.2s; outline: none; background: transparent; color: #333; }
+        .ib:hover { background: rgba(0,0,0,0.05); transform: scale(1.05); }
         #set-m.open { display: flex; }
         .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .set-lbl { font-size: 0.85rem; font-weight: 600; color: #555; }
@@ -148,28 +150,24 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
          <div class="hl-btn" style="background:#ce93d8" onclick="addHighlight('purple')"></div>
     </div>
 
-    <nav id="sticky-nav">
-        <div id="nav-content">
-            <div class="flex items-center gap-3 min-w-0 flex-1 mr-2">
-                 <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 transition shrink-0" onclick="toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
-                 ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
-                 <div id="nav-title" class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
-            </div>
-            <div class="flex items-center gap-1 sm:gap-3 shrink-0">
-                <a href="?mode=standard" id="standard-btn" class="text-xs font-bold uppercase tracking-wider text-black/50 hover:text-black hover:bg-black/5 p-2 sm:px-3 sm:py-1.5 rounded-full transition flex items-center gap-2" title="Return to Standard View">
-                    <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Standard</span>
-                </a>
-                <div class="nav-btn" onclick="toggleSettings()">
-                    <i class="fas fa-font"></i>
-                    <span class="hidden sm:inline">Aa</span>
-                </div>
-                <div class="nav-btn" id="notes-btn" onclick="toggleChat()">
-                    <i class="fas fa-pen-fancy"></i>
-                    <span class="hidden sm:inline">Notes</span>
-                </div>
-            </div>
+    <header class="hdr">
+        <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
+             <button class="ib" onclick="toggleTOC()"><i class="fas fa-list-ul"></i></button>
+             ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+             <div class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
         </div>
-    </nav>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="?mode=standard" class="ib" id="standard-btn" title="Standard View">
+                <i class="fas fa-book-open"></i>
+            </a>
+            <button class="ib" onclick="toggleSettings()" title="Settings">
+                <i class="fas fa-font"></i>
+            </button>
+            <button class="ib" id="notes-btn" onclick="toggleChat()" title="Notes">
+                <i class="fas fa-pen-fancy"></i>
+            </button>
+        </div>
+    </header>
 
     <div id="content-wrapper">
         <!-- Dynamic Content Injected Here -->
@@ -383,24 +381,47 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             const tocList = document.getElementById('toc-list');
 
             // Continuous Scrolled View
+            // Continuous Scrolled View
             // 'scrolled' flow creates a continuous vertical view.
             bookRender = book.renderTo(container, {
                 flow: "scrolled",
                 manager: "continuous",
-                width: "100%",
-                height: "100%"
+                width: "100%"
             });
             await bookRender.display();
             
-            // Remove margin/padding from internal EPUB body
+            // Remove margin/padding from internal EPUB body and sync height
             bookRender.hooks.content.register(contents => {
-                const style = contents.document.createElement('style');
+                const doc = contents.document;
+                const win = contents.window;
+                
+                const style = doc.createElement('style');
                 style.innerHTML = \`
-                    body { margin: 0 !important; padding: 0 !important; }
-                    html { height: auto !important; margin: 0 !important; padding: 0 !important; }
+                    body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
+                    html { height: auto !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
                     .epubjs-view { margin: 0 !important; padding: 0 !important; }
                 \`;
-                contents.document.head.appendChild(style);
+                doc.head.appendChild(style);
+
+                // Auto-resize iframe to fit content
+                const resize = () => {
+                    const h = doc.documentElement.scrollHeight;
+                    const iframe = win.frameElement;
+                    if(iframe && h > 0) {
+                        iframe.style.height = h + 'px';
+                    }
+                };
+                
+                // Observe size changes
+                const ro = new ResizeObserver(resize);
+                ro.observe(doc.body);
+                
+                // Initial resize + image loads
+                resize();
+                win.addEventListener('load', resize);
+                Array.from(doc.images).forEach(img => {
+                    img.onload = resize;
+                });
             });
             
             // TOC

@@ -167,7 +167,7 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                   <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
                   <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
               </div>
-              <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition hidden sm:flex" id="m-btn" onclick="document.body.classList.toggle('full-mode'); this.innerHTML = document.body.classList.contains('full-mode') ? '<i class=\'fas fa-compress-alt\'></i>' : '<i class=\'fas fa-expand\'></i>'" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
+              <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition hidden sm:flex" id="m-btn" onclick="document.body.classList.toggle('full-mode'); this.innerHTML = document.body.classList.contains('full-mode') ? '<i class=\'fas fa-compress-alt\'></i>' : '<i class=\'fas fa-expand\'></i>'" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
           </div>
       </header>
   
@@ -210,15 +210,19 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
       </div>
   
       <div id="bg-modal" class="modal" onclick="toggleModal('bg-modal')">
-          <div class="modal-c !w-[450px]" onclick="event.stopPropagation()">
-              <div class="flex border-b border-white/10 px-4 items-center justify-between">
-                  <div class="flex overflow-x-auto no-scrollbar">
-                      <div class="tab-btn active" onclick="switchTab(event, 'p-bg')">Appearance</div>
-                      <div class="tab-btn" onclick="switchTab(event, 'p-am')">Experience</div>
-                      <div class="tab-btn" onclick="switchTab(event, 'p-in')">Guide</div>
-                  </div>
-                  <button onclick="toggleModal('bg-modal')" class="w-8 h-8 flex items-center justify-center opacity-60 hover:opacity-100 transition mr-2 text-lg">✕</button>
-              </div>
+        <div class="modal-c !w-[500px] !max-w-[95vw]" onclick="event.stopPropagation()">
+            <!-- Modern Header with Segmented Tabs -->
+            <div class="p-4 border-b border-white/10 flex flex-col gap-4 bg-white/5">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase font-bold tracking-[0.2em] opacity-60">Reader Settings</span>
+                    <button onclick="toggleModal('bg-modal')" class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition opacity-60 hover:opacity-100"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="flex p-1 bg-black/20 rounded-lg border border-white/5">
+                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition active" onclick="switchTab(event, 'p-bg')">Appearance</div>
+                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 'p-am')">Experience</div>
+                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 'p-in')">Guide</div>
+                </div>
+            </div>
               <div class="p-6 overflow-y-auto max-h-[60vh]">
                   <div id="p-bg" class="tab-content active">
                       <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Backgrounds</p>
