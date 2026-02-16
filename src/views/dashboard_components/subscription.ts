@@ -10,6 +10,7 @@ export const subscriptionView = `
           </div>
           <span id="bill-yearly" class="toggle-label active" onclick="setBilling('yearly')">Yearly <span class="badge-save">Save 20%</span></span>
         </div>
+        <div style="text-align:center;font-size:12px;opacity:0.6;margin-top:10px">* All prices exclude 10% GST</div>
       </div>
       
       <div style="display:flex;gap:24px;overflow-x:auto;padding-bottom:20px">
@@ -21,7 +22,7 @@ export const subscriptionView = `
             <div class="billed-text" id="billed-basic">Billed $25 yearly</div>
           </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
-            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 2 Books Limit</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 5 Books Limit</li>
             <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 10 MB Uploads</li>
             <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 2,000 Views</li>
           </ul>

@@ -54,7 +54,7 @@ books.post('/upload', async (c) => {
   // Validate file type
   const fileType = getFileType(file.name);
   if (!fileType) {
-    return c.json({ error: 'Only PDF and EPUB files are supported' }, 400);
+    return c.json({ error: 'Unsupported file type. Supported: PDF, EPUB, DOCX, PPTX, XLSX, CSV, TXT, MD, RTF, HTML, JPG, PNG, GIF, WebP, SVG' }, 400);
   }
 
   // Validate file size

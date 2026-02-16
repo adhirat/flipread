@@ -3,7 +3,10 @@ export const authView = `
 <div id="auth-view" class="auth-container">
   <div class="auth-box">
     <div style="text-align:center;margin-bottom:32px">
-      <div class="logo">FlipRead</div>
+      <a href="/" class="logo" style="justify-content:center;margin-bottom:12px">
+        <img src="/logo.png" alt="FlipRead" style="height:32px;width:auto">
+        <span>FlipRead</span>
+      </a>
       <h2 style="font-size:24px" id="auth-title">Welcome Back</h2>
     </div>
     <div id="auth-msg" class="msg"></div>

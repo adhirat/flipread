@@ -11,6 +11,12 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   <head>
       <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
       <title>${safeTitle} — FlipRead</title>
+      <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+      <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+      <meta property="og:title" content="${safeTitle} — FlipRead">
+      <meta property="og:description" content="Read this interactive flipbook on FlipRead.">
+      <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
+      <meta name="twitter:card" content="summary_large_image">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -282,7 +288,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
            <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
                 <button class="ib rounded-full" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
                <div class="flex items-center gap-2 min-w-0">
-                   ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+                   <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
                     <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
                </div>
            </div>

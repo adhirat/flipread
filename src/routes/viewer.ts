@@ -46,17 +46,19 @@ viewer.get('/:slug', async (c) => {
     return c.html(errorPage('Book Not Found', 'This book does not exist or has been made private.'), 404);
   }
 
+  const logoUrl = book.store_logo_key ? `${c.env.APP_URL}/read/api/logo/${book.user_id}` : '';
+
   // Check password protection
   const password = c.req.query('p');
   if (book.password && password !== book.password) {
-    return c.html(passwordPage(slug));
+    return c.html(passwordPage(slug, logoUrl));
   }
 
   // Track view and check limits
   const { allowed } = await trackView(c.env.DB, c.env.KV, book, c.req.raw);
   if (!allowed) {
     return c.html(errorPage('View Limit Reached',
-      'This book has reached its monthly view limit. The publisher can upgrade their plan for more views.'), 403);
+      'This book has reached its monthly view limit. The publisher can upgrade their plan for more views.', logoUrl), 403);
   }
 
   const mode = c.req.query('mode') || 'standard';

@@ -115,6 +115,12 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName}</title>
 <meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on FlipRead.`)}">
+<link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
+<link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
+<meta property="og:title" content="${safeName}">
+<meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on FlipRead.`)}">
+<meta property="og:image" content="${user.store_logo_url || appUrl + '/logo.png'}">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -698,6 +704,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(title)} — ${esc(storeName)}</title>
+<link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
+<link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script>
 (function(){var t=localStorage.getItem('flipread-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
@@ -735,7 +743,7 @@ h1 { font-family: 'Instrument Serif', serif; font-size: 36px; margin-bottom: 8px
 }
 
 function notFoundPage(msg = 'Store not found'): string {
-  return `<!DOCTYPE html><html><head><title>Not Found</title></head><body><h1>404</h1><p>${msg}</p></body></html>`;
+  return `<!DOCTYPE html><html><head><title>Not Found — FlipRead</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to FlipRead</a></body></html>`;
 }
 
 function esc(s: string): string {

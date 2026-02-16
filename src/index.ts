@@ -2,6 +2,9 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { serveStatic } from 'hono/cloudflare-workers';
+// @ts-ignore
+import manifest from '__STATIC_CONTENT_MANIFEST';
 import type { Env } from './lib/types';
 import authRoutes from './routes/auth';
 import bookRoutes from './routes/books';
@@ -52,6 +55,11 @@ app.use('/*', cors({
 
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// Static Assets (for Logo/Icons)
+app.get('/logo.png', serveStatic({ path: './logo.png', manifest }));
+app.get('/favicon.png', serveStatic({ path: './favicon.png', manifest }));
+app.get('/apple-touch-icon.png', serveStatic({ path: './apple-touch-icon.png', manifest }));
 
 // API Routes
 app.route('/api/auth', authRoutes);
@@ -124,6 +132,13 @@ function landingPage(appUrl: string): string {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>FlipRead — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
 <meta name="description" content="Upload PDFs or EPUBs and generate shareable flipbook links. Free to start.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:title" content="FlipRead — Your Digital Flipbook Library">
+<meta property="og:description" content="Convert any PDF or EPUB into a professional, interactive flipbook in seconds.">
+<meta property="og:image" content="${appUrl}/logo.png">
+<meta property="og:url" content="${appUrl}">
+<meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -165,8 +180,9 @@ function landingPage(appUrl: string): string {
 body{font-family:'Work Sans',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;transition:background 0.3s,color 0.3s}
 body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;z-index:0}
 nav{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;position:fixed;top:0;width:100%;z-index:100;background:var(--bg-secondary);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 4px 30px var(--shadow)}
-.logo{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase;position:relative}
-.logo::before{content:'';position:absolute;bottom:-4px;left:0;width:40%;height:2px;background:var(--accent-cyan);box-shadow:0 0 10px var(--glow-cyan)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo img{height:32px;width:auto}
+.logo span{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:600;transition:all .3s;position:relative;letter-spacing:0.5px}
 .nav-links a:hover{color:var(--accent-cyan);text-shadow:0 0 20px var(--glow-cyan)}
@@ -241,7 +257,10 @@ footer a:hover{color:var(--accent-magenta)}
 </head>
 <body>
 <nav>
-<div class="logo">FlipRead</div>
+<a href="/" class="logo">
+  <img src="/logo.png" alt="FlipRead Logo">
+  <span>FlipRead</span>
+</a>
 <div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
 <i class="fas fa-sun" id="theme-icon"></i>
@@ -258,7 +277,10 @@ footer a:hover{color:var(--accent-magenta)}
 
 <div class="mobile-menu" id="mobile-menu">
 <div class="mobile-menu-header">
-<span class="logo">FlipRead</span>
+<a href="/" class="logo">
+  <img src="/logo.png" alt="FlipRead Logo">
+  <span>FlipRead</span>
+</a>
 <button class="close-btn" onclick="toggleMenu()">✕</button>
 </div>
 <div class="mobile-links">
@@ -320,7 +342,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div class="p-price"><span class="price-monthly">$2.50<span class="p-unit">/mo</span></span><span class="price-yearly" style="display:none">$2.08<span class="p-unit">/mo</span></span></div>
 <div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px;display:none" class="price-yearly-note">Billed $25 annually</div>
 <ul class="p-list">
-<li>2 published books</li><li>10 MB max file size</li><li>2,000 monthly views</li>
+<li>5 published books</li><li>10 MB max file size</li><li>2,000 monthly views</li>
 <li>Bookstore page</li><li>Basic analytics</li>
 </ul>
 <a href="/dashboard" class="btn btn-outline" style="width:100%;justify-content:center">Upgrade to Basic</a>
@@ -348,7 +370,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <a href="/dashboard" class="btn btn-outline" style="width:100%;justify-content:center">Go Business</a>
 </div>
 </div>
-<p style="text-align:center;color:#64748b;font-size:12px;margin-top:24px">All prices in USD. GST will be added at checkout where applicable.</p>
+<p style="text-align:center;color:#64748b;font-size:12px;margin-top:24px">All prices in USD. 10% GST will be applicable on top of the displayed price.</p>
 </section>
 <script>
 function toggleTheme(){

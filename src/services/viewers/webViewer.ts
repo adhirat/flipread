@@ -12,6 +12,12 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${safeTitle} — Web View</title>
+    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+    <meta property="og:title" content="${safeTitle} — FlipRead">
+    <meta property="og:description" content="Read this interactive flipbook on FlipRead.">
+    <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
+    <meta name="twitter:card" content="summary_large_image">
     <!-- Dependencies for different formats -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
@@ -153,7 +159,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <header class="hdr">
         <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
              <button class="ib" onclick="toggleTOC()"><i class="fas fa-list-ul"></i></button>
-             ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+             <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
              <div class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
         </div>
         <div class="flex items-center gap-2 shrink-0">

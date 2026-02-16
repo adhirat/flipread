@@ -62,12 +62,40 @@ function updateUI() {
     document.getElementById('st-logo-preview').innerHTML = '<img src="'+esc(currentUser.store_logo_url)+'" style="width:100%;height:100%;object-fit:cover">';
   }
   document.getElementById('set-email').value = currentUser.email;
+  document.getElementById('set-name-input').value = currentUser.name || '';
   
   const username = (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
   document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(username);
   
   const limits = { free: '5 MB', basic: '10 MB', pro: '50 MB', business: '200 MB' };
   document.getElementById('limit-text').textContent = 'Upload Limit: ' + (limits[currentUser.plan] || '5 MB');
+
+  // Highlight active theme button
+  const savedTheme = localStorage.getItem('flipread-theme') || 'light';
+  document.querySelectorAll('[id^="theme-btn-"]').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('theme-btn-' + savedTheme);
+  if(activeBtn) activeBtn.classList.add('active');
+}
+
+async function saveProfile() {
+  const name = document.getElementById('set-name-input').value;
+  if(!name) return alert('Name is required');
+  
+  try {
+    const res = await fetch(API + '/api/user/profile', {
+      method: 'PATCH', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if(res.ok) {
+      alert('Profile updated!');
+      currentUser.name = name;
+      updateUI();
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to update profile');
+    }
+  } catch { alert('Network error'); }
 }
 
 function toggleAuthMode() {
@@ -383,9 +411,28 @@ function copyText(t, btn) {
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('flipread-theme', t);
+  updateThemeIcons(t);
+}
+function toggleDashTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const newTheme = current === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+}
+function updateThemeIcons(theme) {
+  const isDark = theme === 'dark';
+  const icon = isDark ? 'fa-sun' : 'fa-moon';
+  const mobileIcon = document.getElementById('dash-theme-icon');
+  const sidebarIcon = document.getElementById('dash-theme-icon-sidebar');
+  if(mobileIcon) {
+    mobileIcon.className = 'fas ' + icon;
+  }
+  if(sidebarIcon) {
+    sidebarIcon.className = 'fas ' + icon;
+  }
 }
 // Init
-if(localStorage.getItem('flipread-theme')) setTheme(localStorage.getItem('flipread-theme'));
+const savedTheme = localStorage.getItem('flipread-theme') || 'light';
+setTheme(savedTheme);
 const params = new URLSearchParams(window.location.search);
 if (params.get('mode') === 'register') {
   isRegister = true;
@@ -471,5 +518,27 @@ async function executeDeleteAccount() {
     btn.textContent = oldText;
     btn.disabled = false;
   }
+}
+
+// Mobile Sidebar
+function toggleSidebar() {
+  const sb = document.getElementById('main-sidebar');
+  const ov = document.querySelector('.mobile-overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('active');
+}
+function closeSidebar() {
+  document.getElementById('main-sidebar').classList.remove('open');
+  document.querySelector('.mobile-overlay').classList.remove('active');
+}
+function toggleCollapse() {
+  const sb = document.getElementById('main-sidebar');
+  const isCollapsed = sb.classList.toggle('collapsed');
+  localStorage.setItem('flipread-sidebar-collapsed', isCollapsed);
+}
+
+// Init collapse state
+if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.innerWidth > 768) {
+  document.getElementById('main-sidebar').classList.add('collapsed');
 }
 `;

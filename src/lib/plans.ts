@@ -25,7 +25,7 @@ export const PLANS: Record<string, PlanLimits> = {
     analyticsLevel: 'basic',
   },
   basic: {
-    maxBooks: 2,
+    maxBooks: 5,
     maxFileSizeBytes: 10 * 1024 * 1024, // 10 MB
     maxMonthlyViews: 2_000,
     customSlug: false,
@@ -36,7 +36,7 @@ export const PLANS: Record<string, PlanLimits> = {
     analyticsLevel: 'basic',
   },
   pro: {
-    maxBooks: 25,
+    maxBooks: 50,
     maxFileSizeBytes: 50 * 1024 * 1024, // 50 MB
     maxMonthlyViews: 50_000,
     customSlug: true,

@@ -8,6 +8,8 @@ export interface Env {
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   JWT_SECRET: string;
+  __STATIC_CONTENT?: KVNamespace;
+  __STATIC_CONTENT_MANIFEST?: string;
 }
 
 export interface Variables {

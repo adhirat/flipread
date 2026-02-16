@@ -45,9 +45,32 @@ export function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-export function getFileType(filename: string): 'pdf' | 'epub' | null {
-  const ext = filename.toLowerCase().split('.').pop();
-  if (ext === 'pdf') return 'pdf';
-  if (ext === 'epub') return 'epub';
-  return null;
+export type FileType = 'pdf' | 'epub' | 'docx' | 'pptx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'rtf' | 'html' | 'image';
+
+const FILE_TYPE_MAP: Record<string, FileType> = {
+  pdf: 'pdf',
+  epub: 'epub',
+  doc: 'docx',
+  docx: 'docx',
+  ppt: 'pptx',
+  pptx: 'pptx',
+  xls: 'xlsx',
+  xlsx: 'xlsx',
+  csv: 'csv',
+  txt: 'txt',
+  md: 'md',
+  rtf: 'rtf',
+  html: 'html',
+  htm: 'html',
+  jpg: 'image',
+  jpeg: 'image',
+  png: 'image',
+  gif: 'image',
+  webp: 'image',
+  svg: 'image',
+};
+
+export function getFileType(filename: string): FileType | null {
+  const ext = filename.toLowerCase().split('.').pop() || '';
+  return FILE_TYPE_MAP[ext] || null;
 }

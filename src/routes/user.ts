@@ -43,6 +43,22 @@ user.patch('/store', async (c) => {
   return c.json({ success: true });
 });
 
+// PATCH /api/user/profile — update profile
+user.patch('/profile', async (c) => {
+  const currentUser = c.get('user');
+  const { name } = await c.req.json<{ name: string }>();
+
+  if (!name || name.length < 2) {
+    return c.json({ error: 'Name must be at least 2 characters' }, 400);
+  }
+
+  await c.env.DB.prepare(
+    "UPDATE users SET name = ?, updated_at = datetime('now') WHERE id = ?"
+  ).bind(name, currentUser.id).run();
+
+  return c.json({ success: true });
+});
+
 // POST /api/user/store/logo — upload store logo
 user.post('/store/logo', async (c) => {
   const currentUser = c.get('user');

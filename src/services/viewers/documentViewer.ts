@@ -12,6 +12,12 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${safeTitle} — FlipRead</title>
+    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+    <meta property="og:title" content="${safeTitle} — FlipRead">
+    <meta property="og:description" content="Read this interactive flipbook on FlipRead.">
+    <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
+    <meta name="twitter:card" content="summary_large_image">
     <script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
     <script src="https://unpkg.com/docx-preview/dist/docx-preview.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -152,7 +158,7 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
 
     <header class="hdr" id="main-hdr">
         <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />` : ''}
+            <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
             <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
