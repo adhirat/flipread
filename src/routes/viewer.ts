@@ -5,17 +5,25 @@ import type { Env, Book } from '../lib/types';
 import { StorageService } from '../services/storage';
 import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
-import { pdfViewerHTML, epubViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
+import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
 
-export function viewerPage(book: Book & { author_name: string; author_plan: string }, appUrl: string): string {
+export function viewerPage(book: Book & { author_name: string; author_plan: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
   const authorPlan = getPlanLimits(book.author_plan);
   const showBranding = !authorPlan.removeBranding;
   const fileUrl = `${appUrl}/read/api/file/${book.id}`;
   const coverUrl = book.cover_key ? `${appUrl}/read/api/cover/${book.id}` : '';
 
+  if (mode === 'web') {
+    return webViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+  }
+
   if (book.type === 'pdf') {
     return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+  } else if (['doc', 'docx'].includes(book.type)) {
+    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
+  } else if (['ppt', 'pptx'].includes(book.type)) {
+    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
   } else {
     return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding);
   }
@@ -50,7 +58,8 @@ viewer.get('/:slug', async (c) => {
       'This book has reached its monthly view limit. The publisher can upgrade their plan for more views.'), 403);
   }
 
-  return c.html(viewerPage(book, c.env.APP_URL));
+  const mode = c.req.query('mode') || 'standard';
+  return c.html(viewerPage(book, c.env.APP_URL, mode));
 });
 
 // GET /api/file/:bookId — serve the actual file from R2

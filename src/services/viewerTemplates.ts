@@ -7,4 +7,5 @@ export { pdfViewerHTML } from './viewers/pdfViewer';
 export { epubViewerHTML } from './viewers/epubViewer';
 export { documentViewerHTML } from './viewers/documentViewer';
 export { pptViewerHTML } from './viewers/pptViewer';
+export { webViewerHTML } from './viewers/webViewer';
 export { passwordPage, errorPage } from './viewers/commonPages';

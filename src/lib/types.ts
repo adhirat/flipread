@@ -36,7 +36,7 @@ export interface Book {
   user_id: string;
   title: string;
   slug: string;
-  type: 'pdf' | 'epub';
+  type: 'pdf' | 'epub' | 'doc' | 'docx' | 'ppt' | 'pptx';
   file_key: string;
   cover_url: string;
   cover_key: string;

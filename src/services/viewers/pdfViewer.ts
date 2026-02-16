@@ -110,8 +110,11 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     </style>
         #chat-w.o { right: 0; }
         .chat-h { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .chat-b { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .chat-m { background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.5; color: #eee; max-width: 90%; align-self: flex-start; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        .chat-b { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; }
+        .chat-tab-c { display: none; width: 100%; }
+        .chat-tab-c.active { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .chat-m { background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.5; color: #eee; width: 100%; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        .search-item { border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin: 0; width: 100%; background: rgba(255,255,255,0.03); padding: 12px; }
         .chat-t { font-size: 9px; opacity: 0.3; margin-top: 4px; display: block; text-align: right; }
         .chat-f { padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; background: rgba(0,0,0,0.2); }
         .chat-i { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 15px; color: #fff; outline: none; font-size: 13px; }
@@ -140,6 +143,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <button class="hdr-i" id="zo" style="width:26px;height:26px;font-size:10px"><i class="fas fa-minus"></i></button>
                 <div class="zt" id="ztxt">100%</div>
                 <button class="hdr-i" id="zi" style="width:26px;height:26px;font-size:10px"><i class="fas fa-plus"></i></button>
+                <button class="hdr-i" onclick="resetZoom()" style="width:26px;height:26px;font-size:10px;opacity:0.6"><i class="fas fa-redo-alt"></i></button>
             </div>
             <button class="hdr-i" id="m-btn" title="Toggle Layout"><i class="fas fa-expand"></i></button>
         </div>
@@ -209,13 +213,20 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <div class="p-6 overflow-y-auto max-h-[60vh]">
                 <div id="p-bg" class="tab-content active">
                     <p class="text-[9px] uppercase opacity-40 mb-4 tracking-widest font-bold">Backgrounds</p>
-                    <div class="grid grid-cols-6 gap-2 mb-6">
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#ffffff" onclick="setBg('#ffffff')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#f3f0e8" onclick="setBg('#f3f0e8')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#fafafa" onclick="setBg('#fafafa')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#111827" onclick="setBg('#111827')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
-                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" style="background:#000000" onclick="setBg('#000000')"></div>
+                    <div class="grid grid-cols-5 gap-3 mb-6">
+                        <!-- Light -->
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7')"></div>
+                        
+                        <!-- Dark -->
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)')"></div>
+                        <div class="w-8 h-8 rounded-full cursor-pointer ring-1 ring-white/10" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e')"></div>
                     </div>
                 </div>
                 <div id="p-am" class="tab-content">
@@ -237,6 +248,10 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                         <i class="fas fa-comments mr-2"></i> Open Personal Desk
                     </button>
                 <div class="pt-4 border-t border-white/5 flex gap-2">
+                    <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
+                    <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
+                        <i class="fas fa-image mr-2"></i> Wallpaper
+                    </button>
                     <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
                         <i class="fas fa-undo mr-2"></i> Reset
                     </button>
@@ -255,6 +270,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             constructor() {
                 this.pdf = null; this.pf = null; this.tp = 0; this.zoom = 1; this.full = false;
                 this.rp = new Set(); this.rq = new Set(); this.ir = false;
+                this.panX = 0; this.panY = 0; this.isDragging = false; this.startX = 0; this.startY = 0;
                 this.init();
             }
             async init() {
@@ -267,7 +283,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     this.tp = this.pdf.numPages;
                     document.getElementById('ps').max = this.tp - 1;
                     
-                    // Attempt to extract cover and back if missing
                     if (!'${coverUrl}') {
                         const pg = await this.pdf.getPage(1);
                         const vp = pg.getViewport({scale:1});
@@ -277,7 +292,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                         document.getElementById('c-v-inner').innerHTML = \`<img src="\${cv.toDataURL()}" style="width:100%;height:100%;object-fit:cover;">\`;
                     }
                     
-                    // Extract last page for back cover feel
                     const lpg = await this.pdf.getPage(this.tp);
                     const lvp = lpg.getViewport({scale:1});
                     const lcv = document.createElement('canvas');
@@ -316,7 +330,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     width: dims.w, height: dims.h, size: 'fixed',
                     maxShadowOpacity: 0.4, showCover: true,
                     mobileScrollSupport: false, useMouseEvents: true,
-                    flippingTime: 800
+                    flippingTime: 800, autoCenter: true
                 });
                 this.pf.loadFromHTML(document.querySelectorAll('.pg'));
                 this.pf.on('flip', e => { this.update(); this.queue(e.data); });
@@ -332,7 +346,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             }
             queue(i) {
                 this.target = i;
-                for(let j=Math.max(0,i-3); j<=Math.min(this.tp-1,i+3); j++) {
+                for(let j=Math.max(0,i-10); j<=Math.min(this.tp-1,i+10); j++) {
                     if(!this.rp.has(j+1)) this.rq.add(j+1);
                 }
                 this.process();
@@ -371,27 +385,64 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 }
             }
             setup() {
-                document.getElementById('pb').onclick = () => this.pf.flipPrev();
-                document.getElementById('nb').onclick = () => this.pf.flipNext();
-                document.getElementById('ps').oninput = e => this.pf.flip(+e.target.value);
-                document.getElementById('zi').onclick = () => { this.zoom = Math.min(this.zoom+0.2, 3); this.applyZoom(); };
-                document.getElementById('zo').onclick = () => { this.zoom = Math.max(this.zoom-0.2, 0.5); this.applyZoom(); };
+                document.getElementById('pb').onclick = () => { if(this.zoom===1) this.pf.flipPrev(); };
+                document.getElementById('nb').onclick = () => { if(this.zoom===1) this.pf.flipNext(); };
+                document.getElementById('ps').oninput = e => { if(this.zoom===1) this.pf.flip(+e.target.value); };
+                document.getElementById('zi').onclick = () => { this.zoom = Math.min(this.zoom+0.5, 3); this.applyZoom(); };
+                document.getElementById('zo').onclick = () => { this.zoom = Math.max(this.zoom-0.5, 1); if(this.zoom===1) { this.panX=0; this.panY=0; } this.applyZoom(); };
                 document.getElementById('m-btn').onclick = () => this.toggleLayout();
                 
                 window.onmousemove = (e) => {
+                    if(this.isDragging) {
+                        e.preventDefault();
+                        this.panX = e.clientX - this.startX;
+                        this.panY = e.clientY - this.startY;
+                        this.applyZoom();
+                        return;
+                    }
                     if(!this.full) return;
                     if(e.clientY < 70) this.showUI(true);
                     else if(e.clientY > window.innerHeight - 70) this.showUI(true);
                     else this.showUI(false);
                 };
+                
+                window.onmousedown = (e) => {
+                    if(this.zoom > 1) {
+                        this.isDragging = true;
+                        this.startX = e.clientX - this.panX;
+                        this.startY = e.clientY - this.panY;
+                        document.body.style.cursor = 'grabbing';
+                    }
+                };
+                
+                window.onmouseup = () => {
+                    this.isDragging = false;
+                    if(this.zoom > 1) document.body.style.cursor = 'grab';
+                    else document.body.style.cursor = 'default';
+                };
+
+                window.addEventListener('wheel', (e) => {
+                    if(e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        const d = -Math.sign(e.deltaY) * 0.2;
+                        const newZoom = Math.min(Math.max(1, this.zoom + d), 3);
+                        if(newZoom !== this.zoom) {
+                            this.zoom = newZoom;
+                            if(this.zoom === 1) { this.panX = 0; this.panY = 0; }
+                            this.applyZoom();
+                        }
+                    }
+                }, {passive: false});
 
                 document.onkeydown = e => { 
+                    if(this.zoom > 1) return;
                     if(e.key==='ArrowLeft') this.pf.flipPrev();
                     if(e.key==='ArrowRight') this.pf.flipNext();
                     if(e.key==='f') this.toggleLayout();
                 };
-                let sx=0; document.ontouchstart=e=>sx=e.touches[0].clientX;
+                let sx=0; document.ontouchstart=e=> { sx=e.touches[0].clientX; };
                 document.ontouchend=e=>{
+                    if(this.zoom > 1) return;
                     let dx=sx-e.changedTouches[0].clientX;
                     if(Math.abs(dx)>50) dx>0?this.pf.flipNext():this.pf.flipPrev();
                 };
@@ -401,12 +452,17 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 this.full = !this.full;
                 document.body.classList.toggle('full-mode', this.full);
                 document.getElementById('m-btn').innerHTML = this.full ? '<i class="fas fa-compress-alt"></i>' : '<i class="fas fa-expand"></i>';
-                this.zoom = 1; this.applyZoom(); this.build();
+                this.zoom = 1; this.panX = 0; this.panY = 0; this.applyZoom(); this.build();
             }
             showUI(v) { if(this.full) { document.getElementById('main-hdr').classList.toggle('v', v); document.getElementById('main-ft').classList.toggle('v', v); } }
             applyZoom() {
-                document.getElementById('b-t').style.transform = 'scale('+this.zoom+')';
+                const nav = document.getElementById('b-t');
+                nav.style.transform = \`translate(\${this.panX}px, \${this.panY}px) scale(\${this.zoom})\`;
                 document.getElementById('ztxt').textContent = Math.round(this.zoom*100)+'%';
+                
+                // Smart lock: Toggle pointer events on book container to disable drag-flip when zoomed
+                document.getElementById('fc').style.pointerEvents = this.zoom > 1 ? 'none' : 'auto';
+                document.body.style.cursor = this.zoom > 1 ? 'grab' : 'default';
             }
         }
         window.openBook = () => {
@@ -456,20 +512,31 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             i.value = '';
             renderNotes();
         };
-        window.renderNotes = () => {
-            const b = document.getElementById('chat-notes');
-            if(!b) return;
-            let notes = [];
-            try { 
-                notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
-                if(!Array.isArray(notes)) throw new Error();
-            } catch(e) {
-                const legacy = localStorage.getItem('fr_nt_'+FU);
-                if(legacy) notes = [{text: legacy, time: 'Legacy'}];
-            }
-            b.innerHTML = notes.map(n => '<div class="chat-m">' + n.text.replace(/\\n/g, '<br>') + '<span class="chat-t">' + n.time + '</span></div>').join('');
+            b.innerHTML = notes.map(n => 
+                '<div class=\"search-item flex justify-between items-start group\">' +
+                '<div>' +
+                '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full\" style=\"border-left: 2px solid #ffffff; padding-left: 8px\">' + n.text.replace(/\\n/g, '<br>') + '</p>' +
+                '<p class=\"text-[9px] opacity-40 mt-1 pl-2\">' + n.time + '</p></div>' +
+                '</div>'
+            ).join('');
             b.scrollTop = b.scrollHeight;
         };
+        window.loadBg = (e) => {
+            const f = e.target.files[0];
+            if(!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => document.body.style.background = 'url('+ev.target.result+') center/cover fixed';
+            r.readAsDataURL(f);
+        };
+        window.resetZoom = () => { if(pdfViewer) { pdfViewer.zoom = 1; pdfViewer.applyZoom(); } };
+        window.bgClick = (e) => {
+            if(e.target.id !== 's-c' || !pdfViewer || pdfViewer.zoom > 1) return;
+            // Center is roughly window.innerWidth/2
+            if(e.clientX < window.innerWidth/2) pdfViewer.pf.flipPrev();
+            else pdfViewer.pf.flipNext();
+        };
+        document.getElementById('s-c').onclick = bgClick;
+        let pdfViewer;
         window.setBg = (c) => document.body.style.background = c;
         window.switchTab = (e, tabId) => {
             const m = e.target.closest('.modal-c');
@@ -491,7 +558,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             amb = new Audio(urls[type]);
             amb.loop = true; amb.play();
         };
-        new PDFViewer();
+        pdfViewer = new PDFViewer();
     </script>
 </body>
 </html>`;
