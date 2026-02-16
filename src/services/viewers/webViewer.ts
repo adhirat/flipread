@@ -52,7 +52,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .nav-btn:hover { background: rgba(0,0,0,0.1); }
         
         /* Main Content */
-        #content-wrapper { max-width: 1200px; margin: 0 auto; padding: 40px 20px 100px; min-height: 100vh; }
+        #content-wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: calc(100vh - 60px); overflow-y: auto; }
         
         /* Dynamic Sections */
         .section-header { 
@@ -118,6 +118,21 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         
         /* Loading */
         #ld { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s; }
+        /* Settings Modal */
+        #set-m {
+            position: fixed; top: 70px; right: 20px; z-index: 2000; background: white;
+            padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 300px; display: none; flex-direction: column; gap: 16px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        #set-m.open { display: flex; }
+        .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .set-lbl { font-size: 0.85rem; font-weight: 600; color: #555; }
+        .set-ctrl { display: flex; items-center; gap: 8px; background: #f5f5f5; padding: 4px; border-radius: 8px; }
+        .set-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .set-btn:hover { background: white; shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .set-val { font-size: 0.8rem; font-weight: 600; min-width: 40px; text-align: center; }
+        select.set-sel { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.85rem; outline: none; }
     </style>
 </head>
 <body>
@@ -148,6 +163,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <div class="nav-btn" onclick="toggleTOC()">
                     <i class="fas fa-list-ul"></i>
                     <span class="hidden sm:inline">Contents</span>
+                </div>
+                <div class="nav-btn" onclick="toggleSettings()">
+                    <i class="fas fa-font"></i>
+                    <span class="hidden sm:inline">Aa</span>
                 </div>
                 <div class="nav-btn" onclick="toggleChat()">
                     <i class="fas fa-pen-fancy"></i>
@@ -194,8 +213,31 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
-    
-    ${showBranding ? '<a href="https://flipread.pages.dev" target="_blank" style="position:fixed;bottom:20px;right:20px;font-size:10px;text-decoration:none;opacity:0.5;color:black;">Powered by FlipRead</a>' : ''}
+    <!-- Settings Modal -->
+    <div id="set-m" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-bold uppercase tracking-wider m-0">Typography</h3>
+            <button onclick="toggleSettings()" class="text-gray-400 hover:text-black">✕</button>
+        </div>
+        <div class="set-row">
+            <span class="set-lbl">Font Size</span>
+            <div class="set-ctrl">
+                <div class="set-btn" onclick="changeFontSize(-10)">-</div>
+                <div class="set-val" id="wfz-v">100%</div>
+                <div class="set-btn" onclick="changeFontSize(10)">+</div>
+            </div>
+        </div>
+        <div class="flex flex-col gap-2">
+            <span class="set-lbl">Font Family</span>
+            <select class="set-sel" id="wff-s" onchange="setFont(this.value)">
+                <option value="Inter, system-ui, sans-serif">Default (Inter)</option>
+                <option value="Times New Roman, serif">Serif (Times)</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="Arial, sans-serif">Sans-Serif (Arial)</option>
+                <option value="Courier New, monospace">Monospace</option>
+            </select>
+        </div>
+    </div>
 
     <script>
         const FU='${fileUrl}';
@@ -339,7 +381,8 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 flow: "scrolled",
                 manager: "continuous",
                 width: "100%",
-                height: "100%"
+                height: "100%",
+                spread: "none"
             });
             await bookRender.display();
             
@@ -400,10 +443,50 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             });
 
             // Handle Resize
+            let resizeTimer;
             window.addEventListener('resize', () => {
-                if(bookRender) bookRender.resize(); 
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if(bookRender) bookRender.resize(); 
+                }, 250);
+            });
+            
+            // Apply saved settings
+            book.ready.then(() => {
+                const fs = localStorage.getItem('fr_web_fs');
+                const ff = localStorage.getItem('fr_web_ff');
+                if(fs) changeFontSize(0); // Applies current fs
+                if(ff) setFont(ff);
             });
         }
+        
+        // --- Typography Logic ---
+        let wfz = parseInt(localStorage.getItem('fr_web_fs') || '100');
+        let wff = localStorage.getItem('fr_web_ff') || 'Inter, system-ui, sans-serif';
+        
+        window.changeFontSize = (d) => {
+            wfz = Math.max(50, Math.min(200, wfz + d));
+            document.getElementById('wfz-v').textContent = wfz + '%';
+            localStorage.setItem('fr_web_fs', wfz);
+            if(bookRender) {
+                bookRender.themes.fontSize(wfz + "%");
+            }
+        };
+        
+        window.setFont = (f) => {
+            wff = f;
+            localStorage.setItem('fr_web_ff', wff);
+            if(bookRender) {
+                bookRender.themes.font(wff);
+            }
+        };
+        
+        window.toggleSettings = () => {
+            document.getElementById('set-m').classList.toggle('open');
+            // Update UI
+            document.getElementById('wfz-v').textContent = wfz + '%';
+            document.getElementById('wff-s').value = wff;
+        };
         
         // --- Notes Logic ---
         window.sendNote = () => {
