@@ -242,9 +242,18 @@ books.delete('/:id', async (c) => {
     return c.json({ error: 'Book not found' }, 404);
   }
 
-  // Delete from R2
+  // Delete from R2 (file and cover)
   const storage = new StorageService(c.env.BUCKET);
-  await storage.delete(book.file_key);
+  
+  // Delete main file
+  if (book.file_key) {
+    await storage.delete(book.file_key).catch(e => console.error('Failed to delete file', e));
+  }
+
+  // Delete cover if exists  
+  if (book.cover_key) {
+    await storage.delete(book.cover_key).catch(e => console.error('Failed to delete cover', e));
+  }
 
   // Delete from D1 (cascades to view_logs)
   await c.env.DB.prepare('DELETE FROM books WHERE id = ?').bind(bookId).run();
