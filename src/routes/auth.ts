@@ -106,4 +106,79 @@ auth.get('/me', async (c) => {
   return c.json({ user: user || null });
 });
 
+// POST /api/auth/forgot-password
+auth.post('/forgot-password', async (c) => {
+  const { email } = await c.req.json<{ email: string }>();
+  if (!email) return c.json({ error: 'Email required' }, 400);
+
+  const user = await c.env.DB.prepare('SELECT id, name FROM users WHERE email = ?')
+    .bind(email.toLowerCase().trim())
+    .first<{ id: string; name: string }>();
+
+  if (!user) {
+    // Return success even if user not found to prevent email enumeration
+    return c.json({ success: true, message: 'If an account exists with this email, you will receive a reset link.' });
+  }
+
+  const token = crypto.randomUUID();
+  await c.env.KV.put(`reset_token:${token}`, user.id, { expirationTtl: 3600 });
+
+  const resetUrl = `${c.env.APP_URL}/dashboard?mode=reset&token=${token}`;
+  
+  // Send email via Resend
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${c.env.RESEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: 'FlipRead <noreply@adhirat.com>',
+        to: email,
+        subject: 'Reset your FlipRead password',
+        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+          <h2 style="color:#4f46e5;">Reset Your Password</h2>
+          <p>Hi ${user.name || 'there'},</p>
+          <p>We received a request to reset your password for your FlipRead account. Click the button below to set a new password:</p>
+          <a href="${resetUrl}" style="background:#4f46e5;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:20px 0;">Reset Password</a>
+          <p style="color:#64748b;font-size:14px;">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+        </div>`
+      })
+    });
+    
+    if (!res.ok) {
+      console.error('Resend error:', await res.text());
+      return c.json({ error: 'Failed to send reset email' }, 500);
+    }
+  } catch (err) {
+    console.error('Email error:', err);
+    return c.json({ error: 'Failed to send reset email' }, 500);
+  }
+
+  return c.json({ success: true, message: 'Reset link sent to your email.' });
+});
+
+// POST /api/auth/reset-password
+auth.post('/reset-password', async (c) => {
+  const { token, password } = await c.req.json<{ token: string; password: string }>();
+  if (!token || !password || password.length < 8) {
+    return c.json({ error: 'Token and password (min 8 chars) required' }, 400);
+  }
+
+  const userId = await c.env.KV.get(`reset_token:${token}`);
+  if (!userId) {
+    return c.json({ error: 'Invalid or expired reset token' }, 400);
+  }
+
+  const passwordHash = await hashPassword(password);
+  await c.env.DB.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .bind(passwordHash, userId)
+    .run();
+
+  await c.env.KV.delete(`reset_token:${token}`);
+
+  return c.json({ success: true, message: 'Password reset successful. You can now log in.' });
+});
+
 export default auth;

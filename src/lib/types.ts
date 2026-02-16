@@ -8,6 +8,7 @@ export interface Env {
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   JWT_SECRET: string;
+  RESEND_API_KEY: string;
   __STATIC_CONTENT?: KVNamespace;
   __STATIC_CONTENT_MANIFEST?: string;
 }
@@ -38,7 +39,7 @@ export interface Book {
   user_id: string;
   title: string;
   slug: string;
-  type: 'pdf' | 'epub' | 'doc' | 'docx' | 'ppt' | 'pptx';
+  type: 'pdf' | 'epub' | 'doc' | 'docx' | 'ppt' | 'pptx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'rtf' | 'html' | 'image';
   file_key: string;
   cover_url: string;
   cover_key: string;

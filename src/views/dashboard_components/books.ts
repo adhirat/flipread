@@ -9,10 +9,11 @@ export const booksView = `
       <div class="upload-zone" onclick="document.getElementById('file-input').click()">
         <i class="fas fa-cloud-upload-alt" style="font-size:48px;color:var(--accent-cyan);margin-bottom:16px"></i>
         <h3 style="margin-bottom:8px">Upload New Book</h3>
-        <p style="color:var(--text-secondary);font-size:14px">Drag & drop or click to upload PDF/EPUB</p>
+        <p style="color:var(--text-secondary);font-size:14px">Drag & drop or click to upload files</p>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:4px">PDF, EPUB, DOCX, PPTX, XLSX, CSV, TXT, MD, HTML, Images</p>
         <div id="upload-msg" class="msg" style="margin-top:16px;display:inline-block"></div>
       </div>
-      <input type="file" id="file-input" accept=".pdf,.epub" style="display:none" onchange="uploadBook(event)">
+      <input type="file" id="file-input" accept=".pdf,.epub,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.rtf,.html,.htm,.jpg,.jpeg,.png,.gif,.webp,.svg" style="display:none" onchange="uploadBook(event)">
       
       <div class="book-grid" id="book-grid"></div>
     </div>

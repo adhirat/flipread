@@ -2,7 +2,7 @@ export const dashboardScript = `
 const API = '';
 let currentUser = null;
 let currentBooks = [];
-let isRegister = false;
+let authMode = 'login'; // login, register, forgot, reset
 
 // Navigation
 function switchView(view) {
@@ -99,32 +99,140 @@ async function saveProfile() {
 }
 
 function toggleAuthMode() {
-  isRegister = !isRegister;
-  document.getElementById('auth-title').textContent = isRegister ? 'Create Account' : 'Welcome Back';
-  document.getElementById('auth-btn').textContent = isRegister ? 'Create Account' : 'Sign In';
-  document.getElementById('auth-name').classList.toggle('hidden', !isRegister);
-  document.getElementById('auth-toggle-text').textContent = isRegister ? 'Already have an account?' : 'New here?';
-  document.getElementById('auth-toggle-link').textContent = isRegister ? 'Sign In' : 'Create Account';
+  setAuthMode(authMode === 'register' ? 'login' : 'register');
+}
+
+function setAuthMode(mode, token) {
+  authMode = mode;
+  const isLogin = mode === 'login';
+  const isReg = mode === 'register';
+  const isForgot = mode === 'forgot';
+  const isReset = mode === 'reset';
+
+  const titleEl = document.getElementById('auth-title');
+  const subEl = document.getElementById('auth-subtitle');
+  const btnEl = document.getElementById('auth-btn');
+  const fieldsEl = document.getElementById('auth-fields');
+  const resetFieldsEl = document.getElementById('reset-fields');
+  const nameEl = document.getElementById('auth-name');
+  const passEl = document.getElementById('auth-pass');
+  const footerEl = document.getElementById('auth-footer');
+  const backEl = document.getElementById('back-to-login');
+  const forgotLinkEl = document.getElementById('forgot-link-container');
+  const msgEl = document.getElementById('auth-msg');
+
+  msgEl.style.display = 'none';
+  
+  if (isLogin) {
+    titleEl.textContent = 'Welcome Back';
+    subEl.textContent = '';
+    btnEl.textContent = 'Sign In';
+    fieldsEl.classList.remove('hidden');
+    resetFieldsEl.classList.add('hidden');
+    nameEl.classList.add('hidden');
+    passEl.classList.remove('hidden');
+    forgotLinkEl.classList.remove('hidden');
+    footerEl.classList.remove('hidden');
+    backEl.classList.add('hidden');
+    document.getElementById('auth-toggle-text').textContent = 'New here?';
+    document.getElementById('auth-toggle-link').textContent = 'Create Account';
+  } else if (isReg) {
+    titleEl.textContent = 'Create Account';
+    subEl.textContent = '';
+    btnEl.textContent = 'Create Account';
+    fieldsEl.classList.remove('hidden');
+    resetFieldsEl.classList.add('hidden');
+    nameEl.classList.remove('hidden');
+    passEl.classList.remove('hidden');
+    forgotLinkEl.classList.add('hidden');
+    footerEl.classList.remove('hidden');
+    backEl.classList.add('hidden');
+    document.getElementById('auth-toggle-text').textContent = 'Already have an account?';
+    document.getElementById('auth-toggle-link').textContent = 'Sign In';
+  } else if (isForgot) {
+    titleEl.textContent = 'Forgot Password';
+    subEl.textContent = 'Enter your email to receive a reset link.';
+    btnEl.textContent = 'Send Reset Link';
+    fieldsEl.classList.remove('hidden');
+    resetFieldsEl.classList.add('hidden');
+    nameEl.classList.add('hidden');
+    passEl.classList.add('hidden');
+    forgotLinkEl.classList.add('hidden');
+    footerEl.classList.add('hidden');
+    backEl.classList.remove('hidden');
+  } else if (isReset) {
+    titleEl.textContent = 'Set New Password';
+    subEl.textContent = 'Please enter your new password below.';
+    btnEl.textContent = 'Update Password';
+    fieldsEl.classList.add('hidden');
+    resetFieldsEl.classList.remove('hidden');
+    footerEl.classList.add('hidden');
+    backEl.classList.remove('hidden');
+    // Store token in global scope if needed, or just read from DOM/URL later
+    if (token) window.resetToken = token;
+  }
 }
 
 async function submitAuth() {
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-pass').value;
   const name = document.getElementById('auth-name').value;
+  const newPass = document.getElementById('reset-pass').value;
   const msgEl = document.getElementById('auth-msg');
-  const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-  const body = isRegister ? { email, password, name } : { email, password };
+  
+  let endpoint = '';
+  let body = {};
+
+  if (authMode === 'login') {
+    endpoint = '/api/auth/login';
+    body = { email, password };
+  } else if (authMode === 'register') {
+    endpoint = '/api/auth/register';
+    body = { email, password, name };
+  } else if (authMode === 'forgot') {
+    endpoint = '/api/auth/forgot-password';
+    body = { email };
+  } else if (authMode === 'reset') {
+    endpoint = '/api/auth/reset-password';
+    body = { token: window.resetToken, password: newPass };
+  }
   
   try {
+    const btn = document.getElementById('auth-btn');
+    const oldBtnText = btn.textContent;
+    btn.textContent = 'Please wait...';
+    btn.disabled = true;
+
     const res = await fetch(API + endpoint, { 
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if (data.user) { currentUser = data.user; showDashboard(); }
-    else { msgEl.textContent = data.error || 'Failed'; msgEl.className = 'msg error'; msgEl.style.display = 'block'; }
-  } catch { msgEl.textContent = 'Network error'; msgEl.className = 'msg error'; msgEl.style.display = 'block'; }
+    
+    btn.textContent = oldBtnText;
+    btn.disabled = false;
+
+    if (data.user) { 
+      currentUser = data.user; 
+      showDashboard(); 
+    } else if (data.success) {
+      msgEl.textContent = data.message || 'Success'; 
+      msgEl.className = 'msg success'; 
+      msgEl.style.display = 'block';
+      if (authMode === 'reset') {
+        setTimeout(() => setAuthMode('login'), 3000);
+      }
+    } else { 
+      msgEl.textContent = data.error || 'Failed'; 
+      msgEl.className = 'msg error'; 
+      msgEl.style.display = 'block'; 
+    }
+  } catch { 
+    msgEl.textContent = 'Network error'; 
+    msgEl.className = 'msg error'; 
+    msgEl.style.display = 'block'; 
+  }
 }
 
 async function logout() {
@@ -183,18 +291,22 @@ async function uploadBook(e) {
   const file = e.target.files[0];
   if (!file) return;
   const msgEl = document.getElementById('upload-msg');
-  msgEl.textContent = 'Preparing Cover...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
-  
+  msgEl.textContent = 'Preparing...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
+
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('title', file.name.replace(/\.(pdf|epub)$/i, ''));
+  fd.append('title', file.name.replace(/\.[^.]+$/, ''));
 
   try {
-    // Attempt to extract cover
+    // Attempt to extract cover for supported types
     const arrayBuffer = await file.arrayBuffer();
     let coverBlob = null;
+    const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+    const isEpub = file.type === 'application/epub+zip' || file.name.endsWith('.epub');
+    const isImage = file.type.startsWith('image/');
 
-    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    if (isPdf) {
+      msgEl.textContent = 'Extracting cover...';
       try {
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const page = await pdf.getPage(1);
@@ -206,7 +318,8 @@ async function uploadBook(e) {
         await page.render({ canvasContext: context, viewport }).promise;
         coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
       } catch (e) { console.error('PDF Cover Extract Failed', e); }
-    } else if (file.type === 'application/epub+zip' || file.name.endsWith('.epub')) {
+    } else if (isEpub) {
+      msgEl.textContent = 'Extracting cover...';
       try {
         const book = ePub(arrayBuffer);
         const coverUrl = await book.coverUrl();
@@ -214,13 +327,29 @@ async function uploadBook(e) {
           coverBlob = await fetch(coverUrl).then(r => r.blob());
         }
       } catch (e) { console.error('EPUB Cover Extract Failed', e); }
+    } else if (isImage) {
+      // Use the image itself as cover (create a thumbnail)
+      try {
+        const blob = new Blob([arrayBuffer], { type: file.type });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+        const canvas = document.createElement('canvas');
+        const maxDim = 400;
+        const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        coverBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+        URL.revokeObjectURL(url);
+      } catch (e) { console.error('Image Cover Extract Failed', e); }
     }
 
     if (coverBlob) {
       fd.append('cover', coverBlob, 'cover.jpg');
     }
 
-    msgEl.textContent = 'Uploading Book...';
+    msgEl.textContent = 'Uploading...';
     const res = await fetch(API + '/api/books/upload', {
       method: 'POST', credentials: 'include', body: fd
     });
@@ -435,12 +564,9 @@ const savedTheme = localStorage.getItem('flipread-theme') || 'light';
 setTheme(savedTheme);
 const params = new URLSearchParams(window.location.search);
 if (params.get('mode') === 'register') {
-  isRegister = true;
-  document.getElementById('auth-title').textContent = 'Create Account';
-  document.getElementById('auth-btn').textContent = 'Create Account';
-  document.getElementById('auth-name').classList.remove('hidden');
-  document.getElementById('auth-toggle-text').textContent = 'Already have an account?';
-  document.getElementById('auth-toggle-link').textContent = 'Sign In';
+  setAuthMode('register');
+} else if (params.get('mode') === 'reset' && params.get('token')) {
+  setAuthMode('reset', params.get('token'));
 }
 checkAuth();
 

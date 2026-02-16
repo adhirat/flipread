@@ -8,4 +8,7 @@ export { epubViewerHTML } from './viewers/epubViewer';
 export { documentViewerHTML } from './viewers/documentViewer';
 export { pptViewerHTML } from './viewers/pptViewer';
 export { webViewerHTML } from './viewers/webViewer';
+export { spreadsheetViewerHTML } from './viewers/spreadsheetViewer';
+export { textViewerHTML } from './viewers/textViewer';
+export { imageViewerHTML } from './viewers/imageViewer';
 export { passwordPage, errorPage } from './viewers/commonPages';

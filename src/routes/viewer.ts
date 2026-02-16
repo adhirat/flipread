@@ -5,7 +5,7 @@ import type { Env, Book } from '../lib/types';
 import { StorageService } from '../services/storage';
 import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
-import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
+import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
 
 export function viewerPage(book: Book & { author_name: string; author_plan: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
@@ -25,6 +25,12 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
     return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   } else if (['ppt', 'pptx'].includes(book.type)) {
     return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+  } else if (['xlsx', 'xls', 'csv'].includes(book.type)) {
+    return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+  } else if (['txt', 'md', 'rtf', 'html'].includes(book.type)) {
+    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+  } else if (book.type === 'image') {
+    return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   } else {
     return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   }
@@ -79,7 +85,28 @@ viewer.get('/api/file/:bookId', async (c) => {
   const obj = await storage.getObject(book.file_key);
   if (!obj) return c.text('File not found', 404);
 
-  const contentType = book.type === 'pdf' ? 'application/pdf' : 'application/epub+zip';
+  const contentTypeMap: Record<string, string> = {
+    pdf: 'application/pdf',
+    epub: 'application/epub+zip',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    csv: 'text/csv',
+    txt: 'text/plain',
+    md: 'text/plain',
+    rtf: 'application/rtf',
+    html: 'text/html',
+    image: 'application/octet-stream',
+  };
+  // For images, detect from the file extension in the key
+  let contentType = contentTypeMap[book.type] || 'application/octet-stream';
+  if (book.type === 'image') {
+    const ext = book.file_key.split('.').pop()?.toLowerCase() || '';
+    const imgMap: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
+    contentType = imgMap[ext] || 'image/jpeg';
+  }
   return new Response(obj.body, {
     headers: {
       'Content-Type': contentType,
