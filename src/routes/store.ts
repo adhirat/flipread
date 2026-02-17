@@ -19,6 +19,9 @@ export async function getUserByCustomDomain(db: D1Database, domain: string): Pro
   ).bind(domain.toLowerCase()).first<User>();
 }
 
+import { getCookie } from 'hono/cookie';
+import { memberAccessPage } from '../services/viewerTemplates';
+
 // GET /store/:username — displays a user's public book collection
 store.get('/:username', async (c) => {
   const username = c.req.param('username');
@@ -28,6 +31,35 @@ store.get('/:username', async (c) => {
     return c.html(notFoundPage(), 404);
   }
 
+  const settings = JSON.parse(user.store_settings || '{}');
+
+  // Private Store Check
+  if (settings.is_private) {
+    const cookieName = `mk_${user.id}`;
+    const accessKey = getCookie(c, cookieName);
+    
+    // Simple check: if cookie exists, we assume valid for now (stateless for speed)
+    // For more security, we should verify the key against DB, but verifying existence is a good first step
+    // Or we can verify against DB here:
+    let isValid = false;
+    if (accessKey) {
+      const member = await c.env.DB.prepare(
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+      ).bind(user.id, accessKey).first();
+      if (member) isValid = true;
+    }
+
+    if (!isValid) {
+      // Inject owner ID for the client-side script to use (via simple template replacement or global var)
+      // The memberAccessPage template we made has a placeholder or we can pass args?
+      // Our memberAccessPage takes (storeName, logoUrl).
+      // We need to inject ownerId.
+      let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+      html = html.replace('__OWNER_ID__', user.id);
+      return c.html(html);
+    }
+  }
+
   // Get their public books
   const booksResult = await c.env.DB.prepare(
     `SELECT id, title, slug, type, cover_url, view_count, created_at
@@ -35,7 +67,6 @@ store.get('/:username', async (c) => {
   ).bind(user.id).all<Book>();
 
   const books = booksResult.results || [];
-  const settings = JSON.parse(user.store_settings || '{}');
 
   return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
 });
@@ -77,7 +108,7 @@ store.get('/:username/contact', async (c) => {
 });
 
 export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false): string {
-  const storeName = user.store_name || `${user.name}'s Bookstore`;
+  const storeName = user.store_name || user.name;
   const safeName = esc(storeName);
   const bookCount = books.length;
   const showSearch = bookCount > 3;
@@ -86,6 +117,52 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const heroImage = settings.hero_image_url || '';
   const heroTitle = settings.hero_title || safeName;
   const heroCaption = settings.hero_caption || settings.description || `Browse ${user.name}'s curated library.`;
+
+  // Theme customization
+  const accentColor = settings.accent_color || '#c45d3e';
+  const fontChoice = settings.font_choice || 'dm-sans';
+  const layoutStyle = settings.layout_style || 'grid';
+  const cardStyle = settings.card_style || '3d-book';
+  const showViewCount = settings.show_view_count !== false;
+  const themePreset = settings.theme_preset || 'default';
+
+  // Font imports
+  const fontMap: Record<string, { import: string; family: string; heading: string }> = {
+    'dm-sans': { import: 'DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'DM Sans', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
+    'inter': { import: 'Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'Inter', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
+    'playfair': { import: 'Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600', family: "'DM Sans', system-ui, sans-serif", heading: "'Playfair Display', Georgia, serif" },
+    'space-grotesk': { import: 'Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'Space Grotesk', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
+  };
+  const font = fontMap[fontChoice] || fontMap['dm-sans'];
+
+  // Hex to RGB helper for accent color
+  const hexToRgb = (hex: string) => {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `${r}, ${g}, ${b}`;
+  };
+  const accentRgb = hexToRgb(accentColor);
+
+  // Layout-specific grid CSS
+  const gridCSS = layoutStyle === 'list'
+    ? `.grid { display:flex; flex-direction:column; gap:16px; }
+       .bk-card { display:flex; gap:20px; align-items:center; }
+       .bk-3d { padding-bottom:0; width:80px; height:110px; flex-shrink:0; perspective:none; margin-bottom:0; }
+       .bk-cover { position:relative; width:80px; height:110px; transform:none; }
+       .bk-card:hover .bk-cover { transform:none; }
+       .bk-spine { display:none; }
+       .bk-info { text-align:left; flex:1; }
+       .bk-ph-letter { font-size:28px; }`
+    : layoutStyle === 'masonry'
+    ? `.grid { columns: 3; column-gap: 30px; } .bk-card { break-inside:avoid; margin-bottom:30px; display:block; }
+       @media(max-width:900px){.grid{columns:2}} @media(max-width:600px){.grid{columns:2;column-gap:12px} .bk-card{margin-bottom:12px}}`
+    : '';
+
+  // Card style overrides
+  const cardCSS = cardStyle === 'flat-card'
+    ? `.bk-3d { perspective:none; } .bk-cover { transform:none; border-radius:12px; box-shadow:var(--shadow-card); } .bk-card:hover .bk-cover { transform:translateY(-4px); box-shadow:var(--shadow-card-hover); } .bk-spine { display:none; }`
+    : cardStyle === 'minimal-row'
+    ? `.bk-3d { padding-bottom:120%; } .bk-cover { transform:none; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.08); } .bk-card:hover .bk-cover { transform:none; box-shadow:0 2px 8px rgba(0,0,0,0.12); } .bk-spine { display:none; }`
+    : '';
 
   const bookCards = books.map((b, i) => {
     const firstLetter = (b.title || 'B').charAt(0).toUpperCase();
@@ -102,7 +179,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
       <div class="bk-info">
         <h3 class="bk-title">${esc(b.title)}</h3>
         <div class="bk-meta">
-          <span class="bk-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${b.view_count.toLocaleString()}</span>
+          ${showViewCount ? `<span class="bk-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${b.view_count.toLocaleString()}</span>` : ''}
           <span class="bk-type">${b.type.toUpperCase()}</span>
         </div>
       </div>
@@ -123,7 +200,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=${font.import}&display=swap" rel="stylesheet">
 <script>
 (function(){var t=localStorage.getItem('flipread-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
 </script>
@@ -131,18 +208,18 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 /* ====== COLOR SYSTEM ====== */
 :root,
 [data-theme="light"] {
-  --bg-primary: #faf9f7;
-  --bg-secondary: #f0eeeb;
-  --bg-card: #ffffff;
+  --bg-primary: ${themePreset === 'magazine' ? '#1a1a2e' : themePreset === 'dark-luxe' ? '#0a0a0a' : themePreset === 'minimal' ? '#ffffff' : '#faf9f7'};
+  --bg-secondary: ${themePreset === 'magazine' ? '#16213e' : themePreset === 'dark-luxe' ? '#111' : themePreset === 'minimal' ? '#f5f5f5' : '#f0eeeb'};
+  --bg-card: ${themePreset === 'magazine' ? '#1f2847' : themePreset === 'dark-luxe' ? '#1a1a1a' : '#ffffff'};
   --bg-card-hover: #fefefe;
-  --bg-hero: #f5f3f0;
-  --text-primary: #1a1613;
-  --text-secondary: #5c554d;
-  --text-tertiary: #9c9489;
-  --accent: #c45d3e;
-  --accent-hover: #a84e33;
-  --accent-subtle: rgba(196, 93, 62, 0.06);
-  --accent-glow: rgba(196, 93, 62, 0.12);
+  --bg-hero: ${themePreset === 'magazine' ? '#0f1629' : themePreset === 'dark-luxe' ? '#050505' : themePreset === 'minimal' ? '#fafafa' : '#f5f3f0'};
+  --text-primary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#ede9e3' : '#1a1613'};
+  --text-secondary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#a39d94' : '#5c554d'};
+  --text-tertiary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#6b655c' : '#9c9489'};
+  --accent: ${accentColor};
+  --accent-hover: ${accentColor};
+  --accent-subtle: rgba(${accentRgb}, 0.06);
+  --accent-glow: rgba(${accentRgb}, 0.12);
   --border: rgba(26, 22, 19, 0.08);
   --border-strong: rgba(26, 22, 19, 0.15);
   --shadow-card: 0 1px 3px rgba(26, 22, 19, 0.04), 0 8px 24px rgba(26, 22, 19, 0.06);
@@ -168,10 +245,10 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   --text-primary: #ede9e3;
   --text-secondary: #a39d94;
   --text-tertiary: #6b655c;
-  --accent: #e07a5c;
-  --accent-hover: #c45d3e;
-  --accent-subtle: rgba(224, 122, 92, 0.08);
-  --accent-glow: rgba(224, 122, 92, 0.15);
+  --accent: ${accentColor};
+  --accent-hover: ${accentColor};
+  --accent-subtle: rgba(${accentRgb}, 0.08);
+  --accent-glow: rgba(${accentRgb}, 0.15);
   --border: rgba(237, 233, 227, 0.06);
   --border-strong: rgba(237, 233, 227, 0.12);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -182,7 +259,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   --header-bg: rgba(14, 13, 11, 0.82);
   --search-bg: rgba(237, 233, 227, 0.04);
   --ph-bg: linear-gradient(145deg, #1f1d19, #262420);
-  --ph-color: rgba(224, 122, 92, 0.25);
+  --ph-color: rgba(${accentRgb}, 0.25);
   --spine-color: rgba(237, 233, 227, 0.06);
   --toggle-bg: rgba(237, 233, 227, 0.08);
   color-scheme: dark;
@@ -198,10 +275,10 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     --text-primary: #ede9e3;
     --text-secondary: #a39d94;
     --text-tertiary: #6b655c;
-    --accent: #e07a5c;
-    --accent-hover: #c45d3e;
-    --accent-subtle: rgba(224, 122, 92, 0.08);
-    --accent-glow: rgba(224, 122, 92, 0.15);
+    --accent: ${accentColor};
+    --accent-hover: ${accentColor};
+    --accent-subtle: rgba(${accentRgb}, 0.08);
+    --accent-glow: rgba(${accentRgb}, 0.15);
     --border: rgba(237, 233, 227, 0.06);
     --border-strong: rgba(237, 233, 227, 0.12);
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -212,7 +289,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     --header-bg: rgba(14, 13, 11, 0.82);
     --search-bg: rgba(237, 233, 227, 0.04);
     --ph-bg: linear-gradient(145deg, #1f1d19, #262420);
-    --ph-color: rgba(224, 122, 92, 0.25);
+    --ph-color: rgba(${accentRgb}, 0.25);
     --spine-color: rgba(237, 233, 227, 0.06);
     --toggle-bg: rgba(237, 233, 227, 0.08);
     color-scheme: dark;
@@ -223,7 +300,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 body {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: ${font.family};
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -276,7 +353,7 @@ body::before {
   background: var(--bg-secondary);
 }
 .site-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: ${font.heading};
   font-size: 20px;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -357,7 +434,7 @@ body::before {
   animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .hero-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: ${font.heading};
   font-size: clamp(42px, 6vw, 64px);
   font-weight: 400;
   line-height: 1.1;
@@ -413,7 +490,7 @@ body::before {
   background: none;
   border: none;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: ${font.family};
   font-size: 15px;
   color: var(--text-primary);
   min-width: 0;
@@ -495,7 +572,7 @@ body::before {
   background: var(--ph-bg);
 }
 .bk-ph-letter {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: ${font.heading};
   font-size: 72px;
   font-style: italic;
   color: var(--ph-color);
@@ -549,7 +626,7 @@ body::before {
   margin-bottom: 24px;
 }
 .empty-state h2 {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: ${font.heading};
   font-size: 28px;
   font-weight: 400;
   font-style: italic;
@@ -621,6 +698,9 @@ body::before {
   .bk-3d { perspective: 600px; }
   .site-header { padding: 0 16px; }
 }
+/* ====== LAYOUT & CARD OVERRIDES ====== */
+${gridCSS}
+${cardCSS}
 </style>
 </head>
 <body>
@@ -696,7 +776,7 @@ ${showSearch ? `(function(){var input=document.getElementById('book-search');var
 }
 
 export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false): string {
-  const storeName = user.store_name || `${user.name}'s Bookstore`;
+  const storeName = user.store_name || user.name;
   const backUrl = isCustomDomain ? '/' : `/store/${user.name.toLowerCase().replace(/ /g,'-')}`;
 
   return `<!DOCTYPE html>

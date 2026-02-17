@@ -296,4 +296,107 @@ books.get('/:id/analytics', async (c) => {
   });
 });
 
+// Book Sharing Routes
+
+// GET /api/books/shared-with-me
+books.get('/shared-with-me', async (c) => {
+  const user = c.get('user');
+  
+  const results = await c.env.DB.prepare(
+    `SELECT b.*, u.name as owner_name, sb.can_view
+     FROM shared_books sb
+     JOIN books b ON sb.book_id = b.id
+     JOIN users u ON b.user_id = u.id
+     WHERE sb.shared_with_email = ? OR sb.shared_with_user_id = ?
+     ORDER BY sb.created_at DESC`
+  ).bind(user.email, user.id).all();
+
+  return c.json({ books: results.results || [] });
+});
+
+// GET /api/books/:id/shares
+books.get('/:id/shares', async (c) => {
+  const user = c.get('user');
+  const bookId = c.req.param('id');
+  
+  // Verify ownership
+  const book = await c.env.DB.prepare(
+    `SELECT id FROM books WHERE id = ? AND user_id = ?`
+  ).bind(bookId, user.id).first();
+  
+  if (!book) return c.json({ error: 'Book not found' }, 404);
+
+  const shares = await c.env.DB.prepare(
+    `SELECT * FROM shared_books WHERE book_id = ? ORDER BY created_at DESC`
+  ).bind(bookId).all();
+
+  return c.json({ shares: shares.results || [] });
+});
+
+// POST /api/books/:id/share
+books.post('/:id/share', async (c) => {
+  const user = c.get('user');
+  const bookId = c.req.param('id');
+  const { email } = await c.req.json();
+
+  if (!email) return c.json({ error: 'Email is required' }, 400);
+
+  // Check plan limits
+  const allowedPlans = ['pro', 'business'];
+  if (!allowedPlans.includes(user.plan)) {
+    return c.json({ error: 'Sharing is only available on Pro and Business plans.' }, 403);
+  }
+
+  // Verify ownership
+  const book = await c.env.DB.prepare(
+    `SELECT id, title FROM books WHERE id = ? AND user_id = ?`
+  ).bind(bookId, user.id).first();
+  
+  if (!book) return c.json({ error: 'Book not found' }, 404);
+
+  // Check if already shared
+  const existing = await c.env.DB.prepare(
+    `SELECT id FROM shared_books WHERE book_id = ? AND shared_with_email = ?`
+  ).bind(bookId, email).first();
+
+  if (existing) {
+    return c.json({ error: 'Already shared with this user' }, 409);
+  }
+
+  const id = crypto.randomUUID();
+  
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO shared_books (id, book_id, owner_id, shared_with_email) VALUES (?, ?, ?, ?)`
+    ).bind(id, bookId, user.id, email).run();
+    
+    // Ideally look up if user exists and link user_id, but email is enough for now
+    
+    return c.json({ share: { id, book_id: bookId, shared_with_email: email, created_at: new Date().toISOString() } });
+  } catch (e) {
+    return c.json({ error: 'Failed to share book' }, 500);
+  }
+});
+
+// DELETE /api/books/shares/:shareId
+books.delete('/shares/:shareId', async (c) => {
+  const user = c.get('user');
+  const shareId = c.req.param('shareId');
+
+  // Verify ownership of the share (must be owner of the book)
+  const share = await c.env.DB.prepare(
+    `SELECT sb.id FROM shared_books sb
+     JOIN books b ON sb.book_id = b.id
+     WHERE sb.id = ? AND b.user_id = ?`
+  ).bind(shareId, user.id).first();
+
+  if (!share) return c.json({ error: 'Share not found or permission denied' }, 404);
+
+  await c.env.DB.prepare(
+    `DELETE FROM shared_books WHERE id = ?`
+  ).bind(shareId).run();
+
+  return c.json({ success: true });
+});
+
 export default books;

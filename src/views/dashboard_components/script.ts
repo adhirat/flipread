@@ -30,7 +30,10 @@ function showDashboard() {
   document.getElementById('dash-view').style.display = 'flex';
   updateUI();
   loadBooks();
+  loadMembers();
   setBilling('yearly');
+  // Init book view mode
+  setBookView(bookViewMode);
 }
 function updateUI() {
   if(!currentUser) return;
@@ -52,6 +55,26 @@ function updateUI() {
   document.getElementById('st-h-title').value = s.hero_title || '';
   document.getElementById('st-h-caption').value = s.hero_caption || '';
   document.getElementById('st-h-img').value = s.hero_image_url || '';
+
+  // Design & Theme
+  selectThemePreset(s.theme_preset || 'default', true);
+  const accentVal = s.accent_color || '#c45d3e';
+  document.getElementById('st-accent').value = accentVal;
+  document.getElementById('st-accent-hex').value = accentVal;
+  document.getElementById('st-font').value = s.font_choice || 'dm-sans';
+  selectLayout(s.layout_style || 'grid', true);
+  selectCard(s.card_style || '3d-book', true);
+
+  // Show view count toggle
+  const showViewsToggle = document.getElementById('st-show-views-toggle');
+  if(showViewsToggle) showViewsToggle.classList.toggle('active', s.show_view_count !== false);
+
+  // Private store toggle
+  const privateToggle = document.getElementById('st-private-toggle');
+  if(privateToggle) {
+    privateToggle.classList.toggle('active', !!s.is_private);
+    document.getElementById('st-private-info').style.display = s.is_private ? 'block' : 'none';
+  }
 
   // Legal
   document.getElementById('st-privacy').value = s.privacy_policy_content || '';
@@ -243,7 +266,7 @@ async function logout() {
 // Book Logic
 async function loadBooks() {
   try {
-    const res = await fetch(API + '/api/books', { credentials: 'include' });
+    const res = await fetch(API + '/api/docs', { credentials: 'include' });
     const data = await res.json();
     currentBooks = data.books || [];
     
@@ -257,34 +280,62 @@ async function loadBooks() {
 }
 
 function renderBooks() {
-  const grid = document.getElementById('book-grid');
-  if (currentBooks.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px">No books published yet.</div>';
+  const container = document.getElementById('book-grid');
+  const books = getFilteredBooks();
+  const canShare = currentUser && ['pro','business'].includes(currentUser.plan);
+
+  if (books.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">' + (currentBooks.length === 0 ? 'No books published yet.' : 'No matching books.') + '</div>';
+    container.className = 'book-grid';
     return;
   }
-  grid.innerHTML = currentBooks.map(b => {
-    const url = location.origin + '/read/' + b.slug;
-    const isReady = true; // Simplified for now
-    
-    return \`<div class="book-item">
-      <div class="book-cover">
-        \${b.cover_url ? \`<img src="\${esc(b.cover_url)}">\` : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>'}
-      </div>
-      <div class="book-content">
-        <div class="book-title" title="\${esc(b.title)}">\${esc(b.title)}</div>
-        <div style="font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between">
-          <span>\${formatSize(b.file_size_bytes)}</span>
-          <span><i class="fas fa-eye"></i> \${b.view_count}</span>
+
+  if(bookViewMode === 'list') {
+    container.className = 'book-list';
+    container.innerHTML = books.map(b => {
+      const url = location.origin + '/read/' + b.slug;
+      return \`<div class="book-list-item">
+        <div class="book-thumb">
+          \${b.cover_url ? \`<img src="\${esc(b.cover_url)}">\` : '<i class="fas fa-book" style="font-size:18px;opacity:0.2"></i>'}
         </div>
-        <div class="book-actions">
+        <div class="book-meta">
+          <div class="book-title" title="\${esc(b.title)}">\${esc(b.title)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">\${b.type.toUpperCase()} &middot; \${formatSize(b.file_size_bytes)} &middot; <i class="fas fa-eye"></i> \${b.view_count}</div>
+        </div>
+        <div class="book-actions" style="margin-top:0;flex-shrink:0">
           <button onclick="editBook('\${b.id}')"><i class="fas fa-cog"></i></button>
+          \${canShare ? \`<button onclick="openShareModal('\${b.id}')"><i class="fas fa-share-alt"></i></button>\` : ''}
           <button onclick="window.open('\${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
           <button onclick="copyText('\${esc(url)}',this)"><i class="fas fa-link"></i></button>
           <button onclick="deleteBook('\${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
         </div>
-      </div>
-    </div>\`;
-  }).join('');
+      </div>\`;
+    }).join('');
+  } else {
+    container.className = 'book-grid';
+    container.innerHTML = books.map(b => {
+      const url = location.origin + '/read/' + b.slug;
+      return \`<div class="book-item">
+        <div class="book-cover">
+          \${b.cover_url ? \`<img src="\${esc(b.cover_url)}">\` : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>'}
+        </div>
+        <div class="book-content">
+          <div class="book-title" title="\${esc(b.title)}">\${esc(b.title)}</div>
+          <div style="font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between">
+            <span>\${formatSize(b.file_size_bytes)}</span>
+            <span><i class="fas fa-eye"></i> \${b.view_count}</span>
+          </div>
+          <div class="book-actions">
+            <button onclick="editBook('\${b.id}')"><i class="fas fa-cog"></i></button>
+            \${canShare ? \`<button onclick="openShareModal('\${b.id}')"><i class="fas fa-share-alt"></i></button>\` : ''}
+            <button onclick="window.open('\${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
+            <button onclick="copyText('\${esc(url)}',this)"><i class="fas fa-link"></i></button>
+            <button onclick="deleteBook('\${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>\`;
+    }).join('');
+  }
 }
 
 async function uploadBook(e) {
@@ -350,7 +401,7 @@ async function uploadBook(e) {
     }
 
     msgEl.textContent = 'Uploading...';
-    const res = await fetch(API + '/api/books/upload', {
+    const res = await fetch(API + '/api/docs/upload', {
       method: 'POST', credentials: 'include', body: fd
     });
     const data = await res.json();
@@ -367,7 +418,7 @@ async function uploadBook(e) {
 
 async function deleteBook(id) {
   if(!confirm('Delete this book?')) return;
-  await fetch(API + '/api/books/' + id, { method: 'DELETE', credentials: 'include' });
+  await fetch(API + '/api/docs/' + id, { method: 'DELETE', credentials: 'include' });
   loadBooks();
 }
 
@@ -389,7 +440,7 @@ async function saveBook() {
   const password = document.getElementById('edit-pass').value || null;
   const custom_domain = document.getElementById('edit-domain').value || null;
   
-  await fetch(API + '/api/books/' + id, {
+  await fetch(API + '/api/docs/' + id, {
     method: 'PATCH', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, is_public, password, custom_domain })
@@ -408,6 +459,13 @@ async function saveStoreSettings() {
     hero_title: document.getElementById('st-h-title').value,
     hero_caption: document.getElementById('st-h-caption').value,
     hero_image_url: document.getElementById('st-h-img').value,
+    theme_preset: document.querySelector('.theme-preset-card.active')?.dataset.theme || 'default',
+    accent_color: document.getElementById('st-accent').value,
+    font_choice: document.getElementById('st-font').value,
+    layout_style: document.querySelector('.layout-opt.active')?.id.replace('lo-','') || 'grid',
+    card_style: document.querySelector('.card-opt.active')?.id.replace('co-','') || '3d-book',
+    show_view_count: document.getElementById('st-show-views-toggle')?.classList.contains('active') ?? true,
+    is_private: document.getElementById('st-private-toggle')?.classList.contains('active') ?? false,
     privacy_policy_content: document.getElementById('st-privacy').value,
     terms_content: document.getElementById('st-terms').value,
     contact_info_content: document.getElementById('st-contact').value
@@ -541,6 +599,11 @@ function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('flipread-theme', t);
   updateThemeIcons(t);
+  
+  // Update settings buttons
+  document.querySelectorAll('[id^="theme-btn-"]').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('theme-btn-' + t);
+  if(activeBtn) activeBtn.classList.add('active');
 }
 function toggleDashTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'light';
@@ -559,6 +622,275 @@ function updateThemeIcons(theme) {
     sidebarIcon.className = 'fas ' + icon;
   }
 }
+// Store Customization Helpers
+function selectThemePreset(preset, silent) {
+  document.querySelectorAll('.theme-preset-card').forEach(c => c.classList.remove('active'));
+  const el = document.querySelector('.theme-preset-card[data-theme="'+preset+'"]');
+  if(el) el.classList.add('active');
+}
+function selectLayout(layout, silent) {
+  document.querySelectorAll('.layout-opt').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('lo-'+layout);
+  if(el) el.classList.add('active');
+}
+function selectCard(card, silent) {
+  document.querySelectorAll('.card-opt').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('co-'+card);
+  if(el) el.classList.add('active');
+}
+function setAccent(hex) {
+  document.getElementById('st-accent').value = hex;
+  document.getElementById('st-accent-hex').value = hex;
+}
+function syncAccentColor(hex) {
+  if(/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    document.getElementById('st-accent').value = hex;
+  }
+}
+document.addEventListener('change', function(e) {
+  if(e.target && e.target.id === 'st-accent') {
+    document.getElementById('st-accent-hex').value = e.target.value;
+  }
+});
+function toggleStoreOption(opt) {
+  if(opt === 'show-views') {
+    document.getElementById('st-show-views-toggle').classList.toggle('active');
+  } else if(opt === 'private') {
+    const t = document.getElementById('st-private-toggle');
+    t.classList.toggle('active');
+    document.getElementById('st-private-info').style.display = t.classList.contains('active') ? 'block' : 'none';
+  }
+}
+
+// Members Management
+let currentMembers = [];
+
+async function loadMembers() {
+  try {
+    const res = await fetch(API + '/api/members', { credentials: 'include' });
+    const data = await res.json();
+    currentMembers = data.members || [];
+    renderMembers();
+    // Update stats
+    const total = currentMembers.length;
+    const active = currentMembers.filter(m => m.is_active).length;
+    const el = document.getElementById('members-stats');
+    if(el) el.innerHTML = '<span style="color:var(--text-secondary)">Total: <b>'+total+'</b></span> &middot; <span style="color:#10b981">Active: <b>'+active+'</b></span> &middot; <span style="color:#ef4444">Inactive: <b>'+(total-active)+'</b></span>';
+  } catch(e) { console.error(e); }
+}
+
+function renderMembers() {
+  const container = document.getElementById('members-list');
+  if(!container) return;
+  const search = (document.getElementById('members-search')?.value || '').toLowerCase();
+  const filtered = currentMembers.filter(m => !search || m.email.toLowerCase().includes(search) || m.name.toLowerCase().includes(search));
+
+  if(filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">' + (currentMembers.length === 0 ? 'No members yet. Add your first member above.' : 'No matching members.') + '</div>';
+    return;
+  }
+  container.innerHTML = '<table class="members-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Access Key</th><th>Actions</th></tr></thead><tbody>' + filtered.map(m => {
+    return '<tr><td><b>'+esc(m.name || '-')+'</b></td><td>'+esc(m.email)+'</td><td><span class="member-status '+(m.is_active?'active':'inactive')+'" onclick="toggleMemberStatus(\\''+m.id+'\\')"><i class="fas fa-circle" style="font-size:6px"></i> '+(m.is_active?'Active':'Inactive')+'</span></td><td><span class="access-key-text" title="'+esc(m.access_key)+'">'+esc(m.access_key.substring(0,8))+'...</span> <button onclick="copyText(\\''+esc(m.access_key)+'\\',this)" style="border:none;background:none;cursor:pointer;color:var(--text-muted);padding:4px"><i class="fas fa-copy"></i></button></td><td style="white-space:nowrap"><button onclick="editMember(\\''+m.id+'\\')"><i class="fas fa-edit"></i></button> <button onclick="deleteMember(\\''+m.id+'\\')"><i class="fas fa-trash" style="color:var(--accent-magenta)"></i></button></td></tr>';
+  }).join('') + '</tbody></table>';
+}
+
+async function addMember() {
+  const email = document.getElementById('add-member-email').value.trim();
+  const name = document.getElementById('add-member-name').value.trim();
+  if(!email) return alert('Email is required');
+
+  const msgEl = document.getElementById('member-msg');
+  try {
+    const res = await fetch(API + '/api/members', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name })
+    });
+    const data = await res.json();
+    if(data.member) {
+      document.getElementById('add-member-email').value = '';
+      document.getElementById('add-member-name').value = '';
+      msgEl.textContent = 'Member added! Access key: ' + data.member.access_key;
+      msgEl.className = 'msg success'; msgEl.style.display = 'block';
+      setTimeout(() => msgEl.style.display = 'none', 5000);
+      loadMembers();
+    } else {
+      msgEl.textContent = data.error || 'Failed'; msgEl.className = 'msg error'; msgEl.style.display = 'block';
+    }
+  } catch { msgEl.textContent = 'Network error'; msgEl.className = 'msg error'; msgEl.style.display = 'block'; }
+}
+
+async function toggleMemberStatus(id) {
+  const m = currentMembers.find(x => x.id === id);
+  if(!m) return;
+  await fetch(API + '/api/members/' + id, {
+    method: 'PATCH', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_active: !m.is_active })
+  });
+  loadMembers();
+}
+
+function editMember(id) {
+  const m = currentMembers.find(x => x.id === id);
+  if(!m) return;
+  document.getElementById('edit-member-id').value = m.id;
+  document.getElementById('edit-member-name').value = m.name;
+  document.getElementById('edit-member-email').value = m.email;
+  document.getElementById('edit-member-active').checked = !!m.is_active;
+  showModal('edit-member-modal');
+}
+
+async function saveMember() {
+  const id = document.getElementById('edit-member-id').value;
+  const name = document.getElementById('edit-member-name').value;
+  const is_active = document.getElementById('edit-member-active').checked;
+  await fetch(API + '/api/members/' + id, {
+    method: 'PATCH', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, is_active })
+  });
+  hideModal('edit-member-modal');
+  loadMembers();
+}
+
+async function deleteMember(id) {
+  if(!confirm('Remove this member?')) return;
+  await fetch(API + '/api/members/' + id, { method: 'DELETE', credentials: 'include' });
+  loadMembers();
+}
+
+// Book Sharing
+let currentShares = [];
+let sharedWithMe = [];
+
+async function openShareModal(bookId) {
+  document.getElementById('share-book-id').value = bookId;
+  document.getElementById('share-email-input').value = '';
+  showModal('share-modal');
+  // Load existing shares
+  try {
+    const res = await fetch(API + '/api/docs/' + bookId + '/shares', { credentials: 'include' });
+    const data = await res.json();
+    currentShares = data.shares || [];
+    renderShareList();
+  } catch { currentShares = []; renderShareList(); }
+}
+
+function renderShareList() {
+  const el = document.getElementById('share-list');
+  if(!el) return;
+  if(currentShares.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Not shared with anyone yet.</div>';
+    return;
+  }
+  el.innerHTML = currentShares.map(s => {
+    return '<div class="share-item"><span style="font-size:14px">'+esc(s.shared_with_email)+'</span><button onclick="revokeShare(\\''+s.id+'\\',\\''+document.getElementById('share-book-id').value+'\\')"><i class="fas fa-times" style="color:var(--accent-magenta)"></i></button></div>';
+  }).join('');
+}
+
+async function shareBook() {
+  const bookId = document.getElementById('share-book-id').value;
+  const email = document.getElementById('share-email-input').value.trim();
+  if(!email) return;
+  const msgEl = document.getElementById('share-msg');
+  try {
+    const res = await fetch(API + '/api/docs/' + bookId + '/share', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if(data.share) {
+      document.getElementById('share-email-input').value = '';
+      currentShares.push(data.share);
+      renderShareList();
+      msgEl.textContent = 'Shared!'; msgEl.className = 'msg success'; msgEl.style.display = 'block';
+      setTimeout(() => msgEl.style.display = 'none', 2000);
+    } else {
+      msgEl.textContent = data.error || 'Failed'; msgEl.className = 'msg error'; msgEl.style.display = 'block';
+    }
+  } catch { msgEl.textContent = 'Network error'; msgEl.className = 'msg error'; msgEl.style.display = 'block'; }
+}
+
+async function revokeShare(shareId, bookId) {
+  await fetch(API + '/api/books/shares/' + shareId, { method: 'DELETE', credentials: 'include' });
+  currentShares = currentShares.filter(s => s.id !== shareId);
+  renderShareList();
+}
+
+// Shared With Me
+let booksTab = 'my';
+
+function switchBooksTab(tab) {
+  booksTab = tab;
+  document.querySelectorAll('.books-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab === 'shared') {
+    loadSharedWithMe();
+    document.getElementById('my-books-content').style.display = 'none';
+    document.getElementById('shared-books-content').style.display = 'block';
+  } else {
+    document.getElementById('my-books-content').style.display = 'block';
+    document.getElementById('shared-books-content').style.display = 'none';
+  }
+}
+
+async function loadSharedWithMe() {
+  try {
+    const res = await fetch(API + '/api/books/shared-with-me', { credentials: 'include' });
+    const data = await res.json();
+    sharedWithMe = data.books || [];
+    renderSharedBooks();
+  } catch(e) { console.error(e); }
+}
+
+function renderSharedBooks() {
+  const grid = document.getElementById('shared-book-grid');
+  if(!grid) return;
+  if(sharedWithMe.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">No books shared with you.</div>';
+    return;
+  }
+  grid.innerHTML = sharedWithMe.map(b => {
+    const url = location.origin + '/read/' + b.slug;
+    return '<div class="book-item"><div class="book-cover">' + (b.cover_url ? '<img src="'+esc(b.cover_url)+'">' : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>') + '</div><div class="book-content"><div class="book-title" title="'+esc(b.title)+'">'+esc(b.title)+'</div><div style="font-size:12px;color:var(--text-muted)">Shared by '+esc(b.owner_name || 'Unknown')+'</div><div class="book-actions"><button onclick="window.open(\\''+esc(url)+'\\',\\'_blank\\')"><i class="fas fa-external-link-alt"></i></button></div></div></div>';
+  }).join('');
+}
+
+// Books View Toggle & Search/Filter
+let bookViewMode = localStorage.getItem('flipread-book-view') || 'grid';
+let bookSearchTerm = '';
+let bookTypeFilter = '';
+let bookSort = 'newest';
+
+function setBookView(mode) {
+  bookViewMode = mode;
+  localStorage.setItem('flipread-book-view', mode);
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('bv-' + mode);
+  if(btn) btn.classList.add('active');
+  renderBooks();
+}
+
+function filterBooks() {
+  bookSearchTerm = (document.getElementById('books-search-input')?.value || '').toLowerCase();
+  bookTypeFilter = document.getElementById('books-type-filter')?.value || '';
+  bookSort = document.getElementById('books-sort')?.value || 'newest';
+  renderBooks();
+}
+
+function getFilteredBooks() {
+  let books = [...currentBooks];
+  if(bookSearchTerm) books = books.filter(b => b.title.toLowerCase().includes(bookSearchTerm));
+  if(bookTypeFilter) books = books.filter(b => b.type === bookTypeFilter);
+  if(bookSort === 'oldest') books.sort((a,b) => a.created_at.localeCompare(b.created_at));
+  else if(bookSort === 'views') books.sort((a,b) => b.view_count - a.view_count);
+  else if(bookSort === 'az') books.sort((a,b) => a.title.localeCompare(b.title));
+  else books.sort((a,b) => b.created_at.localeCompare(a.created_at));
+  return books;
+}
+
 // Init
 const savedTheme = localStorage.getItem('flipread-theme') || 'light';
 setTheme(savedTheme);
@@ -666,5 +998,15 @@ function toggleCollapse() {
 // Init collapse state
 if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.innerWidth > 768) {
   document.getElementById('main-sidebar').classList.add('collapsed');
+}
+
+function viewMyStore() {
+  if (currentUser && currentUser.store_name) {
+    const slug = currentUser.name.toLowerCase().replace(/\s+/g, '-');
+    window.open('/store/' + slug, '_blank');
+  } else {
+    alert('Please set up your store name in settings first.');
+    switchView('settings');
+  }
 }
 `;

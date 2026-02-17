@@ -141,6 +141,46 @@ h2{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spaci
   .modal-content{padding:24px;max-width:calc(100vw - 40px)}
   .crop-modal-content{max-width:calc(100vw - 40px)}
 }
+/* Theme preset cards */
+.theme-preset-card{cursor:pointer;text-align:center;padding:8px;border-radius:12px;border:2px solid transparent;transition:all .2s}
+.theme-preset-card:hover{border-color:var(--border);background:var(--bg-elevated)}
+.theme-preset-card.active{border-color:var(--accent-cyan);background:var(--bg-elevated)}
+.accent-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;display:inline-block}
+.accent-swatch:hover{transform:scale(1.2);border-color:var(--text-muted)}
+/* Members table */
+.members-table{width:100%;border-collapse:collapse}
+.members-table th{text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.members-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+.members-table tr:hover td{background:var(--bg-elevated)}
+.member-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px}
+.member-status.active{background:rgba(16,185,129,0.1);color:#10b981}
+.member-status.inactive{background:rgba(239,68,68,0.1);color:#ef4444}
+.access-key-text{font-family:monospace;font-size:12px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+/* Book list view */
+.book-list{display:flex;flex-direction:column;gap:12px}
+.book-list-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;transition:all .3s}
+.book-list-item:hover{border-color:var(--accent-cyan);transform:translateX(4px);box-shadow:0 4px 20px var(--shadow)}
+.book-list-item .book-thumb{width:48px;height:64px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center}
+.book-list-item .book-thumb img{width:100%;height:100%;object-fit:cover}
+.book-list-item .book-meta{flex:1;min-width:0}
+.book-list-item .book-title{margin-bottom:4px}
+/* Books tabs */
+.books-tabs{display:flex;gap:4px;background:var(--bg-elevated);padding:4px;border-radius:12px;margin-bottom:24px;width:fit-content}
+.books-tab{padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--text-secondary);border:none;background:none}
+.books-tab.active{background:var(--bg-card);color:var(--text-primary);box-shadow:0 2px 8px var(--shadow)}
+/* Share modal */
+.share-list{max-height:200px;overflow-y:auto;margin:16px 0}
+.share-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
+.share-item:last-child{border-bottom:none}
+/* Search & Filter bar */
+.books-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+.books-search{flex:1;min-width:200px;padding:10px 16px 10px 40px;border-radius:12px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);outline:none;font-family:'Work Sans',sans-serif;transition:all .3s;position:relative}
+.books-search:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 3px var(--glow-cyan)}
+.books-search-wrap{position:relative;flex:1;min-width:200px}
+.books-search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none}
+.view-toggle{display:flex;gap:4px;background:var(--bg-elevated);padding:3px;border-radius:10px}
+.view-toggle button{padding:8px 12px;border:none;background:none;color:var(--text-muted);cursor:pointer;border-radius:8px;transition:all .2s;font-size:14px}
+.view-toggle button.active{background:var(--bg-card);color:var(--text-primary);box-shadow:0 2px 6px var(--shadow)}
 .hidden{display:none !important}
 .billing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px}
 .toggle-label{font-size:14px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:color .3s}

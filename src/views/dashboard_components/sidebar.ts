@@ -29,29 +29,36 @@ export const sidebar = `
       <div onclick="switchView('dashboard');closeSidebar()" class="nav-item active" id="nav-dashboard" title="Dashboard">
         <i class="fas fa-home"></i> <span>Dashboard</span>
       </div>
-      <div onclick="switchView('books');closeSidebar()" class="nav-item" id="nav-books" title="Books">
-        <i class="fas fa-book"></i> <span>Books</span>
+      <div onclick="switchView('docs');closeSidebar()" class="nav-item" id="nav-docs" title="Docs">
+        <i class="fas fa-file-alt"></i> <span>Docs</span>
       </div>
       <div onclick="switchView('store');closeSidebar()" class="nav-item" id="nav-store" title="Store">
         <i class="fas fa-store"></i> <span>Store</span>
       </div>
+      <div onclick="viewMyStore();" class="nav-item" title="View My Store" style="color:var(--accent-cyan)">
+        <i class="fas fa-external-link-alt"></i> <span>View My Store</span>
+      </div>
+      <div onclick="switchView('members');closeSidebar()" class="nav-item" id="nav-members" title="Members">
+        <i class="fas fa-users"></i> <span>Members</span>
+      </div>
       <div onclick="switchView('subscription');closeSidebar()" class="nav-item" id="nav-subscription" title="Subscription">
         <i class="fas fa-credit-card"></i> <span>Subscription</span>
       </div>
-      <div onclick="switchView('settings');closeSidebar()" class="nav-item" id="nav-settings" title="Settings">
-        <i class="fas fa-cog"></i> <span>Settings</span>
-      </div>
-      <div onclick="toggleDashTheme()" class="nav-item" title="Toggle Theme" style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
-        <i class="fas fa-moon" id="dash-theme-icon-sidebar"></i> <span>Theme</span>
-      </div>
     </nav>
-    <div class="user-profile">
+    
+    <div style="flex:1"></div>
+
+    <div onclick="toggleDashTheme()" class="nav-item" title="Toggle Theme" style="margin-bottom:12px">
+      <i class="fas fa-moon" id="dash-theme-icon-sidebar"></i> <span>Theme</span>
+    </div>
+
+    <div class="user-profile" onclick="switchView('settings');closeSidebar()" style="cursor:pointer;margin-top:0" title="Settings">
       <div class="user-avatar" id="user-avatar-initials">U</div>
       <div class="user-info">
         <div class="user-name" id="user-name-disp">User</div>
         <div class="user-plan" id="user-plan-disp">Free</div>
       </div>
-      <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer;color:var(--text-muted);flex-shrink:0" title="Logout"></i>
+      <i class="fas fa-cog" style="color:var(--text-muted);flex-shrink:0"></i>
     </div>
   </aside>
   <style>

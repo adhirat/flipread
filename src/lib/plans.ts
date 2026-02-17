@@ -10,6 +10,9 @@ export interface PlanLimits {
   customBackground: boolean;
   customDomain: boolean;
   analyticsLevel: 'basic' | 'detailed' | 'detailed_export';
+  privateStore: boolean;
+  maxMembers: number;
+  sharing: boolean;
 }
 
 export const PLANS: Record<string, PlanLimits> = {
@@ -23,6 +26,9 @@ export const PLANS: Record<string, PlanLimits> = {
     customBackground: false,
     customDomain: false,
     analyticsLevel: 'basic',
+    privateStore: false,
+    maxMembers: 0,
+    sharing: false,
   },
   basic: {
     maxBooks: 5,
@@ -34,6 +40,9 @@ export const PLANS: Record<string, PlanLimits> = {
     customBackground: true,
     customDomain: false,
     analyticsLevel: 'basic',
+    privateStore: false,
+    maxMembers: 0,
+    sharing: false,
   },
   pro: {
     maxBooks: 50,
@@ -45,6 +54,9 @@ export const PLANS: Record<string, PlanLimits> = {
     customBackground: true,
     customDomain: true,
     analyticsLevel: 'detailed',
+    privateStore: true,
+    maxMembers: 50,
+    sharing: true,
   },
   business: {
     maxBooks: Infinity,
@@ -56,6 +68,9 @@ export const PLANS: Record<string, PlanLimits> = {
     customBackground: true,
     customDomain: true,
     analyticsLevel: 'detailed_export',
+    privateStore: true,
+    maxMembers: Infinity,
+    sharing: true,
   },
 };
 

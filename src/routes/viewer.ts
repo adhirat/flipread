@@ -5,7 +5,8 @@ import type { Env, Book } from '../lib/types';
 import { StorageService } from '../services/storage';
 import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
-import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, passwordPage, errorPage } from '../services/viewerTemplates';
+import { getCookie } from 'hono/cookie';
+import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, passwordPage, errorPage, memberAccessPage } from '../services/viewerTemplates';
 
 export function viewerPage(book: Book & { author_name: string; author_plan: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
@@ -43,10 +44,10 @@ viewer.get('/:slug', async (c) => {
   const slug = c.req.param('slug');
 
   const book = await c.env.DB.prepare(
-    `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_logo_key
+    `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_logo_key, u.store_settings, u.store_name, u.store_logo_url
      FROM books b JOIN users u ON b.user_id = u.id
      WHERE b.slug = ? AND b.is_public = 1`
-  ).bind(slug).first<Book & { author_name: string; author_plan: string; store_logo_key?: string }>();
+  ).bind(slug).first<Book & { author_name: string; author_plan: string; store_logo_key?: string; store_settings?: string; store_name?: string; store_logo_url?: string }>();
 
   if (!book) {
     return c.html(errorPage('Book Not Found', 'This book does not exist or has been made private.'), 404);
@@ -54,7 +55,49 @@ viewer.get('/:slug', async (c) => {
 
   const logoUrl = book.store_logo_key ? `${c.env.APP_URL}/read/api/logo/${book.user_id}` : '';
 
-  // Check password protection
+  // Private Store Access Check
+  const storeSettings = JSON.parse(book.store_settings || '{}');
+  if (storeSettings.is_private) {
+        // First check: Is this user the owner? (Optional, if logged in)
+    // For now, rely on member cookie logic.
+    // Ideally we should also check if the logged-in user is the owner, but we don't have easy session access here without middlewares.
+    // Cookies are the way for members.
+
+    const cookieName = `mk_${book.user_id}`;
+    const accessKey = getCookie(c, cookieName);
+    
+    let isValid = false;
+    // Check cookie
+    if (accessKey) {
+      // Validate key lightly (or deeply)
+      // Deep validation:
+      const member = await c.env.DB.prepare(
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+      ).bind(book.user_id, accessKey).first();
+      if (member) isValid = true;
+    }
+    
+    // Check shared_book access if cookie fails?
+    // The requirement was "Private Store", usually implying all content is gated.
+    // But if a book is shared explicitly, maybe it should bypass?
+    // Let's stick to "Private Store = Gate Everything" for now unless member key is present.
+    // Wait, shared_books might be a way to access *specific* books even in a private store?
+    // The requirement for "Private Store" usually overrides individual book settings or works alongside.
+    // Let's implement Shared Book access bypass if Store is Private.
+    // Check if user email is in shared_books for this book? We don't know user email unless they login.
+    // But we have "login" page. The login page takes email/key.
+    // If I have a specific book link and store is private, maybe I can enter my email to check if it's shared with me?
+    // Unclear. For now, strict Private Store implementation: Must be a Member.
+
+    if (!isValid) {
+      // Inject owner ID
+      let html = memberAccessPage(book.store_name || book.author_name, logoUrl || book.store_logo_url);
+      html = html.replace('__OWNER_ID__', book.user_id);
+      return c.html(html);
+    }
+  }
+
+  // Check password protection (Book Level)
   const password = c.req.query('p');
   if (book.password && password !== book.password) {
     return c.html(passwordPage(slug, logoUrl));

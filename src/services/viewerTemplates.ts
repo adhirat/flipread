@@ -11,4 +11,4 @@ export { webViewerHTML } from './viewers/webViewer';
 export { spreadsheetViewerHTML } from './viewers/spreadsheetViewer';
 export { textViewerHTML } from './viewers/textViewer';
 export { imageViewerHTML } from './viewers/imageViewer';
-export { passwordPage, errorPage } from './viewers/commonPages';
+export { passwordPage, errorPage, memberAccessPage } from './viewers/commonPages';

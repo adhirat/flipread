@@ -73,7 +73,12 @@ export const settingsView = `
              <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5">
                Once you delete your account, there is no going back. Please be certain.
              </p>
-             <button onclick="confirmDeleteAccount()" class="btn-outline" style="width:100%;border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.02)">Delete My Account</button>
+             <button onclick="confirmDeleteAccount()" class="btn-outline" 
+               style="width:100%;border:1px solid #ef4444;color:#ef4444;background:rgba(239,68,68,0.04);justify-content:center;font-weight:600;padding:14px;transition:all 0.2s;text-transform:uppercase;font-size:12px;letter-spacing:1px" 
+               onmouseover="this.style.background='#ef4444';this.style.color='#fff';this.style.boxShadow='0 4px 12px rgba(239,68,68,0.3)'" 
+               onmouseout="this.style.background='rgba(239,68,68,0.04)';this.style.color='#ef4444';this.style.boxShadow='none'">
+               <i class="fas fa-trash-alt" style="margin-right:8px"></i> Delete My Account
+             </button>
           </div>
         </div>
       </div>

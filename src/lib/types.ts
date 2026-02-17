@@ -64,3 +64,24 @@ export interface Subscription {
   current_period_end: string | null;
   created_at: string;
 }
+
+export interface StoreMember {
+  id: string;
+  store_owner_id: string;
+  email: string;
+  name: string;
+  access_key: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SharedBook {
+  id: string;
+  book_id: string;
+  owner_id: string;
+  shared_with_email: string;
+  shared_with_user_id: string | null;
+  can_view: number;
+  created_at: string;
+}

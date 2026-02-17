@@ -7,11 +7,12 @@ import { serveStatic } from 'hono/cloudflare-workers';
 import manifest from '__STATIC_CONTENT_MANIFEST';
 import type { Env } from './lib/types';
 import authRoutes from './routes/auth';
-import bookRoutes from './routes/books';
+import docRoutes from './routes/docs';
 import billingRoutes from './routes/billing';
 import userRoutes from './routes/user';
 import viewerRoutes, { viewerPage } from './routes/viewer';
 import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
+import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
 import type { Book, Variables } from './lib/types';
 
@@ -63,9 +64,10 @@ app.get('/apple-touch-icon.png', serveStatic({ path: './apple-touch-icon.png', m
 
 // API Routes
 app.route('/api/auth', authRoutes);
-app.route('/api/books', bookRoutes);
+app.route('/api/docs', docRoutes);
 app.route('/api/billing', billingRoutes);
 app.route('/api/user', userRoutes);
+app.route('/api/members', memberRoutes);
 
 // Public Routes
 app.route('/read', viewerRoutes);

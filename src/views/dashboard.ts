@@ -3,8 +3,9 @@ import { styles } from './dashboard_components/styles';
 import { authView } from './dashboard_components/auth';
 import { sidebar } from './dashboard_components/sidebar';
 import { dashboardOverview } from './dashboard_components/dashboard_overview';
-import { booksView } from './dashboard_components/books';
+import { docsView } from './dashboard_components/docs';
 import { storeView } from './dashboard_components/store';
+import { membersView } from './dashboard_components/members';
 import { subscriptionView } from './dashboard_components/subscription';
 import { settingsView } from './dashboard_components/settings';
 import { dashboardScript } from './dashboard_components/script';
@@ -44,8 +45,9 @@ export function dashboardPage(appUrl: string): string {
     ${sidebar}
     <main class="content">
       ${dashboardOverview}
-      ${booksView}
+      ${docsView}
       ${storeView}
+      ${membersView}
       ${subscriptionView}
       ${settingsView}
     </main>
