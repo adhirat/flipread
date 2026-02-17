@@ -11,6 +11,10 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${safeTitle} - FlipRead</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
 
     <!-- Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -64,6 +68,14 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             pointer-events: auto;
             /* Re-enable pointer events for buttons */
         }
+        
+        .header-logo {
+            height: 32px;
+            width: auto;
+            max-width: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
 
         .header-name {
             font-size: 16px;
@@ -73,7 +85,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 50vw;
+            max-width: 40vw;
         }
 
         .header-icons {
@@ -440,6 +452,120 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             box-shadow: 0 0 0 2px #4CAF50;
         }
 
+        /* --- Notes Sidebar (Dark Mode) --- */
+        #chat-w {
+            position: fixed;
+            right: -100vw;
+            top: 0;
+            bottom: 0;
+            width: 100vw;
+            background: rgba(30, 30, 30, 0.98); /* Dark */
+            backdrop-filter: blur(20px);
+            z-index: 2100;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            color: #eee;
+        }
+        @media (min-width: 640px) { #chat-w { width: 350px; right: -400px; } }
+        #chat-w.open { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+        
+        .chat-h {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-h span {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+        .close-chat-btn {
+            background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; opacity: 0.6;
+        }
+        .close-chat-btn:hover { opacity: 1; }
+
+        .chat-b {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-item {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        .chat-text {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            color: #ddd;
+        }
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #888;
+        }
+        .chat-actions {
+            display: flex; gap: 10px; opacity: 0.5; transition: opacity 0.2s;
+        }
+        .chat-item:hover .chat-actions { opacity: 1; }
+        .chat-action-btn { cursor: pointer; color: #bbb; transition: color 0.2s; }
+        .chat-action-btn:hover { color: #fff; }
+        .chat-edit:hover { color: #4CAF50; }
+        .chat-del:hover { color: #ff6b6b; }
+
+        .chat-f {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .chat-i {
+            flex: 1;
+            background: #252525;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            outline: none;
+            font-size: 14px;
+            resize: none;
+            min-height: 45px;
+            max-height: 120px;
+            font-family: inherit;
+            color: white;
+            transition: border-color 0.2s;
+        }
+        .chat-i:focus { border-color: #4CAF50; }
+        .chat-s {
+            width: 45px;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        .chat-s:hover { background: #45a049; }
+
         /* Mobile */
         @media (max-width: 768px) {
 
@@ -457,6 +583,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <button class="header-icon" id="index-btn" title="Table of Contents">
                 <i class="fas fa-list"></i>
             </button>
+            ${showBranding && logoUrl ? `<img src="${logoUrl}" alt="Logo" class="header-logo" style="margin-right: 10px;">` : ''}
             <div class="header-name">${safeTitle}</div>
         </div>
 
@@ -466,6 +593,9 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             </button>
             <button class="header-icon" id="bg-settings-btn" title="Change Background">
                 <i class="fas fa-image"></i>
+            </button>
+            <button class="header-icon" id="notes-btn" title="Notes">
+                <i class="fas fa-pen-fancy"></i>
             </button>
 
             <div class="zoom-controls-inline" id="zoom-controls">
@@ -562,6 +692,21 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             </div>
         </div>
     </div>
+    
+    <!-- Notes Sidebar -->
+    <div id="chat-w">
+        <div class="chat-h">
+            <span>My Notes</span>
+            <button class="close-chat-btn" id="close-notes-btn">✕</button>
+        </div>
+        <div class="chat-b" id="notes-list">
+            <!-- Notes injected here -->
+        </div>
+        <div class="chat-f">
+            <textarea id="chat-i" placeholder="Add a note..." class="chat-i"></textarea>
+            <button id="send-note-btn" class="chat-s"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
 
     <div class="controls" id="main-footer">
         <button id="prev-btn" class="nav-button">
@@ -576,6 +721,9 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // File unique key for storage
+        const FU = '${encodeURIComponent(fileUrl)}';
 
         class RealFlipbook {
             constructor() {
@@ -618,8 +766,123 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             init() {
                 this.setupEventListeners();
                 this.setupBackgroundSettings();
+                this.setupNotes();
                 // Do not load default PDF
                 this.showLoading(false);
+            }
+            
+            setupNotes() {
+                this.editingNoteIndex = -1;
+                this.notesSidebar = document.getElementById('chat-w');
+                this.notesList = document.getElementById('notes-list');
+                this.noteInput = document.getElementById('chat-i');
+                this.sendBtn = document.getElementById('send-note-btn');
+                
+                // Open/Close
+                document.getElementById('notes-btn').onclick = () => this.toggleNotes();
+                document.getElementById('close-notes-btn').onclick = () => this.toggleNotes();
+                
+                // Send
+                this.sendBtn.onclick = () => this.sendNote();
+                this.noteInput.onkeydown = (e) => {
+                    if(e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendNote();
+                    }
+                };
+
+                this.renderNotes();
+            }
+            
+            toggleNotes() {
+                this.notesSidebar.classList.toggle('open');
+            }
+            
+            sendNote() {
+                const v = this.noteInput.value.trim();
+                if(!v) return;
+                
+                let notes = [];
+                try { notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || []; } catch(e) {}
+                
+                if(this.editingNoteIndex > -1) {
+                    if(notes[this.editingNoteIndex]) {
+                        notes[this.editingNoteIndex].text = v;
+                    }
+                    this.editingNoteIndex = -1;
+                    this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                } else {
+                    notes.push({
+                        text: v,
+                        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                    });
+                }
+                
+                localStorage.setItem('fr_nt_' + FU, JSON.stringify(notes));
+                this.noteInput.value = '';
+                this.renderNotes();
+            }
+            
+            renderNotes() {
+                if(!this.notesList) return;
+                let notes = [];
+                try { notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || []; } catch(e) {}
+                
+                this.notesList.innerHTML = notes.map((n, i) => 
+                     '<div class="chat-item">' +
+                     '<div class="chat-text">' + this.escapeHtml(n.text) + '</div>' +
+                     '<div class="chat-meta">' +
+                         '<span>' + n.time + '</span>' +
+                         '<div class="chat-actions">' +
+                             '<i class="fas fa-edit chat-action-btn chat-edit" data-idx="'+i+'"></i>' +
+                             '<i class="fas fa-trash chat-action-btn chat-del" data-idx="'+i+'"></i>' +
+                         '</div>' +
+                     '</div>' +
+                     '</div>'
+                ).join('');
+                
+                // Attach listeners
+                this.notesList.querySelectorAll('.chat-edit').forEach(el => {
+                    el.onclick = () => this.editNote(parseInt(el.dataset.idx));
+                });
+                this.notesList.querySelectorAll('.chat-del').forEach(el => {
+                    el.onclick = () => this.deleteNote(parseInt(el.dataset.idx));
+                });
+                
+                this.notesList.scrollTop = this.notesList.scrollHeight;
+            }
+            
+            editNote(i) {
+                let notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || [];
+                if(!notes[i]) return;
+                this.noteInput.value = notes[i].text;
+                this.noteInput.focus();
+                this.editingNoteIndex = i;
+                this.sendBtn.innerHTML = '<i class="fas fa-check"></i>';
+            }
+            
+            deleteNote(i) {
+                if(!confirm('Delete note?')) return;
+                let notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || [];
+                notes.splice(i, 1);
+                localStorage.setItem('fr_nt_' + FU, JSON.stringify(notes));
+                this.renderNotes();
+                
+                // Reset edit mode if deleting the currently edited note
+                if(this.editingNoteIndex === i) {
+                    this.editingNoteIndex = -1;
+                    this.noteInput.value = '';
+                    this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                }
+            }
+            
+            escapeHtml(unsafe) {
+                return unsafe
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
             }
 
             async loadPDF(urlOrData) {
@@ -976,7 +1239,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     }
 
                     // Zoom == 1 (Fit to screen)
-                    const isUI = e.target.closest('.header') || e.target.closest('.controls') || e.target.closest('.index-modal');
+                    const isUI = e.target.closest('.header') || e.target.closest('.controls') || e.target.closest('.index-modal') || e.target.closest('#chat-w');
                     const isBook = e.target.closest('.page') || e.target.closest('.stf__wrapper');
 
                     if (!isUI && !isBook && !e.target.closest('#error-container')) {
