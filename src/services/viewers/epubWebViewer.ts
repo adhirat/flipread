@@ -137,12 +137,17 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                       book.getRange(cfiRange).then(range => {
                           const sel = contents.window.getSelection();
                           if(!sel.rangeCount) return;
-                          const iframe = container.querySelector('iframe');
+                          const menu = document.getElementById('hl-menu');
+                          const iframe = contents.window.frameElement;
                           const iframeRect = iframe.getBoundingClientRect();
                           const rect = sel.getRangeAt(0).getBoundingClientRect();
-                          const menu = document.getElementById('hl-menu');
-                          menu.style.top = (window.scrollY + iframeRect.top + rect.top - 50) + 'px';
-                          menu.style.left = (iframeRect.left + rect.left + rect.width/2) + 'px';
+                          
+                          // Correctly calculate position relative to the main document
+                          const top = window.scrollY + iframeRect.top + rect.top - 60;
+                          const left = window.scrollX + iframeRect.left + rect.left + (rect.width / 2);
+                          
+                          menu.style.top = top + 'px';
+                          menu.style.left = left + 'px';
                           menu.style.display = 'flex';
                           window.currentSelection = { cfiRange, text: range.toString(), contents };
                       });

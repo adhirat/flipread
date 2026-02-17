@@ -12,6 +12,27 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
+        extraStyles: `
+            .textLayer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                overflow: hidden;
+                opacity: 0.2;
+                line-height: 1.0;
+                pointer-events: auto;
+            }
+            .textLayer > span {
+                color: transparent;
+                position: absolute;
+                white-space: pre;
+                cursor: text;
+                transform-origin: 0% 0%;
+            }
+            ::selection { background: rgba(79, 70, 229, 0.3); }
+        `,
         settingsHtml: `
             <div id="set-m">
                 <div class="flex justify-between items-center mb-4">
@@ -46,7 +67,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 }
             }
 
-            function renderPDF(blob) {
+            async function renderPDF(blob) {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
                 const data = await blob.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument(data).promise;
@@ -58,23 +79,41 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const section = document.createElement('div');
                     section.id = 'page-' + i;
-                    section.className = 'page-content mb-8 flex flex-col items-center';
+                    section.className = 'page-content mb-8 flex flex-col items-center relative';
                     
                     const head = document.createElement('div');
                     head.className = 'section-header mb-2';
-                    head.innerHTML = '<div class="pg-elegant text-xs opacity-40">PAGE ' + i + '</div>';
+                    head.innerHTML = '<div class="pg-elegant text-xs opacity-40">' + i + '</div>';
                     section.appendChild(head);
 
+                    const canvasWrapper = document.createElement('div');
+                    canvasWrapper.className = 'relative shadow-2xl';
+                    
                     const canvas = document.createElement('canvas');
-                    canvas.className = 'shadow-2xl max-w-full h-auto';
-                    section.appendChild(canvas);
+                    canvas.className = 'max-w-full h-auto block';
+                    canvasWrapper.appendChild(canvas);
+                    
+                    const textLayer = document.createElement('div');
+                    textLayer.className = 'textLayer absolute inset-0';
+                    canvasWrapper.appendChild(textLayer);
+                    
+                    section.appendChild(canvasWrapper);
                     container.appendChild(section);
 
-                    pdf.getPage(i).then(page => {
+                    pdf.getPage(i).then(async (page) => {
                         const vp = page.getViewport({ scale: pdfScale });
                         canvas.width = vp.width;
                         canvas.height = vp.height;
-                        page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+                        
+                        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                        
+                        const textContent = await page.getTextContent();
+                        pdfjsLib.renderTextLayer({
+                            textContent: textContent,
+                            container: textLayer,
+                            viewport: vp,
+                            textDivs: []
+                        });
                     });
 
                     const item = document.createElement('div');
@@ -88,6 +127,49 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 }
                 window.currentPdfBlob = blob;
             }
+
+            // Selection Handling for PDF
+            document.addEventListener('mouseup', () => {
+                const sel = window.getSelection();
+                if (!sel.rangeCount || sel.isCollapsed) {
+                    document.getElementById('hl-menu').style.display = 'none';
+                    return;
+                }
+                
+                const range = sel.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                const menu = document.getElementById('hl-menu');
+                
+                // Position above selection
+                menu.style.top = (window.scrollY + rect.top - 60) + 'px';
+                menu.style.left = (window.scrollX + rect.left + rect.width / 2) + 'px';
+                menu.style.display = 'flex';
+                
+                window.currentSelection = {
+                    text: sel.toString(),
+                    range: range
+                };
+            });
+
+            window.addHighlight = (color) => {
+                if(!window.currentSelection) return;
+                const { range, text } = window.currentSelection;
+                
+                const span = document.createElement('span');
+                span.className = 'hl-' + color;
+                try {
+                    range.surroundContents(span);
+                    highlights.push({ text, c: color });
+                    localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
+                    renderHighlights();
+                } catch(e) {
+                    // fall back if range is too complex (cross divs)
+                    console.warn("Could not surround selection precisely", e);
+                }
+                
+                document.getElementById('hl-menu').style.display = 'none';
+                window.getSelection().removeAllRanges();
+            };
 
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
