@@ -66,7 +66,7 @@ export const knowledgeView = `
             <ol style="margin-left:20px;line-height:1.8">
               <li>Go to your DNS provider (GoDaddy, Namecheap, Cloudflare, etc.).</li>
               <li>Create a <strong>CNAME</strong> record.</li>
-              <li>Point it to <code>flipread.flipread.workers.dev</code>.</li>
+              <li>Point it to <code>flipread.adhirat.workers.dev</code>.</li>
               <li>Enter your domain in the <strong>Store Settings</strong> > <strong>Custom Domain</strong> field.</li>
               <li>Click Save. It may take up to 24 hours for DNS to propagate.</li>
             </ol>

@@ -381,8 +381,7 @@ function renderBooks() {
   }
 }
 
-async function uploadBook(e) {
-  const file = e.target.files[0];
+async function handleFileUpload(file) {
   if (!file) return;
   const msgEl = document.getElementById('upload-msg');
   msgEl.textContent = 'Preparing...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
@@ -455,9 +454,40 @@ async function uploadBook(e) {
     } else {
       msgEl.textContent = data.error || 'Failed'; msgEl.className = 'msg error';
     }
-  } catch { msgEl.textContent = 'Error'; msgEl.className = 'msg error'; }
-  e.target.value = '';
+  } catch(e) { 
+    console.error(e);
+    msgEl.textContent = 'Error'; msgEl.className = 'msg error'; 
+  }
 }
+
+async function uploadBook(e) {
+  const file = e.type === 'drop' ? e.dataTransfer.files[0] : e.target.files[0];
+  await handleFileUpload(file);
+  if(e.target.value) e.target.value = '';
+}
+
+// Drag & Drop
+document.addEventListener('DOMContentLoaded', () => {
+    const zone = document.querySelector('.upload-zone');
+    if(zone) {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.style.borderColor = 'var(--accent-cyan)';
+            zone.style.background = 'rgba(6, 182, 212, 0.1)';
+        });
+        zone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            zone.style.borderColor = 'var(--border)';
+            zone.style.background = 'var(--bg-elevated)';
+        });
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.style.borderColor = 'var(--border)';
+            zone.style.background = 'var(--bg-elevated)';
+            uploadBook(e);
+        });
+    }
+});
 
 async function deleteBook(id) {
   if(!confirm('Delete this book?')) return;
@@ -995,42 +1025,7 @@ if (params.get('mode') === 'register') {
 }
 checkAuth();
 
-// Subscription Logic
-let billingInterval = 'yearly';
 
-function setBilling(interval) {
-  billingInterval = interval;
-  const isYearly = interval === 'yearly';
-  
-  document.getElementById('bill-monthly').classList.toggle('active', !isYearly);
-  document.getElementById('bill-yearly').classList.toggle('active', isYearly);
-  const sw = document.querySelector('.toggle-switch');
-  if(sw) sw.classList.toggle('active', isYearly);
-
-  if(isYearly) {
-    updatePrice('basic', '2.08', '/mo', 'Billed $25 yearly');
-    updatePrice('pro', '7.50', '/mo', 'Billed $90 yearly');
-    updatePrice('business', '24.17', '/mo', 'Billed $290 yearly');
-  } else {
-    updatePrice('basic', '2.50', '/mo', 'Billed monthly');
-    updatePrice('pro', '9.00', '/mo', 'Billed monthly');
-    updatePrice('business', '29.00', '/mo', 'Billed monthly');
-  }
-}
-
-function updatePrice(plan, amount, interval, text) {
-  const el = document.getElementById('price-'+plan);
-  if(el) el.textContent = amount;
-  const be = document.getElementById('billed-'+plan);
-  if(be) be.textContent = text;
-}
-
-function toggleBilling() {
-  setBilling(billingInterval === 'yearly' ? 'monthly' : 'yearly');
-}
-
-// Initialize billing toggle on load
-document.addEventListener('DOMContentLoaded', () => { setTimeout(() => setBilling('yearly'), 100) });
 
 
 // Account Deletion

@@ -25,7 +25,7 @@ export const storeView = `
           <label>Custom Domain (Optional)</label>
           <input type="text" id="st-domain" placeholder="e.g. books.mydomain.com">
           <p style="font-size:12px;color:var(--text-muted);margin-top:4px">
-            <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.flipread.workers.dev</code>. <br>
+            <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.adhirat.workers.dev</code>. <br>
             Then add the domain here and save.
           </p>
         </div>

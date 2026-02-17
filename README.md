@@ -136,7 +136,7 @@ npm run deploy
 
 ## 🔗 Published URL
 
-**Production**: [https://flipread.flipread.workers.dev](https://flipread.flipread.workers.dev)
+**Production**: [https://flipread.adhirat.workers.dev](https://flipread.adhirat.workers.dev)
 
 > You can configure a custom domain in the [Cloudflare Dashboard](https://dash.cloudflare.com/) under Workers & Pages → Your Worker → Settings → Domains & Routes
 

@@ -84,7 +84,7 @@ export const docsView = `
       <label>Custom Domain (Optional)</label>
       <input type="text" id="edit-domain" placeholder="e.g. docs.mybrand.com">
       <p style="font-size:12px;color:var(--text-muted);margin-top:4px">
-        <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.flipread.workers.dev</code>.
+        <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.adhirat.workers.dev</code>.
       </p>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:12px">
