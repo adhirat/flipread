@@ -33,7 +33,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .tab-content.active { display: block; }
         
         #s-c { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 4000px; overflow: hidden; z-index: 10; width: 100vw; height: 100dvh; }
-        #s-c.full { inset: 0 !important; z-index: 2000; height: 100dvh !important; }
+        #s-c.full { position: fixed !important; inset: 0 !important; z-index: 50 !important; height: 100dvh !important; width: 100vw !important; background: inherit; }
         #b-t { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease; transform-style: preserve-3d; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
         #b-t.open { opacity: 1; pointer-events: auto; }
         #fc { position: relative; transform-origin: center center; }
@@ -73,8 +73,10 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .pc{width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative}
         .pg canvas{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none}
         
-        .sl{flex:1;max-width:250px;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;outline:none}
-        .sl::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:${accent};border-radius:50%;cursor:pointer;box-shadow:0 0 5px rgba(0,0,0,0.5)}
+        .sl{flex:1;max-width:300px;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.2);border-radius:4px;outline:none;transition:height 0.2s, background 0.2s;cursor:pointer}
+        .sl:hover{height:6px;background:rgba(255,255,255,0.3)}
+        .sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;background:#fff;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.3);transition:transform 0.2s, box-shadow 0.2s;margin-top:-3px} /* Margin aligns thumb vertically cleanly if height diff */
+        .sl:hover::-webkit-slider-thumb{transform:scale(1.3);box-shadow:0 0 0 4px rgba(255,255,255,0.1)}
         .nb{position:fixed;top:50.5%;transform:translateY(-50%);z-index:1000;background:rgba(255,255,255,0.05);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .3s;border:1px solid rgba(255,255,255,0.1);opacity:0.3}
         .nb:hover:not(:disabled){background:rgba(255,255,255,0.23);transform:translateY(-50%) scale(1.1);opacity:1}
         .nb:disabled{opacity:0.05;cursor:not-allowed}
@@ -160,14 +162,19 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     </div>
 
     <header class="hdr" id="main-hdr">
-        <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul text-sm"></i></button>
-            <div class="flex items-center gap-2 min-w-0">
-                <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
-                <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
-            </div>
+        <!-- Left: Menu & Logo -->
+        <div class="flex items-center gap-4 z-20">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul text-xs"></i></button>
+            <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-5 w-5 object-contain opacity-70 hover:opacity-100 transition" />
         </div>
-        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+
+        <!-- Center: Title (Absolute) -->
+        <div class="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
+            <div class="font-medium text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-60 truncate max-w-[200px] sm:max-w-[400px] pointer-events-auto select-none">${safeTitle}</div>
+        </div>
+
+        <!-- Right: Controls -->
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto z-20">
             <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
                 <button id="zo" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
                 <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
@@ -178,12 +185,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     </header>
 
     <div id="s-c">
-        <div id="c-b" class="c-b" onclick="openBook()">
-            <div class="c-v" id="c-v-inner">
-                ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:contain;background:#1a1a1a;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">FLIP TO OPEN</span></div>'}
-            </div>
-        </div>
-        <div id="b-t">
+        <div id="b-t" class="open">
             <div id="fc"></div>
         </div>
     </div>
@@ -192,7 +194,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <button id="nb" class="nb"><i class="fas fa-chevron-right"></i></button>
     <div class="ft flex justify-between gap-2 px-4" id="main-ft">
         <div class="flex items-center gap-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-cog"></i></button>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-cog text-xs"></i></button>
         </div>
 
         <div class="flex flex-col items-center gap-1 flex-1 max-w-[300px]">
@@ -201,7 +203,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
 
         <div class="flex items-center gap-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition text-white" onclick="toggleChat()" title="Chat"><i class="fas fa-comment-dots"></i></button>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleChat()" title="Chat"><i class="fas fa-comment-dots text-xs"></i></button>
         </div>
     </div>
 
@@ -343,6 +345,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 this.pdf = null; this.pf = null; this.tp = 0; this.zoom = 1; this.full = false;
                 this.rp = new Set(); this.rq = new Set(); this.ir = false;
                 this.panX = 0; this.panY = 0; this.isDragging = false; this.startX = 0; this.startY = 0;
+                this.buildTimeout = null;
                 this.init();
             }
             async init() {
@@ -355,22 +358,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     this.tp = this.pdf.numPages;
                     document.getElementById('ps').max = this.tp - 1;
                     
-                    if (!'${coverUrl}') {
-                        const pg = await this.pdf.getPage(1);
-                        const vp = pg.getViewport({scale:1});
-                        const cv = document.createElement('canvas');
-                        cv.width = vp.width; cv.height = vp.height;
-                        await pg.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
-                        document.getElementById('c-v-inner').innerHTML = \`<img src="\${cv.toDataURL()}" style="width:100%;height:100%;object-fit:contain;background:#1a1a1a;">\`;
-                    }
-                    
-                    const lpg = await this.pdf.getPage(this.tp);
-                    const lvp = lpg.getViewport({scale:1});
-                    const lcv = document.createElement('canvas');
-                    lcv.width = lvp.width; lcv.height = lvp.height;
-                    await lpg.render({canvasContext:lcv.getContext('2d'), viewport:lvp}).promise;
-                    this.backCoverData = lcv.toDataURL();
-
                     await this.build();
                     document.getElementById('ld').style.opacity='0';
                     setTimeout(()=>document.getElementById('ld').style.display='none', 500);
@@ -379,10 +366,20 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     document.getElementById('ld').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500"></i><p>Connection Error</p>';
                 }
             }
+            scheduleBuild() {
+                if(this.buildTimeout) clearTimeout(this.buildTimeout);
+                this.buildTimeout = setTimeout(() => this.build(), 250);
+            }
             async build() {
                 if(!this.pdf) return;
-                if(this.pf) this.pf.destroy();
                 let container = document.getElementById('fc');
+                if(!container) return;
+                
+                if(this.pf) { 
+                    try { this.pf.destroy(); } catch(e){}
+                    this.pf = null; 
+                }
+                
                 container.innerHTML = '';
                 this.rp.clear(); this.rq.clear();
 
@@ -398,15 +395,32 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     container.appendChild(div);
                 }
 
-                this.pf = new St.PageFlip(container, {
-                    width: dims.w, height: dims.h, size: 'fixed',
-                    maxShadowOpacity: 0.4, showCover: true,
-                    mobileScrollSupport: false, useMouseEvents: true,
-                    flippingTime: 800, autoCenter: true
-                });
-                this.pf.loadFromHTML(document.querySelectorAll('.pg'));
-                this.pf.on('flip', e => { this.update(); this.queue(e.data); });
-                this.update(); this.queue(0);
+                // Wait for layout to settle before initializing PageFlip
+                setTimeout(() => {
+                    if(!document.getElementById('fc')) return; // Ensure container still exists
+                    
+                    try {
+                        // Ensure dimensions are valid before init
+                        if(container.clientWidth === 0 || container.clientHeight === 0) {
+                            // console.warn("Container has 0 dimensions, retrying build...");
+                            this.scheduleBuild();
+                            return;
+                        }
+
+                        this.pf = new St.PageFlip(container, {
+                            width: dims.w, height: dims.h, size: 'fixed',
+                            maxShadowOpacity: 0.4, showCover: true,
+                            mobileScrollSupport: false, useMouseEvents: true,
+                            flippingTime: 800, autoCenter: true,
+                            maxPageWidth: dims.w, maxPageHeight: dims.h
+                        });
+                        this.pf.loadFromHTML(container.querySelectorAll('.pg'));
+                        this.pf.on('flip', e => { this.update(); this.queue(e.data); });
+                        this.update(); this.queue(0);
+                    } catch(e) {
+                        console.error("PageFlip init error:", e);
+                    }
+                }, 100);
             }
             calcDims(ar) {
                 const headH = this.full ? 0 : 50, footH = this.full ? 0 : 70, margin = this.full ? 10 : 40;
@@ -441,11 +455,13 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             }
             update() {
                 if(!this.pf) return;
-                let i = this.pf.getCurrentPageIndex();
-                document.getElementById('pi').textContent = (i+1) + " / " + this.tp;
-                document.getElementById('ps').value = i;
-                document.getElementById('pb').disabled = i === 0;
-                document.getElementById('nb').disabled = i >= this.tp-1;
+                try {
+                    let i = this.pf.getCurrentPageIndex();
+                    document.getElementById('pi').textContent = (i+1) + " / " + this.tp;
+                    document.getElementById('ps').value = i;
+                    document.getElementById('pb').disabled = i === 0;
+                    document.getElementById('nb').disabled = i >= this.tp-1;
+                } catch(e) {}
             }
             genIndex() {
                 let list = document.getElementById('index-list');
@@ -525,13 +541,14 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                         }
                     }
                 }, {passive: true});
-                window.onresize = () => this.build();
+                window.onresize = () => this.scheduleBuild();
             }
             toggleLayout() {
                 this.full = !this.full;
                 document.body.classList.toggle('full-mode', this.full);
-                document.getElementById('m-btn').innerHTML = this.full ? '<i class="fas fa-compress-alt"></i>' : '<i class="fas fa-expand"></i>';
-                this.zoom = 1; this.panX = 0; this.panY = 0; this.applyZoom(); this.build();
+                document.getElementById('s-c').classList.toggle('full', this.full);
+                document.getElementById('m-btn').innerHTML = this.full ? '<i class="fas fa-compress-alt text-xs"></i>' : '<i class="fas fa-expand text-xs"></i>';
+                this.zoom = 1; this.panX = 0; this.panY = 0; this.applyZoom(); this.scheduleBuild();
             }
             showUI(v) { if(this.full) { document.getElementById('main-hdr').classList.toggle('v', v); document.getElementById('main-ft').classList.toggle('v', v); } }
             applyZoom() {
@@ -543,13 +560,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 document.getElementById('fc').style.pointerEvents = this.zoom > 1 ? 'none' : 'auto';
                 document.body.style.cursor = this.zoom > 1 ? 'grab' : 'default';
             }
-        }
-        window.openBook = () => {
-            document.getElementById('c-b').classList.add('a-f-o');
-            setTimeout(() => {
-                document.getElementById('c-b').style.display='none';
-                document.getElementById('b-t').classList.add('open');
-            }, 800);
         }
         window.saveNotes = (v) => localStorage.setItem('fr_nt_' + FU, v);
         window.exportNotes = () => {

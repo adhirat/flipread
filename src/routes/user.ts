@@ -180,10 +180,10 @@ user.delete('/', async (c) => {
   const db = c.env.DB;
   const storage = new StorageService(c.env.BUCKET);
 
-  // 1. Get all user's books to delete files
-  const books = await db.prepare('SELECT file_key FROM books WHERE user_id = ?').bind(currentUser.id).all<{ file_key: string }>();
+  // 1. Get all user's books to delete files and covers
+  const books = await db.prepare('SELECT file_key, cover_key FROM books WHERE user_id = ?').bind(currentUser.id).all<{ file_key: string; cover_key: string }>();
   
-  const fileKeys = books.results?.map(b => b.file_key) || [];
+  const fileKeys = books.results?.flatMap(b => [b.file_key, b.cover_key].filter(Boolean)) || [];
 
   // 2. Delete files from R2
   const deletionPromises = fileKeys.map(key => storage.delete(key));

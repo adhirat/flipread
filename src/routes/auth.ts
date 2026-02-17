@@ -132,30 +132,23 @@ auth.post('/forgot-password', async (c) => {
 
   const resetUrl = `${c.env.APP_URL}/dashboard?mode=reset&token=${token}`;
   
-  // Send email via Resend
+  // Send email via new service
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${c.env.RESEND_API_KEY}`
-      },
-      body: JSON.stringify({
-        from: 'FlipRead <noreply@adhirat.com>',
-        to: email,
-        subject: 'Reset your FlipRead password',
-        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+    const { sendEmail } = await import('../services/email');
+    const sent = await sendEmail(c.env, {
+      to: email,
+      subject: 'Reset your FlipRead password',
+      html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
           <h2 style="color:#4f46e5;">Reset Your Password</h2>
           <p>Hi ${user.name || 'there'},</p>
           <p>We received a request to reset your password for your FlipRead account. Click the button below to set a new password:</p>
           <a href="${resetUrl}" style="background:#4f46e5;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:20px 0;">Reset Password</a>
           <p style="color:#64748b;font-size:14px;">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
         </div>`
-      })
     });
     
-    if (!res.ok) {
-      console.error('Resend error:', await res.text());
+    if (!sent) {
+      console.error('Email sending failed');
       return c.json({ error: 'Failed to send reset email' }, 500);
     }
   } catch (err) {

@@ -1090,12 +1090,11 @@ if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.inner
 
 
 function viewMyStore() {
-  if (currentUser && currentUser.store_name) {
+  if (currentUser) {
     const slug = currentUser.name.toLowerCase().replace(/\s+/g, '-');
     window.open('/store/' + slug, '_blank');
   } else {
-    alert('Please set up your store name in settings first.');
-    switchView('settings');
+    alert('Please log in.');
   }
 }
 

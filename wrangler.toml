@@ -23,6 +23,14 @@ id = "fbea1b597d2f4ebd8f6ab8d2ee6da2dc"
 # Secrets (JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) are set via `wrangler secret put`
 [vars]
 APP_URL = "https://flipread.adhirat.com"
+
+# Cloudflare Email Routing Binding
+# 1. Go to Cloudflare Dashboard > Email > Email Workers
+# 2. Enable Email Routing
+# 3. Add a binding named "EMAIL" to use the `send_email` capability
+# [[send_email]]
+# name = "EMAIL"
+
 MAX_UPLOAD_SIZE_FREE = "5242880"
 MAX_UPLOAD_SIZE_BASIC = "10485760"
 MAX_UPLOAD_SIZE_PRO = "52428800"

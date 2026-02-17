@@ -45,10 +45,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         /* Dynamic Sections */
         .page-content { margin: 0; padding: 0; }
         .section-header { 
-            margin-top: 0; margin-bottom: 20px; padding: 20px; 
-            border-bottom: 1px solid rgba(0,0,0,0.1); 
+            margin-top: 20px; margin-bottom: 30px; padding: 10px 0; 
+            display: flex; justify-content: center; align-items: center;
         }
-        .section-header h2 { font-size: 2rem; margin: 0; color: var(--accent); }
+        .section-header h2 { 
+            font-size: 0.75rem; margin: 0; color: #9ca3af; 
+            text-transform: uppercase; letter-spacing: 0.25em; font-weight: 600;
+            background: #f3f4f6; padding: 6px 16px; border-radius: 99px;
+        }
         
         /* Rendered Content Styles */
         .page-content { margin-bottom: 60px; }
@@ -166,7 +170,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <a href="?mode=standard" class="ib" id="standard-btn" title="Standard View">
                 <i class="fas fa-book-open"></i>
             </a>
-            <button class="ib" onclick="toggleSettings()" title="Settings">
+            <button class="ib" id="settings-btn" onclick="toggleSettings()" title="Settings" style="display:none">
                 <i class="fas fa-font"></i>
             </button>
             <button class="ib" id="notes-btn" onclick="toggleChat()" title="Notes">
@@ -389,11 +393,12 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             // Continuous Scrolled View
             // Continuous Scrolled View
             // 'scrolled' flow creates a continuous vertical view.
-            bookRender = book.renderTo(container, {
+            const bookRender = book.renderTo(container, {
                 flow: "scrolled",
                 manager: "continuous",
                 width: "100%"
             });
+            document.getElementById('settings-btn').style.display='flex';
             await bookRender.display();
             
             // Remove margin/padding from internal EPUB body and sync height
