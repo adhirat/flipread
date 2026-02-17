@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import type { Env, User } from '../lib/types';
 import { authMiddleware } from '../middleware/auth';
 import { StorageService } from '../services/storage';
+import { logActivity } from '../lib/activity';
 
 type Variables = { user: User };
 
@@ -11,7 +12,14 @@ const user = new Hono<{ Bindings: Env; Variables: Variables }>();
 // All routes require auth
 user.use('/*', authMiddleware());
 
-// PATCH /api/user/store — update store settings
+/**
+ * PATCH /api/user/store
+ * Updates the user's store settings and name.
+ * 
+ * @param {string} store_name - The new name for the store (optional)
+ * @param {Record<string, string>} store_settings - JSON object of store settings (optional)
+ * @returns {Promise<Response>} JSON response indicating success
+ */
 user.patch('/store', async (c) => {
   const currentUser = c.get('user');
   const { store_name, store_settings } = await c.req.json<{
@@ -40,10 +48,17 @@ user.patch('/store', async (c) => {
     `UPDATE users SET ${sets.join(', ')} WHERE id = ?`
   ).bind(...values).run();
 
+  await logActivity(c, currentUser.id, 'update_store_settings', 'user', currentUser.id, { store_name });
+
   return c.json({ success: true });
 });
 
-// PATCH /api/user/profile — update profile
+/**
+ * PATCH /api/user/profile
+ * Updates the user's profile name.
+ * 
+ * @param {string} name - The new name (min 2 chars)
+ */
 user.patch('/profile', async (c) => {
   const currentUser = c.get('user');
   const { name } = await c.req.json<{ name: string }>();
@@ -56,10 +71,17 @@ user.patch('/profile', async (c) => {
     "UPDATE users SET name = ?, updated_at = datetime('now') WHERE id = ?"
   ).bind(name, currentUser.id).run();
 
+  await logActivity(c, currentUser.id, 'update_profile', 'user', currentUser.id, { name });
+
   return c.json({ success: true });
 });
 
-// POST /api/user/store/logo — upload store logo
+/**
+ * POST /api/user/store/logo
+ * Uploads a logo for the store.
+ * 
+ * @param {File} logo - The logo file (JPEG, PNG, WebP, SVG, max 1MB)
+ */
 user.post('/store/logo', async (c) => {
   const currentUser = c.get('user');
   const formData = await c.req.formData();
@@ -102,7 +124,54 @@ user.post('/store/logo', async (c) => {
     "UPDATE users SET store_logo_url = ?, store_logo_key = ?, updated_at = datetime('now') WHERE id = ?"
   ).bind(logoUrl, logoKey, currentUser.id).run();
 
+  await logActivity(c, currentUser.id, 'update_store_logo', 'user', currentUser.id);
+
   return c.json({ success: true, logo_url: logoUrl });
+});
+
+/**
+ * GET /api/user/keys
+ * Lists all API keys for the user.
+ */
+user.get('/keys', async (c) => {
+  const currentUser = c.get('user');
+  const keys = await c.env.DB.prepare('SELECT * FROM api_keys WHERE user_id = ? ORDER BY created_at DESC').bind(currentUser.id).all();
+  return c.json({ keys: keys.results });
+});
+
+/**
+ * GET /api/user/activity
+ * Lists recent activity logs for the user.
+ */
+user.get('/activity', async (c) => {
+  const currentUser = c.get('user');
+  const activity = await c.env.DB.prepare('SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').bind(currentUser.id).all();
+  return c.json({ activity: activity.results });
+});
+
+/**
+ * POST /api/user/keys
+ * Generates a new API key.
+ */
+user.post('/keys', async (c) => {
+  const currentUser = c.get('user');
+  const key = 'sk_' + crypto.randomUUID().replace(/-/g, '');
+  const id = crypto.randomUUID();
+  
+  await c.env.DB.prepare('INSERT INTO api_keys (id, user_id, key_value) VALUES (?, ?, ?)').bind(id, currentUser.id, key).run();
+  
+  await logActivity(c, currentUser.id, 'create_api_key', 'api_key', id);
+
+  return c.json({ success: true, key: { id, key_value: key } });
+});
+
+// DELETE /api/user/keys/:id — delete API key
+user.delete('/keys/:id', async (c) => {
+  const currentUser = c.get('user');
+  const id = c.req.param('id');
+  await c.env.DB.prepare('DELETE FROM api_keys WHERE id = ? AND user_id = ?').bind(id, currentUser.id).run();
+  await logActivity(c, currentUser.id, 'delete_api_key', 'api_key', id);
+  return c.json({ success: true });
 });
 
 // DELETE /api/user — delete account

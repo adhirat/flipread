@@ -6,6 +6,7 @@ import { generateId, generateSlug, getFileType } from '../lib/utils';
 import { getPlanLimits } from '../lib/plans';
 import { StorageService } from '../services/storage';
 import { authMiddleware } from '../middleware/auth';
+import { logActivity } from '../lib/activity';
 
 type Variables = { user: User };
 
@@ -14,7 +15,10 @@ const books = new Hono<{ Bindings: Env; Variables: Variables }>();
 // All routes require auth
 books.use('/*', authMiddleware());
 
-// GET /api/books — list user's books
+/**
+ * GET /api/books
+ * Lists all books owned by the current user.
+ */
 books.get('/', async (c) => {
   const user = c.get('user');
   const results = await c.env.DB.prepare(
@@ -24,7 +28,15 @@ books.get('/', async (c) => {
   return c.json({ books: results.results || [] });
 });
 
-// POST /api/books/upload — upload a new book
+/**
+ * POST /api/books/upload
+ * Uploads a new book (PDF/EPUB) to R2 and creates a record in D1.
+ * 
+ * @param {File} file - The book file
+ * @param {string} title - The title of the book
+ * @param {string} slug - Custom slug (optional)
+ * @param {File} cover - Custom cover image (optional)
+ */
 books.post('/upload', async (c) => {
   const user = c.get('user');
   const plan = getPlanLimits(user.plan);
@@ -114,6 +126,9 @@ books.post('/upload', async (c) => {
     coverKey
   ).run();
 
+  // Log activity
+  await logActivity(c, user.id, 'create_book', 'book', bookId, { title, type: fileType });
+
   const viewerUrl = `${c.env.APP_URL}/read/${slug}`;
 
   return c.json({
@@ -179,6 +194,9 @@ books.patch('/:id', async (c) => {
     await c.env.DB.prepare(
       `UPDATE books SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`
     ).bind(...values).run();
+
+    // Log activity
+    await logActivity(c, user.id, 'update_book', 'book', bookId, updates);
   }
 
   return c.json({ success: true });
@@ -257,6 +275,9 @@ books.delete('/:id', async (c) => {
 
   // Delete from D1 (cascades to view_logs)
   await c.env.DB.prepare('DELETE FROM books WHERE id = ?').bind(bookId).run();
+
+  // Log activity
+  await logActivity(c, user.id, 'delete_book', 'book', bookId, { title: book.title });
 
   return c.json({ success: true });
 });
@@ -370,6 +391,10 @@ books.post('/:id/share', async (c) => {
       `INSERT INTO shared_books (id, book_id, owner_id, shared_with_email) VALUES (?, ?, ?, ?)`
     ).bind(id, bookId, user.id, email).run();
     
+    
+    // Log activity
+    await logActivity(c, user.id, 'share_book', 'book', bookId, { type: 'email', target: email });
+    
     // Ideally look up if user exists and link user_id, but email is enough for now
     
     return c.json({ share: { id, book_id: bookId, shared_with_email: email, created_at: new Date().toISOString() } });
@@ -385,16 +410,19 @@ books.delete('/shares/:shareId', async (c) => {
 
   // Verify ownership of the share (must be owner of the book)
   const share = await c.env.DB.prepare(
-    `SELECT sb.id FROM shared_books sb
+    `SELECT sb.id, sb.book_id FROM shared_books sb
      JOIN books b ON sb.book_id = b.id
      WHERE sb.id = ? AND b.user_id = ?`
-  ).bind(shareId, user.id).first();
+  ).bind(shareId, user.id).first<{ id: string; book_id: string }>();
 
   if (!share) return c.json({ error: 'Share not found or permission denied' }, 404);
 
   await c.env.DB.prepare(
     `DELETE FROM shared_books WHERE id = ?`
   ).bind(shareId).run();
+
+  // Log activity
+  await logActivity(c, user.id, 'unshare_book', 'book', share?.book_id || '', { shareId });
 
   return c.json({ success: true });
 });

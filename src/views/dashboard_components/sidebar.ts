@@ -48,6 +48,10 @@ export const sidebar = `
     
     <div style="flex:1"></div>
 
+    <div onclick="switchView('knowledge');closeSidebar()" class="nav-item" id="nav-knowledge" title="Help & Support">
+      <i class="fas fa-question-circle"></i> <span>Help & Support</span>
+    </div>
+
     <div onclick="toggleDashTheme()" class="nav-item" title="Toggle Theme" style="margin-bottom:12px">
       <i class="fas fa-moon" id="dash-theme-icon-sidebar"></i> <span>Theme</span>
     </div>

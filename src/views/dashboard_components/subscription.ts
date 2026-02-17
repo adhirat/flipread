@@ -22,9 +22,12 @@ export const subscriptionView = `
             <div class="billed-text" id="billed-basic">Billed $25 yearly</div>
           </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
-            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 5 Books Limit</li>
-            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 10 MB Uploads</li>
-            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 2,000 Views</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 5 published books</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 10 MB max file size</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> 2,000 monthly views</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> Bookstore page</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> Basic analytics</li>
+            <li><i class="fas fa-check" style="color:var(--accent-cyan);margin-right:8px"></i> Custom viewer background</li>
           </ul>
           <button onclick="checkout('basic')" class="btn btn-outline" style="width:100%">Choose Basic</button>
         </div>
@@ -37,9 +40,17 @@ export const subscriptionView = `
             <div class="billed-text" id="billed-pro">Billed $90 yearly</div>
           </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
-             <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 Books Limit</li>
-            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 MB Uploads</li>
-            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Password Protection</li>
+             <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 published books</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 MB max file size</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50,000 monthly views</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Custom slugs & themes</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Password protection</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Remove branding</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Detailed analytics</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Custom domain</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Private store mode</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> 50 store members</li>
+            <li><i class="fas fa-check" style="color:var(--accent-purple);margin-right:8px"></i> Private book sharing</li>
           </ul>
           <button onclick="checkout('pro')" class="btn" style="width:100%;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue))">Choose Pro</button>
         </div>
@@ -51,9 +62,15 @@ export const subscriptionView = `
             <div class="billed-text" id="billed-business">Billed $290 yearly</div>
           </div>
           <ul style="list-style:none;margin-bottom:24px;font-size:14px;color:var(--text-secondary);line-height:1.6">
-             <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Unlimited Books</li>
-            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> 200 MB Uploads</li>
-            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> API Access</li>
+             <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Unlimited books</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> 200 MB max file size</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Unlimited views</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Everything in Pro</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Custom domain</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> API access</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Priority support</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Unlimited store members</li>
+            <li><i class="fas fa-check" style="color:var(--accent-magenta);margin-right:8px"></i> Export analytics data</li>
           </ul>
           <button onclick="checkout('business')" class="btn btn-outline" style="width:100%">Choose Business</button>
         </div>

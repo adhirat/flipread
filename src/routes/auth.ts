@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import type { Env, User } from '../lib/types';
 import { generateId, hashPassword, verifyPassword } from '../lib/utils';
 import { createToken } from '../middleware/auth';
+import { logActivity } from '../lib/activity';
 
 type Variables = { user: User };
 
@@ -39,6 +40,9 @@ auth.post('/register', async (c) => {
   // Set cookie
   c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
 
+  // Log activity
+  await logActivity(c, id, 'register', 'user', id, { email });
+
   return c.json({ user: { id, email, name, plan: 'free' }, token });
 });
 
@@ -66,6 +70,9 @@ auth.post('/login', async (c) => {
   const token = await createToken(user.id, c.env.JWT_SECRET);
 
   c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
+
+  // Log activity
+  await logActivity(c, user.id, 'login', 'user', user.id);
 
   return c.json({
     user: { id: user.id, email: user.email, name: user.name, plan: user.plan },

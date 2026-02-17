@@ -8,6 +8,7 @@ import { storeView } from './dashboard_components/store';
 import { membersView } from './dashboard_components/members';
 import { subscriptionView } from './dashboard_components/subscription';
 import { settingsView } from './dashboard_components/settings';
+import { knowledgeView } from './dashboard_components/knowledge_base';
 import { dashboardScript } from './dashboard_components/script';
 
 export function dashboardPage(appUrl: string): string {
@@ -49,6 +50,7 @@ export function dashboardPage(appUrl: string): string {
       ${storeView}
       ${membersView}
       ${subscriptionView}
+      ${knowledgeView}
       ${settingsView}
     </main>
   </div>

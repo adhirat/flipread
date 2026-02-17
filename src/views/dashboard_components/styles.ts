@@ -57,7 +57,8 @@ body{font-family:'Work Sans',sans-serif;background:var(--bg-primary);color:var(-
 .nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;color:var(--text-secondary);text-decoration:none;border-radius:12px;margin-bottom:4px;transition:all .3s;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden}
 .nav-item:hover,.nav-item.active{background:var(--bg-elevated);color:var(--accent-cyan)}
 .nav-item i{width:20px;text-align:center;font-size:18px;flex-shrink:0}
-.user-profile{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:center;overflow:hidden}
+.user-profile{margin-top:auto;padding:16px;border-top:1px solid var(--border);border-radius:12px;display:flex;gap:12px;align-items:center;overflow:hidden;transition:background 0.2s}
+.user-profile:hover {background:var(--bg-elevated)}
 .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent-purple),var(--accent-blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
 .user-info{flex:1;overflow:hidden;transition:opacity 0.2s}
 .user-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -80,7 +81,7 @@ h2{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spaci
 .form-group input:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 3px var(--glow-cyan)}
 .btn{padding:12px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;font-weight:700;cursor:pointer;transition:all .3s;text-transform:uppercase;font-size:13px;letter-spacing:1px}
 .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow-magenta)}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary);box-shadow:none;display:flex;align-items:center;gap:8px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary);box-shadow:none;display:flex;align-items:center;gap:8px;font-weight:600;justify-content:center}
 .btn-outline:hover,.btn-outline.active{border-color:var(--accent-cyan);color:var(--accent-cyan);background:var(--bg-elevated)}
 .btn-outline.active{border-width:2px;box-shadow:0 0 15px var(--glow-cyan)}
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}

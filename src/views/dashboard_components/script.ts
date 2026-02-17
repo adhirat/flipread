@@ -3,6 +3,7 @@ const API = '';
 let currentUser = null;
 let currentBooks = [];
 let authMode = 'login'; // login, register, forgot, reset
+let billingInterval = 'yearly';
 
 // Navigation
 function switchView(view) {
@@ -87,7 +88,7 @@ function updateUI() {
   document.getElementById('set-email').value = currentUser.email;
   document.getElementById('set-name-input').value = currentUser.name || '';
   
-  const username = (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
+  const username = (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
   document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(username);
   
   const limits = { free: '5 MB', basic: '10 MB', pro: '50 MB', business: '200 MB' };
@@ -98,6 +99,48 @@ function updateUI() {
   document.querySelectorAll('[id^="theme-btn-"]').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById('theme-btn-' + savedTheme);
   if(activeBtn) activeBtn.classList.add('active');
+
+  // Plan-specific Features UI
+  const plan = currentUser.plan;
+  
+  // Branding (Pro+)
+  const brandingSection = document.getElementById('branding-section');
+  if(brandingSection) {
+    if(['pro','business'].includes(plan)) {
+      brandingSection.style.display = 'block';
+      const brandingToggle = document.getElementById('branding-toggle');
+      if(brandingToggle) brandingToggle.classList.toggle('active', s.branding_enabled !== false); // Default true
+    } else {
+      brandingSection.style.display = 'none';
+    }
+  }
+
+  // API Access (Business)
+  const apiSection = document.getElementById('api-section');
+  if(apiSection) {
+    if(plan === 'business') {
+      apiSection.style.display = 'block';
+      loadApiKeys();
+    } else {
+      apiSection.style.display = 'none';
+    }
+  }
+  
+  // Support Status
+  const supportEl = document.getElementById('support-status');
+  if(supportEl) {
+    if(plan === 'business') {
+        supportEl.innerHTML = '<span style="color:#f59e0b;font-weight:700"><i class="fas fa-star"></i> Priority Support</span> &mdash; You have access to our priority support channel.';
+        supportEl.style.background = 'rgba(245,158,11,0.1)';
+        supportEl.style.color = '#f59e0b';
+    } else {
+        supportEl.innerHTML = 'Standard Support Plan';
+        supportEl.style.background = 'var(--bg-elevated)';
+        supportEl.style.color = 'var(--text-secondary)';
+    }
+  }
+
+  fetchActivity();
 }
 
 async function saveProfile() {
@@ -565,6 +608,56 @@ async function applyCrop() {
   }, 'image/jpeg', 0.9);
 }
 
+function setBilling(interval) {
+  billingInterval = interval;
+  const isYearly = interval === 'yearly';
+  
+  // Update toggle UI
+  const toggleSwitch = document.querySelector('.billing-toggle .toggle-switch');
+  const labelMonthly = document.getElementById('bill-monthly');
+  const labelYearly = document.getElementById('bill-yearly');
+  
+  if (toggleSwitch) {
+    if (isYearly) toggleSwitch.classList.add('active');
+    else toggleSwitch.classList.remove('active');
+  }
+  
+  if (labelMonthly) {
+    if (!isYearly) labelMonthly.classList.add('active');
+    else labelMonthly.classList.remove('active');
+  }
+  
+  if (labelYearly) {
+    if (isYearly) labelYearly.classList.add('active');
+    else labelYearly.classList.remove('active');
+  }
+
+  // Update prices
+  const prices = {
+    basic: isYearly ? '2.08' : '2.50',
+    pro: isYearly ? '7.50' : '9.00',
+    business: isYearly ? '24.17' : '29.00'
+  };
+  
+  const billedText = {
+    basic: isYearly ? 'Billed $25 yearly' : 'Billed monthly',
+    pro: isYearly ? 'Billed $90 yearly' : 'Billed monthly',
+    business: isYearly ? 'Billed $290 yearly' : 'Billed monthly'
+  };
+
+  if(document.getElementById('price-basic')) document.getElementById('price-basic').textContent = prices.basic;
+  if(document.getElementById('price-pro')) document.getElementById('price-pro').textContent = prices.pro;
+  if(document.getElementById('price-business')) document.getElementById('price-business').textContent = prices.business;
+  
+  if(document.getElementById('billed-basic')) document.getElementById('billed-basic').textContent = billedText.basic;
+  if(document.getElementById('billed-pro')) document.getElementById('billed-pro').textContent = billedText.pro;
+  if(document.getElementById('billed-business')) document.getElementById('billed-business').textContent = billedText.business;
+}
+
+function toggleBilling() {
+  setBilling(billingInterval === 'yearly' ? 'monthly' : 'yearly');
+}
+
 async function checkout(plan) {
   try {
     const res = await fetch(API + '/api/billing/checkout', {
@@ -1000,6 +1093,7 @@ if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.inner
   document.getElementById('main-sidebar').classList.add('collapsed');
 }
 
+
 function viewMyStore() {
   if (currentUser && currentUser.store_name) {
     const slug = currentUser.name.toLowerCase().replace(/\s+/g, '-');
@@ -1008,5 +1102,134 @@ function viewMyStore() {
     alert('Please set up your store name in settings first.');
     switchView('settings');
   }
+}
+
+// API Keys
+async function loadApiKeys() {
+  try {
+    const res = await fetch(API + '/api/user/keys', { credentials: 'include' });
+    if(res.ok) {
+        const data = await res.json();
+        renderApiKeys(data.keys || []);
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderApiKeys(keys) {
+    const list = document.getElementById('api-keys-list');
+    if(!list) return;
+    if(keys.length === 0) {
+        list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px;border:1px dashed var(--border);border-radius:8px">No API keys generated.</div>';
+        return;
+    }
+    list.innerHTML = keys.map(k => \`<div style="background:var(--bg-elevated);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-family:monospace;font-size:13px;color:var(--text-primary)">\${k.key_value}</div>
+            <button onclick="deleteApiKey('\${k.id}')" style="border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px"><i class="fas fa-trash"></i></button>
+        </div>\`).join('');
+}
+
+async function generateApiKey() {
+    try {
+        const res = await fetch(API + '/api/user/keys', { method: 'POST', credentials: 'include' });
+        if(res.ok) loadApiKeys();
+        else alert('Failed to generate key');
+    } catch { alert('Network error'); }
+}
+
+async function deleteApiKey(id) {
+    if(!confirm('Delete this API key? Apps using it will stop working.')) return;
+    try {
+        await fetch(API + '/api/user/keys/' + id, { method: 'DELETE', credentials: 'include' });
+        loadApiKeys();
+    } catch { alert('Network error'); }
+}
+
+function toggleBranding() {
+   const t = document.getElementById('branding-toggle');
+   if(t) {
+       t.classList.toggle('active');
+       saveBrandingPreference();
+   }
+}
+
+async function saveBrandingPreference() {
+    const is_enabled = document.getElementById('branding-toggle').classList.contains('active');
+    
+    let s = JSON.parse(currentUser.store_settings || '{}');
+    s.branding_enabled = is_enabled;
+    
+    try {
+        const res = await fetch(API + '/api/user/store', {
+            method: 'PATCH', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ store_settings: s })
+        });
+        
+        if(res.ok) {
+            currentUser.store_settings = JSON.stringify(s);
+        }
+    } catch(e) { console.error('Failed to save branding', e); }
+}
+
+async function fetchActivity() {
+    const list = document.getElementById('activity-list');
+    if(!list) return;
+    
+    try {
+        const res = await fetch(API + '/api/user/activity', { credentials: 'include' });
+        if(res.ok) {
+            const data = await res.json();
+            const logs = data.activity || [];
+            
+            if(logs.length === 0) {
+                list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:12px">No recent activity.</div>';
+            } else {
+                list.innerHTML = logs.map(l => {
+                    const date = new Date(l.created_at).toLocaleString();
+                    let icon = 'fa-info-circle';
+                    let color = 'var(--accent-cyan)';
+                    
+                    if(l.action.includes('login')) { icon = 'fa-sign-in-alt'; color = '#10b981'; }
+                    if(l.action.includes('create')) { icon = 'fa-plus'; color = '#3b82f6'; }
+                    if(l.action.includes('delete')) { icon = 'fa-trash'; color = '#ef4444'; }
+                    if(l.action.includes('update')) { icon = 'fa-pen'; color = '#f59e0b'; }
+                    
+                    let detailsText = '';
+                    if(l.details) {
+                        try {
+                            const d = JSON.parse(l.details);
+                            if(d) detailsText = Object.keys(d).map(k => k + ': ' + d[k]).join(', ');
+                        } catch(e) { detailsText = l.details; }
+                    }
+                    
+                    const actionName = l.action.replace(/_/g, ' ');
+
+                    return \`<div style="display:flex;gap:12px;align-items:start;padding:12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border)">
+                        <div style="background:var(--bg-card);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:\${color};flex-shrink:0;border:1px solid var(--border)">
+                            <i class="fas \${icon}"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:13px;font-weight:600;color:var(--text-primary);text-transform:capitalize">\${actionName}</div>
+                            \${detailsText ? \`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;word-break:break-all">\${detailsText}</div>\` : ''}
+                            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">\${date}</div>
+                        </div>
+                    </div>\`;
+                }).join('');
+            }
+        } else {
+            list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center">Failed to load activity</div>';
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function scrollToKb(id) {
+    const el = document.getElementById(id);
+    if(el) {
+        el.scrollIntoView({behavior: 'smooth'});
+        document.querySelectorAll('.kb-link').forEach(a => {
+           if(a.getAttribute('href') === '#'+id) a.classList.add('active');
+           else a.classList.remove('active');
+        });
+    }
 }
 `;

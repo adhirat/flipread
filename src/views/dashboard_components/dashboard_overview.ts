@@ -26,5 +26,11 @@ export const dashboardOverview = `
           <button onclick="switchView('store')" class="btn btn-outline">Customize Store</button>
         </div>
       </div>
+      <div class="card" style="margin-top:24px">
+        <h3 style="margin-bottom:16px;font-family:'Rajdhani',sans-serif">Recent Activity</h3>
+        <div id="activity-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+            <div style="color:var(--text-muted);font-size:13px;font-style:italic">Loading activity...</div>
+        </div>
+      </div>
     </div>
 `;

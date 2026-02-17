@@ -1,24 +1,28 @@
 # FlipRead
 
-A modern platform for selling and reading PDF books online, built on Cloudflare's edge infrastructure.
+A modern, edge-native platform for selling and reading digital books (PDF/EPUB), built on Cloudflare's global network.
 
 ## 🚀 Features
 
-- **PDF Book Management**: Upload, manage, and sell PDF books
-- **Tiered Subscriptions**: Free, Basic, Pro, and Business plans with different upload limits
-- **Secure Reading**: Password-protected books for premium content
-- **Custom Storefront**: Personalized store with custom branding, logo, and policies
-- **Stripe Integration**: Seamless payment processing for subscriptions
-- **Edge-Native**: Built on Cloudflare Workers for global performance
+- **Multi-Format Support**: Upload and read PDF and EPUB books with a premium viewer experience.
+- **Custom Storefronts**: Personalized branded stores with custom domains, logos, themes, and layouts.
+- **Tiered Subscriptions**: Free, Basic, Pro, and Business plans with tailored limits and features.
+- **Secure Access**: Password protection, private store modes, and secure member access.
+- **Team Collaboration**: Invite members to your store with role-based access (Pro/Business).
+- **Detailed Analytics**: Track views, geographic data, and user activity logs.
+- **Developer API**: Full REST API with Swagger documentation for external integrations.
+- **Activity Logging**: Comprehensive audit logs for all user actions.
+- **Edge Performance**: Built on Cloudflare Workers, D1, R2, and KV for low-latency global access.
 
 ## 🛠️ Tech Stack
 
 - **Runtime**: [Cloudflare Workers](https://workers.cloudflare.com/)
 - **Framework**: [Hono](https://hono.dev/) - Fast, lightweight web framework
 - **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite at the edge)
-- **Storage**: [Cloudflare R2](https://developers.cloudflare.com/r2/) (S3-compatible object storage)
-- **Cache**: [Cloudflare KV](https://developers.cloudflare.com/kv/) (key-value store)
+- **Storage**: [Cloudflare R2](https://developers.cloudflare.com/r2/) (Object storage for books/covers)
+- **Cache**: [Cloudflare KV](https://developers.cloudflare.com/kv/) (Session and performant data caching)
 - **Payments**: [Stripe](https://stripe.com/)
+- **Documentation**: [Swagger UI](https://swagger.io/)
 - **Language**: TypeScript
 
 ## 📋 Prerequisites
@@ -51,6 +55,7 @@ Create a `.dev.vars` file in the project root:
 JWT_SECRET=your-local-jwt-secret-change-in-production
 STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+RESEND_API_KEY=re_your_resend_key_optional
 ```
 
 > **Note**: Get your Stripe test keys from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
@@ -72,6 +77,7 @@ npm run dev
 ```
 
 The app will be available at **http://localhost:8787**
+Swagger Documentation is available at **http://localhost:8787/api/swagger**
 
 ## 🌐 Deployment to Cloudflare
 
@@ -128,8 +134,6 @@ npm run db:migrate:prod
 npm run deploy
 ```
 
-Your app will be deployed to Cloudflare Workers!
-
 ## 🔗 Published URL
 
 **Production**: [https://flipread.flipread.workers.dev](https://flipread.flipread.workers.dev)
@@ -142,36 +146,41 @@ Your app will be deployed to Cloudflare Workers!
 flipread/
 ├── src/
 │   ├── index.ts           # Main application entry point
-│   ├── routes/
-│   │   ├── auth.ts        # Authentication routes
-│   │   ├── books.ts       # Book management routes
-│   │   ├── billing.ts     # Stripe billing routes
-│   │   ├── viewer.ts      # PDF viewer routes
-│   │   └── store.ts       # Public storefront routes
-│   ├── db/
-│   │   └── schema.sql     # Database schema
-│   └── middleware/        # Authentication & validation
-├── public/                # Static assets
-├── wrangler.toml         # Cloudflare Workers configuration
+│   ├── routes/            # API Route handlers
+│   │   ├── auth.ts        # Authentication & Session
+│   │   ├── books.ts       # Book management
+│   │   ├── user.ts        # User profile & settings
+│   │   ├── store.ts       # Public storefront
+│   │   ├── viewer.ts      # Book viewer & asset serving
+│   │   ├── members.ts     # Team member management
+│   │   ├── docs.ts        # Swagger API docs
+│   │   └── swagger.ts     # Swagger UI setup
+│   ├── db/                # Database schema & migrations
+│   ├── lib/               # Shared utilities & types
+│   ├── services/          # Business logic services
+│   ├── views/             # HTML templates & dashboard components
+│   └── middleware/        # Auth & Logging middleware
+├── public/                # Static assets (images, styles)
+├── wrangler.toml          # Cloudflare configuration
 └── package.json
 ```
 
 ## 🎯 Subscription Plans
 
-| Plan       | Upload Limit | Features                              |
-|------------|--------------|---------------------------------------|
-| **Free**   | 5 MB         | Basic book uploads                    |
-| **Basic**  | 10 MB        | Increased storage                     |
-| **Pro**    | 50 MB        | Password protection, analytics        |
-| **Business** | 200 MB     | Custom branding, priority support     |
+| Plan         | Upload Limit | Monthly Views | Store Features                                              | Team       |
+| ------------ | ------------ | ------------- | ----------------------------------------------------------- | ---------- |
+| **Free**     | 5 MB         | 500           | Basic Store                                                 | -          |
+| **Basic**    | 10 MB        | 2,000         | Custom Backgrounds                                          | -          |
+| **Pro**      | 50 MB        | 50,000        | Custom Domain, Password Protection, Analytics, Private Mode | 50 Members |
+| **Business** | 200 MB       | Unlimited     | API Access, Priority Support, Raw Data Export               | Unlimited  |
 
 ## 🔐 Security Features
 
-- JWT-based authentication
-- Password-protected books (Pro+ plans)
-- Secure file uploads with validation
-- Stripe webhook signature verification
-- Environment-based secret management
+- **JWT Authentication**: Secure, stateless session management.
+- **Role-Based Access**: Granular permissions for store members.
+- **Activity Logging**: Full audit trail of all sensitive actions.
+- **Secure Uploads**: File type validation and sanitized filenames.
+- **Secret Management**: Environment-based configuration for API keys.
 
 ## 🧪 Development Commands
 
@@ -188,37 +197,3 @@ npm run db:migrate
 # Run database migrations (production)
 npm run db:migrate:prod
 ```
-
-## 📝 Environment Variables
-
-Non-sensitive variables are configured in `wrangler.toml`:
-
-- `APP_URL`: Your application URL
-- `MAX_UPLOAD_SIZE_*`: Upload limits per plan
-- `STRIPE_PRICE_*`: Stripe price IDs for subscriptions
-
-Sensitive secrets are set via Wrangler:
-
-- `JWT_SECRET`: Secret for signing authentication tokens
-- `STRIPE_SECRET_KEY`: Stripe API secret key
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is proprietary and confidential.
-
-## 🆘 Support
-
-For issues and questions, please contact the development team or open an issue in the repository.
-
----
-
-Built with ⚡ on [Cloudflare Workers](https://workers.cloudflare.com/)

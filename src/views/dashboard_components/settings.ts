@@ -50,6 +50,46 @@ export const settingsView = `
               </button>
             </div>
           </div>
+          
+          <div class="form-group" id="branding-section" style="display:none">
+            <label>FlipRead Branding</label>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--bg-elevated);border-radius:12px">
+              <span style="font-size:14px;color:var(--text-secondary)">Show "Powered by FlipRead"</span>
+              <div class="toggle-switch active" id="branding-toggle" onclick="toggleBranding()">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Disable to remove FlipRead branding from your viewer and store.</p>
+          </div>
+        </div>
+
+        <!-- API Access (Business) -->
+        <div class="card" id="api-section" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(59,130,246,0.1);color:var(--accent-blue);display:flex;align-items:center;justify-content:center;font-size:18px">
+              <i class="fas fa-code"></i>
+            </div>
+            <h3 style="font-family:'Rajdhani',sans-serif">API Access</h3>
+          </div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">
+            Manage API keys for programmatic access to your library.
+          </p>
+          <div id="api-keys-list" style="margin-bottom:20px"></div>
+          <button onclick="generateApiKey()" class="btn-outline" style="width:100%;justify-content:center"><i class="fas fa-plus"></i> Generate New Key</button>
+        </div>
+
+        <!-- Support Section -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,0.1);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:18px">
+              <i class="fas fa-life-ring"></i>
+            </div>
+            <h3 style="font-family:'Rajdhani',sans-serif">Support</h3>
+          </div>
+          <div id="support-status" style="margin-bottom:20px;padding:12px;background:var(--bg-elevated);border-radius:12px;font-size:13px;color:var(--text-secondary)">
+            Standard Support Plan
+          </div>
+          <button onclick="window.location.href='mailto:support@flipread.com'" class="btn-outline" style="width:100%;justify-content:center">Contact Support</button>
         </div>
 
         <!-- Security & Danger Zone -->

@@ -14,6 +14,7 @@ import viewerRoutes, { viewerPage } from './routes/viewer';
 import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
 import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
+import swagger from './routes/swagger';
 import type { Book, Variables } from './lib/types';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -68,6 +69,7 @@ app.route('/api/docs', docRoutes);
 app.route('/api/billing', billingRoutes);
 app.route('/api/user', userRoutes);
 app.route('/api/members', memberRoutes);
+app.route('/api/swagger', swagger);
 
 // Public Routes
 app.route('/read', viewerRoutes);
@@ -345,7 +347,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <div style="font-size:12px;color:var(--text-muted);margin-top:-15px;margin-bottom:15px;display:none" class="price-yearly-note">Billed $25 annually</div>
 <ul class="p-list">
 <li>5 published books</li><li>10 MB max file size</li><li>2,000 monthly views</li>
-<li>Bookstore page</li><li>Basic analytics</li>
+<li>Bookstore page</li><li>Basic analytics</li><li>Custom viewer background</li>
 </ul>
 <a href="/dashboard" class="btn btn-outline" style="width:100%;justify-content:center">Upgrade to Basic</a>
 </div>
@@ -357,6 +359,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <ul class="p-list">
 <li>50 published books</li><li>50 MB max file size</li><li>50,000 monthly views</li>
 <li>Custom slugs & themes</li><li>Password protection</li><li>Remove branding</li><li>Detailed analytics</li>
+<li>Custom domain</li><li>Private store mode</li><li>50 store members</li><li>Private book sharing</li>
 </ul>
 <a href="/dashboard" class="btn btn-primary" style="width:100%;justify-content:center">Upgrade to Pro</a>
 </div>
@@ -368,6 +371,7 @@ Annual <span style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#ff
 <ul class="p-list">
 <li>Unlimited books</li><li>200 MB max file size</li><li>Unlimited views</li>
 <li>Everything in Pro</li><li>Custom domain</li><li>API access</li><li>Priority support</li>
+<li>Unlimited store members</li><li>Export analytics data</li>
 </ul>
 <a href="/dashboard" class="btn btn-outline" style="width:100%;justify-content:center">Go Business</a>
 </div>
