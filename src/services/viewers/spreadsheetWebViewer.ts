@@ -12,6 +12,24 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
         dependencies: [
             'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'
         ],
+        settingsHtml: `
+            <div id="set-m">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Table View</h3>
+                    <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Text Size</label>
+                        <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                            <button onclick="changeFontSize(-1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                            <span id="wfz-v" class="flex-1 text-center font-bold text-sm">13px</span>
+                            <button onclick="changeFontSize(1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
         extraStyles: `
             #sheet-container { overflow-x: auto; padding: 20px; }
             table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -23,8 +41,16 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
         `,
         extraScripts: `
             let workbook = null;
+            let currentFontSize = 13;
             async function init() {
                 try {
+                    document.getElementById('settings-btn').style.display = 'flex';
+                    const storedSize = localStorage.getItem('fr_web_ss_fs');
+                    if(storedSize) {
+                        currentFontSize = parseInt(storedSize);
+                        document.getElementById('wfz-v').textContent = currentFontSize + 'px';
+                    }
+
                     const res = await fetch(FU);
                     const arrayBuffer = await res.arrayBuffer();
                     workbook = XLSX.read(arrayBuffer);
@@ -71,8 +97,23 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
             function renderSheet(name) {
                 const sheet = workbook.Sheets[name];
                 const html = XLSX.utils.sheet_to_html(sheet);
-                document.getElementById('sheet-container').innerHTML = html;
+                const container = document.getElementById('sheet-container');
+                container.innerHTML = html;
+                container.querySelector('table').style.fontSize = currentFontSize + 'px';
             }
+
+            window.toggleSettings = () => {
+                const m = document.getElementById('set-m');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+            };
+
+            window.changeFontSize = (d) => {
+                currentFontSize = Math.max(8, Math.min(30, currentFontSize + d));
+                document.getElementById('wfz-v').textContent = currentFontSize + 'px';
+                localStorage.setItem('fr_web_ss_fs', currentFontSize);
+                const table = document.querySelector('#sheet-container table');
+                if(table) table.style.fontSize = currentFontSize + 'px';
+            };
         `
     });
 }

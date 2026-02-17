@@ -46,6 +46,7 @@ function updateUI() {
   document.getElementById('d-plan').textContent = currentUser.plan.toUpperCase();
   // Store inputs
   document.getElementById('st-name').value = currentUser.store_name || '';
+  document.getElementById('st-handle').value = currentUser.store_handle || '';
   const s = JSON.parse(currentUser.store_settings || '{}');
   
   // General
@@ -88,8 +89,8 @@ function updateUI() {
   document.getElementById('set-email').value = currentUser.email;
   document.getElementById('set-name-input').value = currentUser.name || '';
   
-  const username = (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
-  document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(username);
+  const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
+  document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(handle);
   
   const limits = { free: '5 MB', basic: '10 MB', pro: '50 MB', business: '200 MB' };
   document.getElementById('limit-text').textContent = 'Upload Limit: ' + (limits[currentUser.plan] || '5 MB');
@@ -525,6 +526,7 @@ async function saveBook() {
 // Store & Settings
 async function saveStoreSettings() {
   const store_name = document.getElementById('st-name').value;
+  const store_handle = document.getElementById('st-handle').value;
   
   const store_settings = {
     description: document.getElementById('st-desc').value,
@@ -547,13 +549,14 @@ async function saveStoreSettings() {
   const res = await fetch(API + '/api/user/store', {
     method: 'PATCH', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ store_name, store_settings })
+    body: JSON.stringify({ store_name, store_handle, store_settings })
   });
   if(res.ok) {
     const m = document.getElementById('store-msg');
     m.textContent = 'Saved!'; m.className = 'msg success'; m.style.display = 'block';
     setTimeout(() => m.style.display = 'none', 2000);
     currentUser.store_name = store_name;
+    currentUser.store_handle = store_handle;
     currentUser.store_settings = JSON.stringify(store_settings);
   }
 }
@@ -1091,8 +1094,8 @@ if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.inner
 
 function viewMyStore() {
   if (currentUser) {
-    const slug = currentUser.name.toLowerCase().replace(/\s+/g, '-');
-    window.open('/store/' + slug, '_blank');
+    const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
+    window.open('/store/' + encodeURIComponent(handle), '_blank');
   } else {
     alert('Please log in.');
   }

@@ -23,6 +23,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  store_handle: string;
   password_hash: string | null;
   avatar_url: string;
   plan: string;

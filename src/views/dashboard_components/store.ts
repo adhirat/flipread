@@ -9,6 +9,14 @@ export const storeView = `
           <input type="text" id="st-name" placeholder="My Book Store">
         </div>
         <div class="form-group">
+          <label>Store Handle (URL Slug)</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span style="color:var(--text-muted);font-size:14px">/store/</span>
+            <input type="text" id="st-handle" placeholder="my-awesome-store" style="flex:1">
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">This is your unique store URL. 3-30 characters, lowercase alphanumeric and hyphens.</p>
+        </div>
+        <div class="form-group">
           <label>Store Description</label>
           <textarea id="st-desc" rows="2" placeholder="Welcome to my collection..."></textarea>
         </div>

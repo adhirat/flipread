@@ -5,11 +5,11 @@ import type { Env, Book, User } from '../lib/types';
 
 const store = new Hono<{ Bindings: Env }>();
 
-// Helper to get user by name
-async function getUserByUsername(db: D1Database, username: string): Promise<User | null> {
+// Helper to get user by store handle
+async function getUserByUsername(db: D1Database, handle: string): Promise<User | null> {
   return await db.prepare(
-    'SELECT id, name, avatar_url, plan, store_name, store_logo_url, store_settings FROM users WHERE LOWER(REPLACE(name, " ", "-")) = ?'
-  ).bind(username.toLowerCase()).first<User>();
+    'SELECT id, name, store_handle, avatar_url, plan, store_name, store_logo_url, store_settings FROM users WHERE store_handle = ? OR (store_handle IS NULL AND LOWER(REPLACE(name, " ", "-")) = ?)'
+  ).bind(handle.toLowerCase(), handle.toLowerCase()).first<User>();
 }
 
 export async function getUserByCustomDomain(db: D1Database, domain: string): Promise<User | null> {
@@ -748,9 +748,9 @@ ${cardCSS}
       <span>${safeName}</span>
     </div>
     <div class="footer-links">
-      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/p/privacy' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/privacy'}">Privacy Policy</a>` : ''}
-      ${settings.terms_content ? `<a href="${isCustomDomain ? '/p/terms' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/terms'}">Terms & Conditions</a>` : ''}
-      ${settings.contact_info_content ? `<a href="${isCustomDomain ? '/p/contact' : '/store/'+user.name.toLowerCase().replace(/ /g,'-')+'/contact'}">Contact Us</a>` : ''}
+      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/p/privacy' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/privacy'}">Privacy Policy</a>` : ''}
+      ${settings.terms_content ? `<a href="${isCustomDomain ? '/p/terms' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/terms'}">Terms & Conditions</a>` : ''}
+      ${settings.contact_info_content ? `<a href="${isCustomDomain ? '/p/contact' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/contact'}">Contact Us</a>` : ''}
     </div>
     <div class="footer-copy">
       &copy; ${new Date().getFullYear()} ${safeName}. All rights reserved.
@@ -777,7 +777,7 @@ ${showSearch ? `(function(){var input=document.getElementById('book-search');var
 
 export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false): string {
   const storeName = user.store_name || user.name;
-  const backUrl = isCustomDomain ? '/' : `/store/${user.name.toLowerCase().replace(/ /g,'-')}`;
+  const backUrl = isCustomDomain ? '/' : `/store/${user.store_handle || user.name.toLowerCase().replace(/ /g,'-')}`;
 
   return `<!DOCTYPE html>
 <html lang="en">

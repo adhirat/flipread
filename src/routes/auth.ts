@@ -30,10 +30,11 @@ auth.post('/register', async (c) => {
 
   const id = generateId();
   const passwordHash = await hashPassword(password);
+  const storeHandle = (name || 'user').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + id.slice(0, 4);
 
   await c.env.DB.prepare(
-    'INSERT INTO users (id, email, name, password_hash, plan) VALUES (?, ?, ?, ?, ?)'
-  ).bind(id, email.toLowerCase().trim(), name || '', passwordHash, 'free').run();
+    'INSERT INTO users (id, email, name, store_handle, password_hash, plan) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, email.toLowerCase().trim(), name || '', storeHandle, passwordHash, 'free').run();
 
   const token = await createToken(id, c.env.JWT_SECRET);
 
@@ -75,7 +76,7 @@ auth.post('/login', async (c) => {
   await logActivity(c, user.id, 'login', 'user', user.id);
 
   return c.json({
-    user: { id: user.id, email: user.email, name: user.name, plan: user.plan },
+    user: { id: user.id, email: user.email, name: user.name, store_handle: user.store_handle, plan: user.plan },
     token,
   });
 });
@@ -107,7 +108,7 @@ auth.get('/me', async (c) => {
   if (!decoded) return c.json({ user: null });
 
   const user = await c.env.DB.prepare(
-    'SELECT id, email, name, avatar_url, plan, store_name, store_logo_url, store_settings, created_at FROM users WHERE id = ?'
+    'SELECT id, email, name, store_handle, avatar_url, plan, store_name, store_logo_url, store_settings, created_at FROM users WHERE id = ?'
   ).bind(decoded.sub).first();
 
   return c.json({ user: user || null });

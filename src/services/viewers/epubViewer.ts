@@ -20,6 +20,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
           body { background: ${bg}; background-size: cover; background-position: center; transition: background 0.5s ease; overflow: hidden; height: 100dvh; font-family: sans-serif; }
@@ -429,8 +430,15 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                            <div class="flex items-center justify-between">
                                <span class="text-[13px] font-medium opacity-90">Font Style</span>
                                <select onchange="setFF(this.value)" class="bg-black/40 text-[12px] border border-white/20 rounded-lg px-3 py-2 outline-none font-medium">
-                                   <option value="Georgia, serif">Serif (Georgia)</option>
-                                   <option value="Inter, sans-serif">Sans (Inter)</option>
+                                   <option value="Georgia, serif">Classic Serif (Georgia)</option>
+                                   <option value="'Lora', serif">Literary Serif (Lora)</option>
+                                   <option value="'EB Garamond', serif">Elegant Garamond</option>
+                                   <option value="'Crimson Pro', serif">Journal Serif (Crimson)</option>
+                                   <option value="'Merriweather', serif">Classic Serif (Merriweather)</option>
+                                   <option value="'Playfair Display', serif">Display Serif</option>
+                                   <option value="'Inter', sans-serif">Modern Sans (Inter)</option>
+                                   <option value="'Open Sans', sans-serif">Clean Sans</option>
+                                   <option value="'Montserrat', sans-serif">Sharp Sans</option>
                                    <option value="Monaco, monospace">Mono (Clean)</option>
                                    <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
                                </select>
@@ -640,6 +648,11 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                   };
                   
                   // Inject Stylesheet
+                  const gFont = contents.document.createElement('link');
+                  gFont.rel = 'stylesheet';
+                  gFont.href = 'https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap';
+                  contents.document.head.appendChild(gFont);
+
                   const style = contents.document.createElement('style');
                   style.innerHTML = \`
                       ::selection { background: rgba(255, 165, 0, 0.3); }
@@ -650,6 +663,11 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                       .hl-purple { background-color: rgba(206, 147, 216, 0.4); border-bottom: 2px solid #ab47bc; cursor: pointer; }
                   \`;
                   contents.document.head.appendChild(style);
+
+                  // Apply current styles
+                  contents.addStylesheetRules({
+                      "body": { "font-family": ff + " !important", "font-size": fz + "% !important", "line-height": lh + " !important" }
+                  });
               });
               } catch(e) {
                   console.error("Init Error", e);

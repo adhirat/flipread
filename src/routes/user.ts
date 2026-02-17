@@ -22,9 +22,10 @@ user.use('/*', authMiddleware());
  */
 user.patch('/store', async (c) => {
   const currentUser = c.get('user');
-  const { store_name, store_settings } = await c.req.json<{
+  const { store_name, store_settings, store_handle } = await c.req.json<{
     store_name?: string;
     store_settings?: Record<string, string>;
+    store_handle?: string;
   }>();
 
   const sets: string[] = [];
@@ -37,6 +38,24 @@ user.patch('/store', async (c) => {
   if (store_settings !== undefined) {
     sets.push('store_settings = ?');
     values.push(JSON.stringify(store_settings));
+  }
+  if (store_handle !== undefined) {
+    // Validate handle: alphanumeric and dashes only, 3-30 chars
+    const handleRegex = /^[a-z0-9](-?[a-z0-9])*$/;
+    if (!handleRegex.test(store_handle) || store_handle.length < 3 || store_handle.length > 30) {
+      return c.json({ error: 'Store handle must be 3-30 characters, lowercase, alphanumeric and may contain single internal hyphens.' }, 400);
+    }
+
+    // Check uniqueness
+    const existing = await c.env.DB.prepare('SELECT id FROM users WHERE store_handle = ? AND id != ?')
+      .bind(store_handle.toLowerCase(), currentUser.id)
+      .first();
+    if (existing) {
+      return c.json({ error: 'Store handle is already taken' }, 409);
+    }
+
+    sets.push('store_handle = ?');
+    values.push(store_handle.toLowerCase());
   }
 
   if (sets.length === 0) return c.json({ success: true });

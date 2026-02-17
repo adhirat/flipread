@@ -11,11 +11,12 @@ export interface WebViewerOptions {
     extraStyles?: string;
     extraHtml?: string;
     extraScripts?: string;
+    settingsHtml?: string;
     dependencies?: string[];
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', extraStyles = '', extraHtml = '', extraScripts = '', dependencies = [] } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [] } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -39,6 +40,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root { --accent: ${accent}; }
@@ -397,32 +399,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="set-m">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Typography</h3>
-            <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
-        </div>
-        <div class="space-y-4">
-            <div>
-                <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Size</label>
-                <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
-                    <button onclick="changeFontSize(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
-                    <span id="wfz-v" class="flex-1 text-center font-bold text-sm">100%</span>
-                    <button onclick="changeFontSize(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
-                </div>
-            </div>
-            <div>
-                <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Family</label>
-                <select id="wff-s" onchange="setFont(this.value)" class="w-full bg-gray-50 border p-2 rounded-lg text-sm outline-none focus:ring-2 ring-indigo-500">
-                    <option value="'Inter', system-ui, sans-serif">Modern Sans</option>
-                    <option value="'Merriweather', serif">Classic Serif</option>
-                    <option value="'EB Garamond', serif">Elegant Garamond</option>
-                    <option value="system-ui">System Default</option>
-                </select>
-            </div>
-        </div>
-    </div>
+    ${settingsHtml}
     
     <!-- Chat/Notes Sidebar -->
     <div id="chat-w">
@@ -512,10 +489,6 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              document.getElementById('chat-footer').style.display = tabId === 'chat-highlights' ? 'none' : 'flex';
         };
 
-        window.toggleSettings = () => {
-            document.getElementById('set-m').style.display = document.getElementById('set-m').style.display === 'flex' ? 'none' : 'flex';
-            document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
-        };
 
         window.sendNote = () => {
             const i = document.getElementById('chat-i'), v = i.value.trim();

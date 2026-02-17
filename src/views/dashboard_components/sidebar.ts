@@ -35,9 +35,6 @@ export const sidebar = `
       <div onclick="switchView('store');closeSidebar()" class="nav-item" id="nav-store" title="Store">
         <i class="fas fa-store"></i> <span>Store</span>
       </div>
-      <div onclick="viewMyStore();" class="nav-item" title="View My Store" style="color:var(--accent-cyan)">
-        <i class="fas fa-external-link-alt"></i> <span>View My Store</span>
-      </div>
       <div onclick="switchView('members');closeSidebar()" class="nav-item" id="nav-members" title="Members">
         <i class="fas fa-users"></i> <span>Members</span>
       </div>
@@ -47,6 +44,10 @@ export const sidebar = `
     </nav>
     
     <div style="flex:1"></div>
+
+    <div onclick="viewMyStore();" class="nav-item" title="View My Store" style="color:var(--accent-cyan)">
+      <i class="fas fa-external-link-alt"></i> <span>View My Store</span>
+    </div>
 
     <div onclick="switchView('knowledge');closeSidebar()" class="nav-item" id="nav-knowledge" title="Help & Support">
       <i class="fas fa-question-circle"></i> <span>Help & Support</span>

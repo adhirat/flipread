@@ -14,12 +14,47 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js'
         ],
         extraStyles: `
-            .epub-container { height: calc(100vh - 60px) !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            #content-wrapper iframe { border: none !important; }
+            #content-wrapper { width: 100%; max-width: 900px; margin: 0 auto; min-height: 100vh; position: relative; }
+            #content-wrapper iframe { width: 100% !important; border: none !important; margin: 0 !important; padding: 0 !important; }
+            .epub-container { height: auto !important; width: 100% !important; overflow: visible !important; }
+        `,
+        settingsHtml: `
+            <!-- Settings Modal -->
+            <div id="set-m">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Typography</h3>
+                    <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Size</label>
+                        <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                            <button onclick="changeFontSize(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                            <span id="wfz-v" class="flex-1 text-center font-bold text-sm">100%</span>
+                            <button onclick="changeFontSize(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Family</label>
+                        <select id="wff-s" onchange="setFont(this.value)" class="w-full bg-gray-50 border p-2 rounded-lg text-sm outline-none focus:ring-2 ring-indigo-500">
+                            <option value="'Inter', sans-serif">Modern Sans (Inter)</option>
+                            <option value="'Lora', serif">Literary Serif (Lora)</option>
+                            <option value="'EB Garamond', serif">Elegant Garamond</option>
+                            <option value="'Crimson Pro', serif">Journal Serif (Crimson)</option>
+                            <option value="'Merriweather', serif">Classic Serif</option>
+                            <option value="'Playfair Display', serif">Display Serif</option>
+                            <option value="'Open Sans', sans-serif">Clean Sans</option>
+                            <option value="'Montserrat', sans-serif">Sharp Sans</option>
+                            <option value="system-ui">System Default</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         `,
         extraScripts: `
             async function init() {
                 try {
+                    document.getElementById('settings-btn').style.display = 'flex';
                     const res = await fetch(FU);
                     const blob = await res.blob();
                     await renderEPUB(blob);
@@ -39,34 +74,54 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
 
                 bookRender = book.renderTo(container, {
                     flow: "scrolled",
-                    manager: "continuous",
-                    width: "100%"
+                    width: "100%",
+                    manager: "continuous"
                 });
+                
                 document.getElementById('settings-btn').style.display='flex';
                 await bookRender.display();
                 
                 bookRender.hooks.content.register(contents => {
                     const doc = contents.document;
                     const win = contents.window;
+                    
+                    // Inject styles and fonts
+                    const gFont = doc.createElement('link');
+                    gFont.rel = 'stylesheet';
+                    gFont.href = 'https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap';
+                    doc.head.appendChild(gFont);
+
                     const style = doc.createElement('style');
                     style.innerHTML = \`
-                        body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
-                        html { height: auto !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
-                        .epubjs-view { margin: 0 !important; padding: 0 !important; }
+                        body { 
+                            margin: 0 !important; 
+                            padding: 20px 40px !important; 
+                            overflow-x: hidden !important; 
+                            font-family: inherit;
+                        }
+                        html { height: auto !important; }
+                        img { max-width: 100% !important; height: auto !important; }
                     \`;
                     doc.head.appendChild(style);
 
+                    // Apply stored settings
+                    const storedFF = localStorage.getItem('fr_web_ff');
+                    const storedFS = localStorage.getItem('fr_web_fs');
+                    if(storedFF) contents.addStylesheetRules({"body": {"font-family": storedFF + " !important"}});
+                    if(storedFS) contents.addStylesheetRules({"body": {"font-size": storedFS + "% !important"}});
+
                     const resize = () => {
-                        const h = doc.documentElement.scrollHeight;
                         const iframe = win.frameElement;
-                        if(iframe && h > 0) iframe.style.height = h + 'px';
+                        if (iframe) {
+                            iframe.style.height = '0';
+                            iframe.style.height = doc.documentElement.scrollHeight + 'px';
+                        }
                     };
                     
+                    win.addEventListener('load', resize);
                     const ro = new ResizeObserver(resize);
                     ro.observe(doc.body);
-                    resize();
-                    win.addEventListener('load', resize);
-                    Array.from(doc.images).forEach(img => { img.onload = resize; });
+                    setTimeout(resize, 100);
                 });
                 
                 const navigation = await book.loaded.navigation;
@@ -145,12 +200,28 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 wfz = Math.max(50, Math.min(200, (parseInt(localStorage.getItem('fr_web_fs') || '100')) + d));
                 document.getElementById('wfz-v').textContent = wfz + '%';
                 localStorage.setItem('fr_web_fs', wfz);
-                if(bookRender) bookRender.themes.fontSize(wfz + "%");
+                if(bookRender) {
+                    bookRender.themes.fontSize(wfz + "%");
+                    bookRender.getContents().forEach(c => {
+                        c.addStylesheetRules({"body": {"font-size": wfz + "% !important"}});
+                    });
+                }
             };
             
             window.setFont = (f) => {
                 localStorage.setItem('fr_web_ff', f);
-                if(bookRender) bookRender.themes.font(f);
+                if(bookRender) {
+                    bookRender.themes.font(f);
+                    bookRender.getContents().forEach(c => {
+                        c.addStylesheetRules({"body": {"font-family": f + " !important"}});
+                    });
+                }
+            };
+
+            window.toggleSettings = () => {
+                const m = document.getElementById('set-m');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+                document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
             };
         `
     });
