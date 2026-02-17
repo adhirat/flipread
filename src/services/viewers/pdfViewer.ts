@@ -51,13 +51,12 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             border-bottom: none;
             color: white;
             height: 60px;
-            z-index: 100;
+            z-index: 1000;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             pointer-events: none;
-            /* Allows clicks to pass through empty space */
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
@@ -66,7 +65,33 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             align-items: center;
             gap: 10px;
             pointer-events: auto;
-            /* Re-enable pointer events for buttons */
+            flex: 1;
+        }
+
+        .header-name {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40vw;
+            pointer-events: auto;
+            text-align: center;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            pointer-events: auto;
+            flex: 1;
         }
         
         .header-logo {
@@ -77,23 +102,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             border-radius: 4px;
         }
 
-        .header-name {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 40vw;
-        }
 
-        .header-icons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            pointer-events: auto;
-        }
 
         /* Full Mode Logic for Header */
         body.full-mode .header {
@@ -424,33 +433,80 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             color: white;
         }
 
+        /* Social & Divider */
+        .h-divider { width:1px; height:24px; background:rgba(255,255,255,0.2); margin:0 5px; }
+
+        /* Modern Settings Modal (Popup Desktop / Full Mobile) */
+        .settings-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2500;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .settings-modal.open { display: flex; }
+        
+        .settings-content {
+            background: #252525; color: white;
+            width: 100%; height: 100%; max-width: none; border-radius: 0;
+            display: flex; flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        @media (min-width: 768px) {
+            .settings-modal { 
+                background: transparent; pointer-events: none;
+                align-items: flex-start; justify-content: flex-end;
+                padding-top: 60px; padding-right: 20px;
+            }
+            .settings-modal.open { pointer-events: auto; }
+            .settings-content {
+                width: 320px; height: auto; max-height: 80vh;
+                border-radius: 12px;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+        }
+
+        .set-header {
+            padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .set-tabs {
+            display: flex; background: rgba(0,0,0,0.2); padding: 4px; gap: 4px;
+        }
+        .set-tab {
+            flex: 1; text-align: center; padding: 8px; font-size: 12px; font-weight: 600;
+            cursor: pointer; opacity: 0.6; border-radius: 4px; transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .set-tab.active { background: rgba(255,255,255,0.1); opacity: 1; color: #4CAF50; }
+        
+        .set-body { padding: 15px; overflow-y: auto; flex: 1; }
+        .set-section { display: none; }
+        .set-section.active { display: block; }
+        
+        .set-opt-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .set-label { font-size: 13px; color: #ccc; font-weight: 500; }
+        
+        /* Texture Overlay */
+        #texture-overlay { 
+            position: fixed; inset: 0; pointer-events: none; z-index: 10; opacity: 0.15; 
+            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png'); 
+            display: none; mix-blend-mode: overlay;
+        }
+        body.textured #texture-overlay { display: block; }
+
         /* Background Options Styling */
         .bg-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
             padding: 10px 0;
         }
-
         .bg-option {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid #444;
-            transition: transform 0.2s, border-color 0.2s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            aspect-ratio: 1; border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;
         }
-
-        .bg-option:hover {
-            transform: scale(1.1);
-            border-color: #fff;
-        }
-
-        .bg-option.active {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 2px #4CAF50;
-        }
+        .bg-option:hover { transform: scale(1.1); border-color: white; }
+        .bg-option.active { border-color: #4CAF50; box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3); }
 
         /* --- Notes Sidebar (Dark Mode) --- */
         #chat-w {
@@ -568,11 +624,57 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         /* Mobile */
         @media (max-width: 768px) {
-
             .zoom-controls-inline,
-            #zoom-btn {
+            #zoom-btn,
+            #page-slider,
+            #page-info,
+            .h-divider {
                 display: none !important;
             }
+
+            .header-icons {
+                display: flex !important;
+            }
+            .header-icons > *:not(#expand-btn) {
+                display: none !important;
+            }
+
+            .footer-icons-mobile {
+                display: flex !important;
+            }
+
+            .controls {
+                justify-content: space-between !important;
+                padding: 15px 20px !important;
+                background: rgba(20, 20, 20, 0.95) !important;
+                backdrop-filter: blur(15px);
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                pointer-events: auto !important;
+            }
+
+            .header-left .header-name {
+                display: none;
+            }
+            .header-name {
+                max-width: 50vw;
+                font-size: 13px;
+            }
+        }
+
+        .footer-icons-mobile {
+            display: none;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .footer-icons-mobile .header-icon {
+            margin: 0;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -583,16 +685,21 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <button class="header-icon" id="index-btn" title="Table of Contents">
                 <i class="fas fa-list"></i>
             </button>
-            ${showBranding && logoUrl ? `<img src="${logoUrl}" alt="Logo" class="header-logo" style="margin-right: 10px;">` : ''}
-            <div class="header-name">${safeTitle}</div>
+            ${showBranding && logoUrl ? `<img src="${logoUrl}" alt="Logo" class="header-logo">` : ''}
         </div>
+        <div class="header-name">${safeTitle}</div>
 
         <div class="header-icons" id="header-icons">
+            <button class="header-icon" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
+            <button class="header-icon" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
+            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+            <div class="h-divider"></div>
+
             <button class="header-icon" id="open-pdf-btn" title="Open New File" style="display:none">
                 <i class="fas fa-folder-open"></i>
             </button>
-            <button class="header-icon" id="bg-settings-btn" title="Change Background">
-                <i class="fas fa-image"></i>
+            <button class="header-icon" id="bg-settings-btn" title="Appearance">
+                <i class="fas fa-palette"></i>
             </button>
             <button class="header-icon" id="notes-btn" title="Notes">
                 <i class="fas fa-pen-fancy"></i>
@@ -608,16 +715,16 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 </button>
             </div>
 
-            <button class="header-icon" id="expand-btn" title="Toggle Full Layout">
-                <i class="fas fa-expand"></i>
-            </button>
+            <a href="?mode=web" class="header-icon" id="web-view-icon-hdr" title="Web View">
+                <i class="fas fa-globe"></i>
+            </a>
 
-            <button class="header-icon" id="fit-screen-btn" title="Fit to Screen">
-                <i class="fas fa-compress"></i>
+            <button class="header-icon" id="expand-btn" title="Toggle Fullscreen">
+                <i class="fas fa-expand"></i>
             </button>
         </div>
     </header>
-
+    <div id="texture-overlay"></div>
     <div class="main-content" id="main-content">
         <div class="loading" id="loading">
             <i class="fas fa-circle-notch fa-spin"></i> Loading...
@@ -652,43 +759,48 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         </div>
     </div>
 
-    <!-- Background Settings Modal -->
-    <div class="index-modal" id="bg-modal">
-        <div class="index-content" style="height: auto; max-height: 80vh;">
-            <div class="index-header">
-                <div style="font-weight:600">Background Settings</div>
-                <button class="header-icon" id="bg-close-btn" style="width:30px; height:30px">
+    <!-- Modern Settings Modal -->
+    <div class="settings-modal" id="settings-modal" onclick="document.getElementById('settings-modal').classList.remove('open')">
+        <div class="settings-content" onclick="event.stopPropagation()">
+            <div class="set-header">
+                <div style="font-weight:600; text-transform:uppercase; letter-spacing:1px; font-size:12px;">Settings</div>
+                <button class="header-icon" onclick="document.getElementById('settings-modal').classList.remove('open')" style="width:28px; height:28px">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div style="padding: 20px; overflow-y: auto;">
+            
+            <!-- Removed tabs since only one remains -->
+            <div style="padding: 0 15px; margin-top: 10px; font-weight: 600; font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">General Settings</div>
 
-                <div style="margin-bottom: 10px; font-weight: 500; color: #ccc;">Dark Themes</div>
-                <div class="bg-grid">
-                    <div class="bg-option active" style="background: #1a1a1a;" data-bg="#1a1a1a" title="Dark (Default)">
+
+            <div class="set-body">
+                <!-- Display Tab (Now the only tab) -->
+                <div id="st-disp" class="set-section active">
+                    <div style="margin-bottom: 10px; font-weight: 600; font-size:11px; color:#888; text-transform:uppercase;">Background</div>
+                    <div class="bg-grid">
+                        <div class="bg-option active" style="background: #1a1a1a;" onclick="setBg('#1a1a1a')" title="Dark"></div>
+                        <div class="bg-option" style="background: #333333;" onclick="setBg('#333333')" title="Charcoal"></div>
+                        <div class="bg-option" style="background: #0d1b2a;" onclick="setBg('#0d1b2a')" title="Midnight"></div>
+                        <div class="bg-option" style="background: #f5f5f5;" onclick="setBg('#f5f5f5')" title="Light"></div>
+                        <div class="bg-option" style="background: #e0e0e0;" onclick="setBg('#e0e0e0')" title="Grey"></div>
+                        <div class="bg-option" style="background: #d7ccc8;" onclick="setBg('#d7ccc8')" title="Paper"></div>
+                        <div class="bg-option" style="background: #fff8e1;" onclick="setBg('#fff8e1')" title="Cream"></div>
+                        <div class="bg-option" style="background: linear-gradient(to bottom right, #2c3e50, #000000);" onclick="setBg('linear-gradient(to bottom right, #2c3e50, #000000)')" title="Gradient"></div>
                     </div>
-                    <div class="bg-option" style="background: #333333;" data-bg="#333333" title="Charcoal"></div>
-                    <div class="bg-option" style="background: #3e2723;" data-bg="#3e2723" title="Dark Wood"></div>
-                    <div class="bg-option" style="background: #0d1b2a;" data-bg="#0d1b2a" title="Midnight"></div>
-                    <div class="bg-option" style="background: linear-gradient(to right, #434343 0%, #000000 100%);"
-                        data-bg="linear-gradient(to right, #434343 0%, #000000 100%)" title="Metal"></div>
-                </div>
 
-                <div style="margin-top: 15px; margin-bottom: 10px; font-weight: 500; color: #ccc;">Light Themes</div>
-                <div class="bg-grid">
-                    <div class="bg-option" style="background: #f5f5f5;" data-bg="#f5f5f5" title="Clean White"></div>
-                    <div class="bg-option" style="background: #e0e0e0;" data-bg="#e0e0e0" title="Light Grey"></div>
-                    <div class="bg-option" style="background: #d7ccc8;" data-bg="#d7ccc8" title="Light Wood"></div>
-                    <div class="bg-option" style="background: #fff8e1;" data-bg="#fff8e1" title="Cream"></div>
-                    <div class="bg-option" style="background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);"
-                        data-bg="linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)" title="Paper Gradient"></div>
-                </div>
+                    <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                        <div class="set-opt-row">
+                            <span class="set-label">Paper Texture</span>
+                            <button id="tex-toggle" onclick="toggleTexture()" class="btn-primary" style="padding:4px 12px; font-size:11px; background:#444;">OFF</button>
+                        </div>
+                    </div>
 
-                <div style="margin-top: 20px; margin-bottom: 10px; font-weight: 500; color: #ccc;">Custom Image</div>
-                <button class="btn-primary" onclick="document.getElementById('bg-upload').click()" style="width: 100%;">
-                    <i class="fas fa-upload"></i> Upload Image
-                </button>
-                <input type="file" id="bg-upload" accept="image/*" style="display: none;">
+                    <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                         <a href="?mode=web" style="display:block; text-align:center; padding:12px; background:rgba(79, 70, 229, 0.1); color:#818cf8; border-radius:8px; text-decoration:none; font-weight:bold; font-size:12px; border:1px solid rgba(79, 70, 229, 0.3); transition:0.2s;">
+                            <i class="fas fa-flask" style="margin-right:8px;"></i> Experimental Web View
+                         </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -712,6 +824,16 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         <button id="prev-btn" class="nav-button">
             <i class="fas fa-chevron-left"></i>
         </button>
+        
+        <div class="footer-icons-mobile">
+            <button class="header-icon" id="bg-settings-btn-mob" title="Settings"><i class="fas fa-palette"></i></button>
+            <button class="header-icon" id="notes-btn-mob" title="Notes"><i class="fas fa-pen-fancy"></i></button>
+            <a href="?mode=web" class="header-icon" title="Web View"><i class="fas fa-globe"></i></a>
+            <button class="header-icon" onclick="window.shareSocial('twitter')"><i class="fab fa-twitter"></i></button>
+            <button class="header-icon" onclick="window.shareSocial('facebook')"><i class="fab fa-facebook"></i></button>
+            <button class="header-icon" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
+        </div>
+
         <input type="range" id="page-slider" class="page-slider" min="0" max="0" value="0">
         <button id="next-btn" class="nav-button">
             <i class="fas fa-chevron-right"></i>
@@ -724,6 +846,40 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         // File unique key for storage
         const FU = '${encodeURIComponent(fileUrl)}';
+
+        // Global Functions
+        window.shareSocial = (p) => {
+            const u = encodeURIComponent(window.location.href);
+            const t = encodeURIComponent('${safeTitle} on FlipRead');
+            let url = '';
+            if(p === 'twitter') url = \`https://twitter.com/intent/tweet?url=\${u}&text=\${t}\`;
+            if(p === 'facebook') url = \`https://www.facebook.com/sharer/sharer.php?u=\${u}\`;
+            if(p === 'linkedin') url = \`https://www.linkedin.com/sharing/share-offsite/?url=\${u}\`;
+            if(url) window.open(url, '_blank', 'width=600,height=400');
+        };
+        window.copyLink = () => {
+             navigator.clipboard.writeText(window.location.href);
+             alert('Link copied!');
+        };
+        
+
+
+        window.setBg = (c) => {
+             document.body.style.background = c;
+             document.body.style.color = (c.includes('#f') || c.includes('#e') || c.includes('#d')) ? '#333' : '#fff';
+             localStorage.setItem('fr_bg', c);
+        };
+        
+        window.toggleTexture = () => {
+             document.body.classList.toggle('textured');
+             const on = document.body.classList.contains('textured');
+             const btn = document.getElementById('tex-toggle');
+             if(btn) {
+                 btn.innerText = on ? 'ON' : 'OFF';
+                 btn.style.background = on ? '#4CAF50' : '#444';
+             }
+             localStorage.setItem('fr_tex', on);
+        };
 
         class RealFlipbook {
             constructor() {
@@ -765,8 +921,26 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
             init() {
                 this.setupEventListeners();
-                this.setupBackgroundSettings();
                 this.setupNotes();
+                
+                // Initialize settings state
+                const sBg = localStorage.getItem('fr_bg');
+                if(sBg) window.setBg(sBg);
+                const sTex = localStorage.getItem('fr_tex');
+                if(sTex === null || sTex === 'true') {
+                     document.body.classList.add('textured');
+                     const btn = document.getElementById('tex-toggle');
+                     if(btn) {
+                         btn.innerText = 'ON';
+                         btn.style.background = '#4CAF50';
+                     }
+                }
+                
+                const openSettings = () => document.getElementById('settings-modal').classList.add('open');
+                document.getElementById('bg-settings-btn').onclick = openSettings;
+                if(document.getElementById('bg-settings-btn-mob')) {
+                    document.getElementById('bg-settings-btn-mob').onclick = openSettings;
+                }
                 // Do not load default PDF
                 this.showLoading(false);
             }
@@ -779,8 +953,12 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 this.sendBtn = document.getElementById('send-note-btn');
                 
                 // Open/Close
-                document.getElementById('notes-btn').onclick = () => this.toggleNotes();
-                document.getElementById('close-notes-btn').onclick = () => this.toggleNotes();
+                const onNotesToggle = () => this.toggleNotes();
+                document.getElementById('notes-btn').onclick = onNotesToggle;
+                if(document.getElementById('notes-btn-mob')) {
+                    document.getElementById('notes-btn-mob').onclick = onNotesToggle;
+                }
+                document.getElementById('close-notes-btn').onclick = onNotesToggle;
                 
                 // Send
                 this.sendBtn.onclick = () => this.sendNote();
@@ -1206,7 +1384,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
                 document.getElementById('zoom-in').onclick = () => this.handleZoom(0.25);
                 document.getElementById('zoom-out').onclick = () => this.handleZoom(-0.25);
-                document.getElementById('fit-screen-btn').onclick = () => this.resetZoom();
                 document.getElementById('open-pdf-btn').onclick = () => this.fileInput.click();
 
                 document.getElementById('expand-btn').onclick = () => {
@@ -1215,9 +1392,9 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     const icon = document.querySelector('#expand-btn i');
                     if (this.useFullHeight) {
                         icon.classList.remove('fa-expand');
-                        icon.classList.add('fa-compress-arrows-alt');
+                        icon.classList.add('fa-compress');
                     } else {
-                        icon.classList.remove('fa-compress-arrows-alt');
+                        icon.classList.remove('fa-compress');
                         icon.classList.add('fa-expand');
                     }
 

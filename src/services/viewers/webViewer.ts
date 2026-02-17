@@ -35,6 +35,13 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         html { scroll-behavior: smooth; }
         body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; background: ${bg}; color: #333; overflow-x: hidden; }
         
+        #texture-overlay { 
+            position: fixed; inset: 0; pointer-events: none; z-index: 10; opacity: 0.05; 
+            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png'); 
+            display: none; 
+        }
+        body.textured #texture-overlay { display: block; }
+        
         /* Typography */
         h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1em; color: #111; }
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
@@ -45,13 +52,15 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         /* Dynamic Sections */
         .page-content { margin: 0; padding: 0; }
         .section-header { 
-            margin-top: 20px; margin-bottom: 30px; padding: 10px 0; 
+            margin-top: 40px; margin-bottom: 30px; padding: 10px 0; 
             display: flex; justify-content: center; align-items: center;
         }
-        .section-header h2 { 
-            font-size: 0.75rem; margin: 0; color: #9ca3af; 
-            text-transform: uppercase; letter-spacing: 0.25em; font-weight: 600;
-            background: #f3f4f6; padding: 6px 16px; border-radius: 99px;
+        .pg-elegant {
+            font-size: 9px; font-weight: 800; color: #9ca3af;
+            background: rgba(0,0,0,0.03); width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: 1px solid rgba(0,0,0,0.05);
+            margin: 0 auto; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
         
         /* Rendered Content Styles */
@@ -60,7 +69,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         
         /* TOC Menu */
         #toc-menu {
-            position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
             opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         #toc-menu.open { opacity: 1; pointer-events: auto; }
@@ -70,6 +79,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.1);
         }
         #toc-menu.open #toc-panel { transform: translateX(0); }
+        
+        @media (max-width: 768px) {
+            #toc-panel { width: 100% !important; max-width: 100vw !important; }
+        }
         
         #toc-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         #toc-list { flex: 1; overflow-y: auto; padding: 10px 0; }
@@ -92,7 +105,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         .hl-btn:hover { transform: scale(1.2); border-color: white; }
 
         /* Chat Sidebar */
-        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; }
+        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2500; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; }
         @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
         #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
         .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
@@ -122,30 +135,203 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             width: 300px; display: none; flex-direction: column; gap: 16px;
             border: 1px solid rgba(0,0,0,0.05);
         }
-        /* Header & Icons */
-        .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 1500; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        
-        .ib { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: all 0.2s; outline: none; background: transparent; color: #333; }
-        .ib:hover { background: rgba(0,0,0,0.05); transform: scale(1.05); }
-        #set-m.open { display: flex; }
-        .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .set-lbl { font-size: 0.85rem; font-weight: 600; color: #555; }
-        .set-ctrl { display: flex; items-center; gap: 8px; background: #f5f5f5; padding: 4px; border-radius: 8px; }
-        .set-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.2s; }
-        .set-btn:hover { background: white; shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .set-val { font-size: 0.8rem; font-weight: 600; min-width: 40px; text-align: center; }
-        select.set-sel { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.85rem; outline: none; }
-
-        @media(max-width:768px){ 
-            #standard-btn, #notes-btn { display: none !important; }
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            border-bottom: none;
+            color: white;
+            height: 60px;
+            z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .header.up {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .header.down {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            flex: 1;
+        }
+
+        .header-name {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40vw;
+            pointer-events: auto;
+            text-align: center;
+            color: #fff;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            pointer-events: auto;
+            flex: 1;
+        }
+        
+        .header-logo {
+            height: 32px;
+            width: auto;
+            max-width: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Footer Controls */
+        .controls {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px 15px;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2000;
+            pointer-events: auto;
+            transition: transform 0.3s ease;
+        }
+        .controls.down { transform: translateY(100%); }
+        .controls.up { transform: translateY(0); }
+
+        .footer-icons-mobile {
+            display: none;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .footer-icons-mobile .header-icon {
+            margin: 0;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .header-icons {
+                display: flex !important;
+                gap: 8px;
+            }
+            .header-icons > button:not(#notes-btn):not(#settings-btn) { display: none !important; }
+            /* Keep standard view (a tag) visible as requested */
+            .header-icons > a#standard-btn { display: flex !important; }
+
+            .header-icons .header-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .header-logo {
+                display: block !important;
+                height: 24px !important;
+                width: 24px !important;
+            }
+
+            .controls {
+                display: flex !important;
+            }
+            .footer-icons-mobile {
+                display: flex !important;
+            }
+
+
+            .header-left .header-name {
+                display: none;
+            }
+            .header-name {
+                position: static !important;
+                transform: none !important;
+                max-width: 50vw;
+                font-size: 13px;
+                color: #fff;
+                text-align: left;
+                margin-left: 0;
+            }
+            #set-m { 
+                top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important; 
+                width: 100vw !important; height: 100vh !important; 
+                border-radius: 0 !important; z-index: 3000 !important;
+            }
+        }
+
+        #scroll-top {
+            position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px;
+            background: var(--accent); color: white; border: none; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1500; opacity: 0; visibility: hidden;
+            transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        #scroll-top.v { opacity: 1; visibility: visible; }
+        #scroll-top:hover { transform: scale(1.1); }
+
         
         /* Ensure EPUB canvas/iframe fills space */
         .epub-container { height: calc(100vh - 60px) !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
         #content-wrapper iframe { border: none !important; }
     </style>
 </head>
-<body>
+<body class="up">
+    <div id="texture-overlay"></div>
+    <button id="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <i class="fas fa-chevron-up"></i>
+    </button>
     <div id="ld">
         <div class="w-12 h-12 border-4 border-gray-200 border-t-${accent} rounded-full animate-spin"></div>
         <p class="text-xs font-bold tracking-widest uppercase opacity-50">Generating Web Experience...</p>
@@ -160,24 +346,39 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
          <div class="hl-btn" style="background:#ce93d8" onclick="addHighlight('purple')"></div>
     </div>
 
-    <header class="hdr">
-        <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-             <button class="ib" onclick="toggleTOC()"><i class="fas fa-list-ul"></i></button>
-             <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
-             <div class="truncate font-bold text-xs sm:text-sm opacity-90">${safeTitle}</div>
+    <header class="header up" id="main-header">
+        <div class="header-left">
+            <button class="header-icon" onclick="toggleTOC()" title="Contents">
+                <i class="fas fa-list-ul"></i>
+            </button>
+            <img src="${logoUrl || '/logo.png'}" alt="Logo" class="header-logo" />
+            <div class="header-name">${safeTitle}</div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-            <a href="?mode=standard" class="ib" id="standard-btn" title="Standard View">
+        <div class="header-icons">
+            <button class="header-icon" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
+            <button class="header-icon" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
+            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+            
+            <a href="?mode=standard" class="header-icon" id="standard-btn" title="Standard View">
                 <i class="fas fa-book-open"></i>
             </a>
-            <button class="ib" id="settings-btn" onclick="toggleSettings()" title="Settings" style="display:none">
-                <i class="fas fa-font"></i>
+            <button class="header-icon" id="settings-btn" onclick="toggleSettings()" title="Settings">
+                <i class="fas fa-palette"></i>
             </button>
-            <button class="ib" id="notes-btn" onclick="toggleChat()" title="Notes">
+            <button class="header-icon" id="notes-btn" onclick="toggleChat()" title="Notes">
                 <i class="fas fa-pen-fancy"></i>
             </button>
         </div>
     </header>
+
+    <div class="controls up" id="main-footer">
+        <div class="footer-icons-mobile">
+            <button class="header-icon" onclick="window.shareSocial('twitter')" title="Twitter"><i class="fab fa-twitter"></i></button>
+            <button class="header-icon" onclick="window.shareSocial('facebook')" title="Facebook"><i class="fab fa-facebook"></i></button>
+            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+            <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
+        </div>
+    </div>
 
     <div id="content-wrapper">
         <!-- Dynamic Content Injected Here -->
@@ -216,43 +417,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
-    <!-- Settings Modal -->
-    <div id="set-m" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="text-sm font-bold uppercase tracking-wider m-0">Typography</h3>
-            <button onclick="toggleSettings()" class="text-gray-400 hover:text-black">✕</button>
-        </div>
-        <div class="set-row">
-            <span class="set-lbl">Font Size</span>
-            <div class="set-ctrl">
-                <div class="set-btn" onclick="changeFontSize(-10)">-</div>
-                <div class="set-val" id="wfz-v">100%</div>
-                <div class="set-btn" onclick="changeFontSize(10)">+</div>
-            </div>
-        </div>
-        <div class="flex flex-col gap-2">
-            <span class="set-lbl">Font Family</span>
-            <select class="set-sel" id="wff-s" onchange="setFont(this.value)">
-                <option value="Inter, system-ui, sans-serif">Default (Inter)</option>
-                <option value="Times New Roman, serif">Serif (Times)</option>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="Arial, sans-serif">Sans-Serif (Arial)</option>
-                <option value="Courier New, monospace">Monospace</option>
-            </select>
-        </div>
-        <div class="md:hidden pt-4 border-t border-gray-100 flex flex-col gap-3">
-             <button onclick="toggleChat();toggleSettings()" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[11px] font-bold uppercase tracking-wider transition">
-                <i class="fas fa-pen-fancy mr-2"></i> Open Notes
-             </button>
-             <a href="?mode=standard" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[11px] font-bold uppercase tracking-wider transition text-center">
-                <i class="fas fa-book-open mr-2"></i> Standard View
-             </a>
-        </div>
-    </div>
-
-    <div id="status-bar" class="hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-4 py-1 text-[10px] font-mono opacity-60 z-[50]">
-        Scroll to navigate • <span id="w-pi">Loading...</span>
-    </div>
 
     <script>
         const FU='${fileUrl}';
@@ -260,7 +424,49 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         let highlights = [];
         try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
 
+        // --- Layout Utils ---
+        let lastS = 0;
+        const ftr = document.getElementById('main-footer');
+        const stBtn = document.getElementById('scroll-top');
+
+        window.addEventListener('scroll', () => {
+             const curS = window.scrollY;
+             // Header & Footer Hiding
+             if (curS > lastS && curS > 100) {
+                 hdr.classList.remove('up');
+                 hdr.classList.add('down');
+                 ftr.classList.remove('up');
+                 ftr.classList.add('down');
+             } else {
+                 hdr.classList.remove('down');
+                 hdr.classList.add('up');
+                 ftr.classList.remove('down');
+                 ftr.classList.add('up');
+             }
+             lastS = curS;
+
+             // Scroll Top Button
+             if (curS > 400) stBtn.classList.add('v');
+             else stBtn.classList.remove('v');
+        });
+
         function toggleTOC() { document.getElementById('toc-menu').classList.toggle('open'); }
+        
+        window.shareSocial = (p) => {
+            const u = encodeURIComponent(window.location.href);
+            const t = encodeURIComponent('${safeTitle} on FlipRead');
+            let url = '';
+            if(p === 'twitter') url = \`https://twitter.com/intent/tweet?url=\${u}&text=\${t}\`;
+            if(p === 'facebook') url = \`https://www.facebook.com/sharer/sharer.php?u=\${u}\`;
+            if(p === 'linkedin') url = \`https://www.linkedin.com/sharing/share-offsite/?url=\${u}\`;
+            if(url) window.open(url, '_blank', 'width=600,height=400');
+        };
+        
+        window.copyLink = () => {
+             navigator.clipboard.writeText(window.location.href);
+             alert('Link copied!');
+        };
+
         function toggleChat() { 
             const w = document.getElementById('chat-w');
             w.classList.toggle('o');
@@ -282,7 +488,10 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 const blob = await res.blob();
                 const type = res.headers.get('content-type');
                 
-                if(type.includes('pdf')) await renderPDF(blob);
+                if(type.includes('pdf')) {
+                    document.getElementById('settings-btn').style.display = 'none';
+                    await renderPDF(blob);
+                }
                 else if(type.includes('epub')) await renderEPUB(blob);
                 else if(type.includes('document') || FU.endsWith('.docx') || FU.endsWith('.doc')) await renderDOCX(blob);
                 else if(type.includes('presentation') || FU.endsWith('.pptx')) await renderPPTX(FU);
@@ -310,7 +519,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 
                 const head = document.createElement('div');
                 head.className = 'section-header';
-                head.innerHTML = '<h2>Page ' + i + '</h2>';
+                head.innerHTML = '<div class="pg-elegant">' + i + '</div>';
                 section.appendChild(head);
 
                 const canvas = document.createElement('canvas');
@@ -646,10 +855,48 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
               renderHighlights();
         };
 
+
+
+        // Initialize texture by default
+        document.body.classList.add('textured');
+
         init();
-        // Render initial notes
         renderNotes();
     </script>
+    
+    <!-- Settings Modal -->
+    <div id="set-m" onclick="event.stopPropagation()" style="position:fixed; top:60px; right:16px; background:white; padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); display:none; flex-direction:column; gap:12px; z-index:2000; border:1px solid rgba(0,0,0,0.05); width:280px;">
+        <div class="flex justify-between items-center mb-1">
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Typography</h3>
+            <button onclick="toggleSettings()" class="text-gray-300 hover:text-black">✕</button>
+        </div>
+        <div class="set-row">
+            <span class="set-lbl">Font Size</span>
+            <div class="set-ctrl">
+                <div class="set-btn" onclick="changeFontSize(-10)">-</div>
+                <div class="set-val" id="wfz-v">100%</div>
+                <div class="set-btn" onclick="changeFontSize(10)">+</div>
+            </div>
+        </div>
+        <div class="flex flex-col gap-2">
+            <span class="set-lbl">Font Family</span>
+            <select class="set-sel" id="wff-s" onchange="setFont(this.value)" style="border:1px solid rgba(0,0,0,0.1); font-size:12px; padding:6px; border-radius:6px; outline:none;">
+                <option value="Inter, system-ui, sans-serif">Default (Inter)</option>
+                <option value="Times New Roman, serif">Serif (Times)</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="Arial, sans-serif">Sans-Serif (Arial)</option>
+                <option value="Courier New, monospace">Monospace</option>
+            </select>
+        </div>
+        <div class="md:hidden pt-3 border-t border-gray-100 flex flex-col gap-2">
+             <button onclick="toggleChat();toggleSettings()" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition">
+                <i class="fas fa-pen-fancy mr-2"></i> Open Notes
+             </button>
+             <a href="?mode=standard" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition text-center text-gray-600 no-underline">
+                <i class="fas fa-book-open mr-2"></i> Standard View
+             </a>
+        </div>
+    </div>
 </body>
 </html>`;
 }
