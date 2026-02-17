@@ -6,7 +6,13 @@ import { StorageService } from '../services/storage';
 import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
 import { getCookie } from 'hono/cookie';
-import { pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, webViewerHTML, spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, passwordPage, errorPage, memberAccessPage } from '../services/viewerTemplates';
+import { 
+  pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, 
+  spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, 
+  pdfWebViewerHTML, epubWebViewerHTML, docxWebViewerHTML, pptWebViewerHTML, 
+  spreadsheetWebViewerHTML, textWebViewerHTML, imageWebViewerHTML,
+  passwordPage, errorPage, memberAccessPage 
+} from '../services/viewerTemplates';
 
 export function viewerPage(book: Book & { author_name: string; author_plan: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
@@ -17,7 +23,13 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
   const logoUrl = book.store_logo_key ? `${appUrl}/read/api/logo/${book.user_id}` : '';
 
   if (mode === 'web') {
-    return webViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
   }
 
   if (book.type === 'pdf') {

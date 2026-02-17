@@ -1,10 +1,26 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
+export interface WebViewerOptions {
+    title: string;
+    fileUrl: string;
+    coverUrl: string;
+    settings: Record<string, any>;
+    showBranding: boolean;
+    logoUrl?: string;
+    extraStyles?: string;
+    extraHtml?: string;
+    extraScripts?: string;
+    dependencies?: string[];
+}
+
+export function getWebViewerBase(options: WebViewerOptions): string {
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', extraStyles = '', extraHtml = '', extraScripts = '', dependencies = [] } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
+
+    const depScripts = dependencies.map(dep => `<script src="${dep}"></script>`).join('\n    ');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -15,17 +31,11 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
     <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
     <meta property="og:title" content="${safeTitle} — FlipRead">
-    <meta property="og:description" content="Read this interactive flipbook on FlipRead.">
+    <meta property="og:description" content="Read this interactive content on FlipRead.">
     <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
     <meta name="twitter:card" content="summary_large_image">
-    <!-- Dependencies for different formats -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://unpkg.com/docx-preview/dist/docx-preview.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.css">
+    
+    ${depScripts}
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -171,10 +181,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         }
 
         .header-name {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
             font-size: 14px;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -184,7 +190,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             text-overflow: ellipsis;
             max-width: 40vw;
             pointer-events: auto;
-            text-align: center;
+            text-align: left;
             color: #fff;
         }
 
@@ -269,7 +275,6 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 gap: 8px;
             }
             .header-icons > button:not(#notes-btn):not(#settings-btn) { display: none !important; }
-            /* Keep standard view (a tag) visible as requested */
             .header-icons > a#standard-btn { display: flex !important; }
 
             .header-icons .header-icon {
@@ -291,18 +296,14 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 display: flex !important;
             }
 
-
             .header-left .header-name {
                 display: none;
             }
             .header-name {
-                position: static !important;
-                transform: none !important;
                 max-width: 50vw;
                 font-size: 13px;
                 color: #fff;
                 text-align: left;
-                margin-left: 0;
             }
             #set-m { 
                 top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important; 
@@ -315,16 +316,17 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px;
             background: var(--accent); color: white; border: none; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 1500; opacity: 0; visibility: hidden;
+            cursor: pointer; z-index: 4000; opacity: 0; visibility: hidden;
             transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         #scroll-top.v { opacity: 1; visibility: visible; }
         #scroll-top:hover { transform: scale(1.1); }
-
         
-        /* Ensure EPUB canvas/iframe fills space */
-        .epub-container { height: calc(100vh - 60px) !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        #content-wrapper iframe { border: none !important; }
+        @media (max-width: 768px) {
+            #scroll-top { bottom: 80px; right: 20px; width: 40px; height: 40px; }
+        }
+        
+        ${extraStyles}
     </style>
 </head>
 <body class="up">
@@ -381,7 +383,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
     </div>
 
     <div id="content-wrapper">
-        <!-- Dynamic Content Injected Here -->
+        ${extraHtml}
     </div>
 
     <!-- TOC Modal -->
@@ -392,6 +394,33 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 <button onclick="toggleTOC()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">✕</button>
             </div>
             <div id="toc-list"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="set-m">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Typography</h3>
+            <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Size</label>
+                <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                    <button onclick="changeFontSize(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                    <span id="wfz-v" class="flex-1 text-center font-bold text-sm">100%</span>
+                    <button onclick="changeFontSize(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                </div>
+            </div>
+            <div>
+                <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Family</label>
+                <select id="wff-s" onchange="setFont(this.value)" class="w-full bg-gray-50 border p-2 rounded-lg text-sm outline-none focus:ring-2 ring-indigo-500">
+                    <option value="'Inter', system-ui, sans-serif">Modern Sans</option>
+                    <option value="'Merriweather', serif">Classic Serif</option>
+                    <option value="'EB Garamond', serif">Elegant Garamond</option>
+                    <option value="system-ui">System Default</option>
+                </select>
+            </div>
         </div>
     </div>
     
@@ -408,7 +437,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         <div class="chat-b">
             <div id="chat-notes" class="chat-tab-c active"></div>
             <div id="chat-highlights" class="chat-tab-c">
-                <p class="text-xs text-center opacity-40 py-10">Select text in the book to highlight (EPUB only).</p>
+                <p class="text-xs text-center opacity-40 py-10">Select text in the content to highlight.</p>
                 <div id="hi-list"></div>
             </div>
         </div>
@@ -426,6 +455,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
         // --- Layout Utils ---
         let lastS = 0;
+        const hdr = document.getElementById('main-header');
         const ftr = document.getElementById('main-footer');
         const stBtn = document.getElementById('scroll-top');
 
@@ -446,7 +476,7 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              lastS = curS;
 
              // Scroll Top Button
-             if (curS > 400) stBtn.classList.add('v');
+             if (curS > 200) stBtn.classList.add('v');
              else stBtn.classList.remove('v');
         });
 
@@ -482,275 +512,11 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              document.getElementById('chat-footer').style.display = tabId === 'chat-highlights' ? 'none' : 'flex';
         };
 
-        async function init() {
-            try {
-                const res = await fetch(FU);
-                const blob = await res.blob();
-                const type = res.headers.get('content-type');
-                
-                if(type.includes('pdf')) {
-                    document.getElementById('settings-btn').style.display = 'none';
-                    await renderPDF(blob);
-                }
-                else if(type.includes('epub')) await renderEPUB(blob);
-                else if(type.includes('document') || FU.endsWith('.docx') || FU.endsWith('.doc')) await renderDOCX(blob);
-                else if(type.includes('presentation') || FU.endsWith('.pptx')) await renderPPTX(FU);
-                else await renderEPUB(blob);
-
-                document.getElementById('ld').style.opacity = '0';
-                setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
-            } catch(e) {
-                console.error(e);
-                document.getElementById('ld').innerHTML = '<p class="text-red-500">Error loading content.</p>';
-            }
-        }
-
-        async function renderPDF(blob) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-            const data = await blob.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument(data).promise;
-            const container = document.getElementById('content-wrapper');
-            const tocList = document.getElementById('toc-list');
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const section = document.createElement('div');
-                section.id = 'page-' + i;
-                section.className = 'page-content';
-                
-                const head = document.createElement('div');
-                head.className = 'section-header';
-                head.innerHTML = '<div class="pg-elegant">' + i + '</div>';
-                section.appendChild(head);
-
-                const canvas = document.createElement('canvas');
-                canvas.className = 'w-full h-auto shadow-lg';
-                section.appendChild(canvas);
-                container.appendChild(section);
-
-                pdf.getPage(i).then(page => {
-                    const vp = page.getViewport({ scale: 1.5 });
-                    canvas.width = vp.width;
-                    canvas.height = vp.height;
-                    page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
-                });
-
-                const item = document.createElement('div');
-                item.className = 'toc-item';
-                item.innerText = 'Page ' + i;
-                item.onclick = () => {  
-                    document.getElementById('page-'+i).scrollIntoView({behavior:'smooth'});
-                    toggleTOC();
-                };
-                tocList.appendChild(item);
-            }
-        }
-
-        async function renderDOCX(blob) {
-            const container = document.getElementById('content-wrapper');
-            const wrapper = document.createElement('div');
-            container.appendChild(wrapper);
-            await docx.renderAsync(blob, wrapper);
-            
-            const headers = wrapper.querySelectorAll('h1, h2, h3');
-            const tocList = document.getElementById('toc-list');
-            if(headers.length === 0) {
-                 tocList.innerHTML = '<div class="p-4 text-xs opacity-50">No sections found.</div>';
-                 return;
-            }
-            headers.forEach((h, i) => {
-                h.id = 'section-' + i;
-                const item = document.createElement('div');
-                item.className = 'toc-item';
-                item.innerText = h.innerText;
-                item.style.paddingLeft = (parseInt(h.tagName[1]) * 10) + 'px';
-                item.onclick = () => { h.scrollIntoView({behavior:'smooth'}); toggleTOC(); };
-                tocList.appendChild(item);
-            });
-        }
-        
-        async function renderPPTX(url) {
-             const container = document.getElementById('content-wrapper');
-             $(container).pptxToHtml({
-                 pptxFileUrl: url,
-                 slideMode: false,
-                 slidesScale: "100%",
-                 keyBoardShortCut: false
-             });
-             setTimeout(() => {
-                 const slides = container.querySelectorAll('.slide');
-                 const tocList = document.getElementById('toc-list');
-                 slides.forEach((s, i) => {
-                     let title = "Slide " + (i+1);
-                     const t = s.innerText.substring(0, 20);
-                     if(t.length > 2) title = t + "...";
-                     s.id = 'slide-' + i;
-                     const item = document.createElement('div');
-                     item.className = 'toc-item';
-                     item.innerText = title;
-                     item.onclick = () => { s.scrollIntoView({behavior:'smooth'}); toggleTOC(); };
-                     tocList.appendChild(item);
-                 });
-             }, 3000);
-        }
-
-        async function renderEPUB(blob) {
-            const container = document.getElementById('content-wrapper');
-            container.innerHTML = '';
-            const book = ePub(blob);
-            const tocList = document.getElementById('toc-list');
-
-            // Continuous Scrolled View
-            // Continuous Scrolled View
-            // 'scrolled' flow creates a continuous vertical view.
-            const bookRender = book.renderTo(container, {
-                flow: "scrolled",
-                manager: "continuous",
-                width: "100%"
-            });
-            document.getElementById('settings-btn').style.display='flex';
-            await bookRender.display();
-            
-            // Remove margin/padding from internal EPUB body and sync height
-            bookRender.hooks.content.register(contents => {
-                const doc = contents.document;
-                const win = contents.window;
-                
-                const style = doc.createElement('style');
-                style.innerHTML = \`
-                    body { margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
-                    html { height: auto !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; }
-                    .epubjs-view { margin: 0 !important; padding: 0 !important; }
-                \`;
-                doc.head.appendChild(style);
-
-                // Auto-resize iframe to fit content
-                const resize = () => {
-                    const h = doc.documentElement.scrollHeight;
-                    const iframe = win.frameElement;
-                    if(iframe && h > 0) {
-                        iframe.style.height = h + 'px';
-                    }
-                };
-                
-                // Observe size changes
-                const ro = new ResizeObserver(resize);
-                ro.observe(doc.body);
-                
-                // Initial resize + image loads
-                resize();
-                win.addEventListener('load', resize);
-                Array.from(doc.images).forEach(img => {
-                    img.onload = resize;
-                });
-            });
-            
-            // TOC
-            const navigation = await book.loaded.navigation;
-            navigation.toc.forEach(chapter => {
-               const item = document.createElement('div');
-               item.className = 'toc-item';
-               item.innerText = chapter.label.trim();
-               item.onclick = () => {
-                   bookRender.display(chapter.href);
-                   toggleTOC();
-               };
-               tocList.appendChild(item);
-            });
-            
-            // Selection / Highlight Hook
-            bookRender.on("selected", (cfiRange, contents) => {
-                  book.getRange(cfiRange).then(range => {
-                      const sel = contents.window.getSelection();
-                      if(!sel.rangeCount) return;
-                      
-                      // Using the iframe's rect to position
-                      const iframe = container.querySelector('iframe');
-                      const iframeRect = iframe.getBoundingClientRect();
-                      const rect = sel.getRangeAt(0).getBoundingClientRect();
-                      
-                      const menu = document.getElementById('hl-menu');
-                      // Position menu near selection (accounting for iframe offset)
-                      menu.style.top = (window.scrollY + iframeRect.top + rect.top - 50) + 'px';
-                      menu.style.left = (iframeRect.left + rect.left + rect.width/2) + 'px';
-                      menu.style.display = 'flex';
-                      
-                      window.currentSelection = { cfiRange, text: range.toString(), contents };
-                  });
-            });
-            
-            // Inject Highlight CSS
-            bookRender.hooks.content.register(contents => {
-                  const style = contents.document.createElement('style');
-                  style.innerHTML = \`
-                      ::selection { background: rgba(255, 165, 0, 0.3); }
-                      .hl-yellow { background-color: rgba(255, 235, 59, 0.4); }
-                      .hl-green { background-color: rgba(165, 214, 167, 0.4); }
-                      .hl-blue { background-color: rgba(144, 202, 249, 0.4); }
-                      .hl-pink { background-color: rgba(244, 143, 177, 0.4); }
-                      .hl-purple { background-color: rgba(206, 147, 216, 0.4); }
-                  \`;
-                  contents.document.head.appendChild(style);
-                  contents.document.body.onclick = () => { 
-                      if(contents.window.getSelection().toString().length > 0) return;
-                      document.getElementById('hl-menu').style.display = 'none'; 
-                  };
-            });
-            
-            // Restore Highlights
-            book.ready.then(() => {
-                highlights.forEach(h => {
-                    try { bookRender.annotations.add("highlight", h.cfi, {}, null, 'hl-' + (h.c || 'yellow')); } catch(e){}
-                });
-            });
-
-            // Handle Resize
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    if(bookRender) bookRender.resize(); 
-                }, 250);
-            });
-            
-            // Apply saved settings
-            book.ready.then(() => {
-                const fs = localStorage.getItem('fr_web_fs');
-                const ff = localStorage.getItem('fr_web_ff');
-                if(fs) changeFontSize(0); // Applies current fs
-                if(ff) setFont(ff);
-            });
-        }
-        
-        // --- Typography Logic ---
-        let wfz = parseInt(localStorage.getItem('fr_web_fs') || '100');
-        let wff = localStorage.getItem('fr_web_ff') || 'Inter, system-ui, sans-serif';
-        
-        window.changeFontSize = (d) => {
-            wfz = Math.max(50, Math.min(200, wfz + d));
-            document.getElementById('wfz-v').textContent = wfz + '%';
-            localStorage.setItem('fr_web_fs', wfz);
-            if(bookRender) {
-                bookRender.themes.fontSize(wfz + "%");
-            }
-        };
-        
-        window.setFont = (f) => {
-            wff = f;
-            localStorage.setItem('fr_web_ff', wff);
-            if(bookRender) {
-                bookRender.themes.font(wff);
-            }
-        };
-        
         window.toggleSettings = () => {
-            document.getElementById('set-m').classList.toggle('open');
-            // Update UI
-            document.getElementById('wfz-v').textContent = wfz + '%';
-            document.getElementById('wff-s').value = wff;
+            document.getElementById('set-m').style.display = document.getElementById('set-m').style.display === 'flex' ? 'none' : 'flex';
+            document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
         };
-        
-        // --- Notes Logic ---
-        let editingNoteIndex = -1;
+
         window.sendNote = () => {
             const i = document.getElementById('chat-i'), v = i.value.trim();
             if(!v) return;
@@ -759,9 +525,9 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
             } catch(e) {}
             
-            if(editingNoteIndex > -1) {
-                notes[editingNoteIndex].text = v;
-                editingNoteIndex = -1;
+            if(window.editingNoteIndex > -1) {
+                notes[window.editingNoteIndex].text = v;
+                window.editingNoteIndex = -1;
                 document.querySelector('#chat-footer .chat-s i').className = 'fas fa-paper-plane';
             } else {
                 notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
@@ -778,12 +544,12 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
              b.innerHTML = notes.map((n, i) => 
                  '<div class=\"chat-item\">' +
-                 '<p class=\"whitespace-pre-wrap\">' + n.text + '</p>' +
+                 '<p class=\"whitespace-pre-wrap text-sm\">' + n.text + '</p>' +
                  '<div class=\"flex justify-between items-center mt-2\">' +
                      '<span class=\"text-[10px] opacity-40\">' + n.time + '</span>' +
                      '<div class=\"flex gap-2\">' +
-                         '<i class=\"fas fa-edit chat-edit\" onclick=\"editNote('+i+')\"></i>' +
-                         '<i class=\"fas fa-trash chat-del\" onclick=\"deleteNote('+i+')\"></i>' +
+                         '<i class=\"fas fa-edit chat-edit text-xs\" onclick=\"editNote('+i+')\"></i>' +
+                         '<i class=\"fas fa-trash chat-del text-xs\" onclick=\"deleteNote('+i+')\"></i>' +
                      '</div>' +
                  '</div>' +
                  '</div>'
@@ -797,106 +563,45 @@ export function webViewerHTML(title: string, fileUrl: string, coverUrl: string, 
              const input = document.getElementById('chat-i');
              input.value = notes[i].text;
              input.focus();
-             editingNoteIndex = i;
+             window.editingNoteIndex = i;
              document.querySelector('#chat-footer .chat-s i').className = 'fas fa-check';
         };
-        
+
         window.deleteNote = (i) => {
-             if(!confirm('Delete note?')) return;
+             if(!confirm('Delete this note?')) return;
              let notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || [];
              notes.splice(i, 1);
              localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
              renderNotes();
         };
 
-        // --- Highlight Logic (EPUB) ---
-        window.addHighlight = (color) => {
-              const sel = window.currentSelection;
-              if(!sel) return;
-              document.getElementById('hl-menu').style.display='none';
-              
-              if(bookRender) {
-                  bookRender.annotations.add("highlight", sel.cfiRange, {}, null, 'hl-' + color);
-                  sel.contents.window.getSelection().removeAllRanges();
-                  
-                  highlights.push({t: sel.text, cfi: sel.cfiRange, d: new Date().toLocaleDateString(), c: color});
-                  localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
-                  renderHighlights();
-              }
-        };
-        
         window.renderHighlights = () => {
              const b = document.getElementById('hi-list');
              if(!b) return;
-             if(highlights.length === 0) { b.innerHTML = ''; return; }
-             
-             const getColorCode = (c) => {
-                 const map = { yellow:'#fdd835', green:'#66bb6a', blue:'#42a5f5', pink:'#ec407a', purple:'#ab47bc' };
-                 return map[c] || map['yellow'];
-             };
-
              b.innerHTML = highlights.map((h, i) => 
-                 '<div class=\"chat-item flex justify-between items-start group cursor-pointer hover:bg-gray-50\" onclick=\"if(bookRender) bookRender.display(\\\'' + h.cfi + '\\\')\">' +
-                 '<div class=\"flex-1\">' +
-                 '<div class=\"w-2 h-2 rounded-full mb-2\" style=\"background: ' + getColorCode(h.c||'yellow') + '\"></div>' +
-                 '<p class=\"text-xs line-clamp-2 italic opacity-80\" style=\"border-left: 2px solid ' + getColorCode(h.c||'yellow') + '; padding-left: 8px\">\"' + h.t + '\"</p>' +
-                 '<p class=\"text-[9px] opacity-40 mt-1\">' + (h.d || '') + '</p></div>' +
-                 '<button class=\"opacity-0 group-hover:opacity-100 transition p-2 text-red-500 hover:text-red-700\" onclick=\"event.stopPropagation();deleteHighlight(' + i + ')\"><i class=\"fas fa-trash\"></i></button>' +
+                 '<div class=\"chat-item\">' +
+                 '<p class=\"italic text-xs opacity-60\">\"' + h.text + '\"</p>' +
+                 '<div class=\"flex justify-between items-center mt-2\">' +
+                     '<div class=\"w-3 h-3 rounded-full bg-hl-' + (h.c || 'yellow') + '\"></div>' +
+                     '<i class=\"fas fa-trash chat-del text-xs\" onclick=\"deleteHighlight('+i+')\"></i>' +
+                 '</div>' +
                  '</div>'
              ).join('');
         };
-        
+
         window.deleteHighlight = (i) => {
-              if(!confirm('Delete highlight?')) return;
-              const h = highlights[i];
-              if(bookRender) bookRender.annotations.remove(h.cfi, "highlight");
-              highlights.splice(i, 1);
-              localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
-              renderHighlights();
+             if(bookRender) bookRender.annotations.remove(highlights[i].cfi, "highlight");
+             highlights.splice(i, 1);
+             localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
+             renderHighlights();
         };
 
-
-
-        // Initialize texture by default
-        document.body.classList.add('textured');
-
-        init();
-        renderNotes();
+        ${extraScripts}
+        
+        window.addEventListener('load', () => {
+            if(window.init) window.init();
+        });
     </script>
-    
-    <!-- Settings Modal -->
-    <div id="set-m" onclick="event.stopPropagation()" style="position:fixed; top:60px; right:16px; background:white; padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); display:none; flex-direction:column; gap:12px; z-index:2000; border:1px solid rgba(0,0,0,0.05); width:280px;">
-        <div class="flex justify-between items-center mb-1">
-            <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Typography</h3>
-            <button onclick="toggleSettings()" class="text-gray-300 hover:text-black">✕</button>
-        </div>
-        <div class="set-row">
-            <span class="set-lbl">Font Size</span>
-            <div class="set-ctrl">
-                <div class="set-btn" onclick="changeFontSize(-10)">-</div>
-                <div class="set-val" id="wfz-v">100%</div>
-                <div class="set-btn" onclick="changeFontSize(10)">+</div>
-            </div>
-        </div>
-        <div class="flex flex-col gap-2">
-            <span class="set-lbl">Font Family</span>
-            <select class="set-sel" id="wff-s" onchange="setFont(this.value)" style="border:1px solid rgba(0,0,0,0.1); font-size:12px; padding:6px; border-radius:6px; outline:none;">
-                <option value="Inter, system-ui, sans-serif">Default (Inter)</option>
-                <option value="Times New Roman, serif">Serif (Times)</option>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="Arial, sans-serif">Sans-Serif (Arial)</option>
-                <option value="Courier New, monospace">Monospace</option>
-            </select>
-        </div>
-        <div class="md:hidden pt-3 border-t border-gray-100 flex flex-col gap-2">
-             <button onclick="toggleChat();toggleSettings()" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition">
-                <i class="fas fa-pen-fancy mr-2"></i> Open Notes
-             </button>
-             <a href="?mode=standard" class="w-full py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition text-center text-gray-600 no-underline">
-                <i class="fas fa-book-open mr-2"></i> Standard View
-             </a>
-        </div>
-    </div>
 </body>
 </html>`;
 }
