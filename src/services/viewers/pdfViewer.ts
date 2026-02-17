@@ -2,662 +2,1195 @@
 import { escapeHtml } from './viewerUtils';
 
 export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
-  const bg = (settings.background as string) || '#1a1a1a';
-  const accent = (settings.accent_color as string) || '#4CAF50';
   const safeTitle = escapeHtml(title);
 
   return `<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${safeTitle} — FlipRead</title>
-    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
-    <meta property="og:title" content="${safeTitle} — FlipRead">
-    <meta property="og:description" content="Read this interactive flipbook on FlipRead.">
-    <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
-    <meta name="twitter:card" content="summary_large_image">
+    <title>${safeTitle} - FlipRead</title>
+
+    <!-- Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;background:${bg};background-size:cover;background-position:center;height:100dvh;width:100vw;position:fixed;transition:background 0.3s ease}
-        
-        /* Tabs */
-        .tab-btn { padding: 12px 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.7; transition: 0.2s; }
-        .tab-btn.active { opacity: 1; border-color: ${accent}; }
-        .tab-content { display: none; padding: 20px 0; }
-        .tab-content.active { display: block; }
-        
-        #s-c { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 4000px; overflow: hidden; z-index: 10; width: 100vw; height: 100dvh; }
-        #s-c.full { position: fixed !important; inset: 0 !important; z-index: 50 !important; height: 100dvh !important; width: 100vw !important; background: inherit; }
-        #b-t { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease; transform-style: preserve-3d; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
-        #b-t.open { opacity: 1; pointer-events: auto; }
-        #fc { position: relative; transform-origin: center center; }
-
-        .c-b { position: absolute; z-index: 200; width: 45vh; height: 65vh; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; }
-        .c-b:hover { transform: scale(1.03) rotateY(-5deg); }
-        .c-v { width: 100%; height: 100%; object-fit: contain; border-radius: 2px 4px 4px 2px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: ${accent}; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; font-weight: bold; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        .c-b::before { content: ''; position: absolute; inset: 0 0 0 -30px; transform: rotateY(-90deg); transform-origin: right; background: linear-gradient(to right, #444, #222, #444); border-radius: 4px 0 0 4px; }
-        
-        .a-f-o { animation: fO 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
-        @keyframes fO {
-            0% { transform: rotateY(0) translateZ(0); opacity: 1; }
-            40% { transform: rotateY(-70deg) translateZ(150px); opacity: 1; }
-            100% { transform: rotateY(-180deg) translateZ(300px) scale(1.8); opacity: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);color:#fff;height:50px;z-index:1500;position:fixed;top:0;left:0;width:100%;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
-        .ft{display:flex;align-items:center;justify-content:center;gap:15px;padding:10px;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);position:fixed;bottom:0;left:0;width:100%;z-index:1500;pointer-events:auto;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
-        body.light-ui .hdr { background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
-        body.light-ui .ft { background: linear-gradient(to top, rgba(0,0,0,0.1), transparent); color: #1a1a1a; }
-        body.light-ui .hdr-i { background: rgba(0,0,0,0.05); color: #1a1a1a; }
-        body.light-ui #pi { color: #1a1a1a; text-shadow: none; }
-        body.light-ui .sl { background: rgba(0,0,0,0.1); }
-        
-        body.full-mode .hdr { transform: translateY(-100%); opacity: 0; }
-        body.full-mode .ft { transform: translateY(100%); opacity: 0; }
-        body.full-mode .hdr:hover, body.full-mode .hdr.v, body.full-mode .ft:hover, body.full-mode .ft.v { transform: translateY(0); opacity: 1; }
-
-        .hdr-l{display:flex;align-items:center;gap:10px}
-        .hdr-t{font-size:14px;font-weight:600;text-shadow:0 2px 4px rgba(0,0,0,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
-        .hdr-r{display:flex;gap:10px;align-items:center}
-        .hdr-i{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;color:#fff;font-size:14px;border:none;backdrop-filter:blur(10px)}
-        .hdr-i:hover{background:rgba(255,255,255,0.2);transform:scale(1.05)}
-        
-        .pg{background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.3);cursor:grab}.pg:active{cursor:grabbing}
-        .pg.--hard{background:#f8f9fa;border:1px solid #ddd}
-        .pc{width:100%;height:100%;display:flex;justify-content:center;align-items:center;position:relative}
-        .pg canvas{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none}
-        
-        .sl{flex:1;max-width:300px;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.2);border-radius:4px;outline:none;transition:height 0.2s, background 0.2s;cursor:pointer}
-        .sl:hover{height:6px;background:rgba(255,255,255,0.3)}
-        .sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;background:#fff;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.3);transition:transform 0.2s, box-shadow 0.2s;margin-top:-3px} /* Margin aligns thumb vertically cleanly if height diff */
-        .sl:hover::-webkit-slider-thumb{transform:scale(1.3);box-shadow:0 0 0 4px rgba(255,255,255,0.1)}
-        .nb{position:fixed;top:50.5%;transform:translateY(-50%);z-index:1000;background:rgba(255,255,255,0.05);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);transition:all .3s;border:1px solid rgba(255,255,255,0.1);opacity:0.3}
-        .nb:hover:not(:disabled){background:rgba(255,255,255,0.23);transform:translateY(-50%) scale(1.1);opacity:1}
-        .nb:disabled{opacity:0.05;cursor:not-allowed}
-        #pb{left:24px} #nb{right:24px}
-        @media(max-width:768px){
-            #b-t { width: 92%; height: 92%; }
-            .pg { box-shadow: none !important; }
-            .nb{width:36px;height:36px;opacity:0.15} #pb{left:12px} #nb{right:12px}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+            /* Default Background */
+            background-size: cover;
+            background-position: center;
+            height: 100dvh;
+            width: 100vw;
+            position: fixed;
+            transition: background 0.3s ease;
         }
-        .pi{color:#fff;font-size:11px;min-width:60px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.8);font-weight:600}
-        
-        .zc{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:12px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}
-        .zt{color:#fff;font-size:11px;min-width:35px;text-align:center;font-mono}
-        
-        .modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:2500;backdrop-filter:blur(8px)}
-        .modal.o{display:flex}
-        .modal-c{background:#1c1c1c;border-radius:16px;width:95%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
-        .modal-h{padding:18px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center}
-        .modal-b{overflow-y:auto;flex:1;padding:12px}
-        .item{padding:14px;cursor:pointer;color:#aaa;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;justify-content:space-between;transition:all 0.2s;border-radius:8px}
-        .item:hover{background:rgba(255,255,255,0.05);color:#fff;padding-left:18px}
-        
-        .br{position:fixed;bottom:60px;right:15px;z-index:200;font-size:10px;color:rgba(255,255,255,0.3);text-decoration:none;transition:color 0.2s}
-        .br:hover{color:rgba(255,255,255,0.6)}
-        
-        #detect-zone-top, #detect-zone-bottom { position: fixed; left: 0; right: 0; height: 60px; z-index: 95; }
-        #detect-zone-top { top: 0; }
-        #detect-zone-bottom { bottom: 0; }
-        #zoom-cluster { display: flex; }
 
-        @media(max-width:768px){.zc,#f-btn,#zoom-cluster{display:none!important}}
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            border-bottom: none;
+            color: white;
+            height: 60px;
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            /* Allows clicks to pass through empty space */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
 
-        /* Chat Sidebar */
-        #chat-w { position: fixed; right: -400px; top: 0; bottom: 0; width: 350px; background: rgba(20,20,20,0.85); backdrop-filter: blur(20px); z-index: 2100; border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; color: white; }
-        #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
-        .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .chat-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); }
-        .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
-        .chat-tab.active { opacity: 1; border-color: ${accent}; background: rgba(255,255,255,0.02); }
-        .chat-b { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .chat-tab-c { display: none; }
-        .chat-tab-c.active { display: flex; flex-direction: column; gap: 12px; }
-        .chat-m { background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.5; color: #eee; max-width: 90%; align-self: flex-start; position: relative; border: 1px solid rgba(255,255,255,0.05); }
-        .chat-t { font-size: 9px; opacity: 0.3; margin-top: 4px; display: block; text-align: right; }
-        .chat-f { padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); }
-        .chat-i-w { position: relative; display: flex; gap: 10px; }
-        .chat-i { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 15px; color: #fff; outline: none; font-size: 13px; resize: none; min-height: 40px; max-height: 150px; }
-        .chat-i:focus { border-color: ${accent}; }
-        .chat-s { width: 40px; height: 40px; min-width: 40px; border-radius: 12px; background: ${accent}; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; align-self: flex-end; }
-        
-        body.light-ui #chat-w { background: rgba(248, 248, 248, 0.95); color: #1a1a1a; border-left-color: rgba(0,0,0,0.1); }
-        body.light-ui .chat-h, body.light-ui .chat-tabs, body.light-ui .chat-export { border-bottom-color: rgba(0,0,0,0.1); }
-        body.light-ui .chat-tab { color: #111; }
-        body.light-ui .chat-m { background: white; color: #333; border-color: rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        body.light-ui .chat-f { background: rgba(0,0,0,0.05); border-top-color: rgba(0,0,0,0.1); }
-        body.light-ui .chat-i { background: #fff; border-color: rgba(0,0,0,0.2); color: #111; }
-        
-        body.light-ui .modal-c { background: #ffffff; color: #1a1a1a; border-color: rgba(0,0,0,0.1); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.15); }
-        body.light-ui .modal-c .tab-btn { color: #555; }
-        body.light-ui .modal-c .tab-btn.active { color: #000; }
-        body.light-ui .modal-c select { background: #f5f5f5; color: #111; border-color: rgba(0,0,0,0.1); }
-        body.light-ui .modal-c .bg-white\/5 { background: rgba(0,0,0,0.05); }
-        body.light-ui .modal-c .border-white\/10 { border-color: rgba(0,0,0,0.1); }
-        body.light-ui .modal-c .text-white\/40, body.light-ui .modal-c .opacity-40 { opacity: 0.6; color: #666; }
-        @media(max-width:768px){ 
-            #bg-modal .modal-c { 
-                width: 100vw !important; 
-                height: 100dvh !important; 
-                max-width: none !important; 
-                max-height: none !important; 
-                border-radius: 0 !important; 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            /* Re-enable pointer events for buttons */
+        }
+
+        .header-name {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50vw;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        /* Full Mode Logic for Header */
+        body.full-mode .header {
+            opacity: 0;
+            /* Hidden by default in full mode */
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+        }
+
+        body.full-mode .header:hover {
+            opacity: 1;
+            /* Show on hover */
+        }
+
+        .zoom-controls-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .zoom-text {
+            color: white;
+            font-size: 12px;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: transparent;
+            cursor: default;
+            z-index: 1;
+        }
+
+        .main-content.grabbing {
+            cursor: grabbing !important;
+        }
+
+        /* The container for the book */
+        #flipbook-container {
+            position: relative;
+            transform-origin: center center;
+            margin: 0 auto;
+        }
+
+        /* Styles for individual pages generated by page-flip */
+        .page {
+            background-color: white;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            cursor: grab;
+        }
+
+        .page:active {
+            cursor: grabbing;
+        }
+
+        .stf__item {
+            cursor: grab;
+        }
+
+        .stf__item:active {
+            cursor: grabbing;
+        }
+
+        .page.--hard {
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+        }
+
+        .page.--simple {
+            background-color: white;
+        }
+
+        .page-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .page canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* Footer Controls */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Full Mode Logic for Footer */
+        body.full-mode .controls {
+            opacity: 0;
+            /* Hidden by default in full mode */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+        }
+
+        body.full-mode .controls:hover {
+            opacity: 1;
+            /* Show on hover */
+        }
+
+        .page-slider {
+            flex: 1;
+            max-width: 300px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            pointer-events: auto;
+        }
+
+        .page-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .nav-button {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .page-info {
+            color: #ddd;
+            font-size: 12px;
+            min-width: 60px;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Loaders & Errors */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 16px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #252525;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            z-index: 2000;
+        }
+
+        .error-icon {
+            font-size: 32px;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+
+        .error-title {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        /* Modals */
+        .index-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .index-content {
+            background: #252525;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .index-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .index-list-container {
+            overflow-y: auto;
+            flex: 1;
+            padding: 10px 0;
+        }
+
+        .index-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ccc;
+            border-bottom: 1px solid #333;
+        }
+
+        .index-item:hover {
+            background: #333;
+            color: white;
+        }
+
+        /* Background Options Styling */
+        .bg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 15px;
+            padding: 10px 0;
+        }
+
+        .bg-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #444;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .bg-option:hover {
+            transform: scale(1.1);
+            border-color: #fff;
+        }
+
+        .bg-option.active {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px #4CAF50;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+
+            .zoom-controls-inline,
+            #zoom-btn {
+                display: none !important;
             }
         }
     </style>
 </head>
-<body class="fit-mode light-ui" style="background: #ffffff">
-    <div id="ld" class="fixed inset-0 bg-black/95 z-[1000] flex flex-col items-center justify-center text-white gap-6">
-        <div class="relative w-16 h-16">
-            <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-t-${accent} rounded-full animate-spin"></div>
-        </div>
-        <p class="uppercase tracking-[0.2em] text-[10px] font-bold opacity-60">Initializing Reader...</p>
-    </div>
 
-    <header class="hdr" id="main-hdr">
-        <!-- Left: Menu & Logo -->
-        <div class="flex items-center gap-4 z-20">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleModal('index-modal')"><i class="fas fa-list-ul text-xs"></i></button>
-            <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-5 w-5 object-contain opacity-70 hover:opacity-100 transition" />
+<body>
+    <header class="header" id="main-header">
+        <div class="header-left">
+            <button class="header-icon" id="index-btn" title="Table of Contents">
+                <i class="fas fa-list"></i>
+            </button>
+            <div class="header-name">${safeTitle}</div>
         </div>
 
-        <!-- Center: Title (Absolute) -->
-        <div class="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-            <div class="font-medium text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-60 truncate max-w-[200px] sm:max-w-[400px] pointer-events-auto select-none">${safeTitle}</div>
-        </div>
+        <div class="header-icons" id="header-icons">
+            <button class="header-icon" id="open-pdf-btn" title="Open New File" style="display:none">
+                <i class="fas fa-folder-open"></i>
+            </button>
+            <button class="header-icon" id="bg-settings-btn" title="Change Background">
+                <i class="fas fa-image"></i>
+            </button>
 
-        <!-- Right: Controls -->
-        <div class="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto z-20">
-            <div id="zoom-cluster" class="flex bg-white/5 rounded-full p-0.5 gap-0.5 items-center border border-white/10 backdrop-blur-md mx-1">
-                <button id="zo" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
-                <div id="ztxt" class="text-[10px] font-mono w-[32px] text-center hidden sm:block opacity-80">100%</div>
-                <button id="zi" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-plus"></i></button>
+            <div class="zoom-controls-inline" id="zoom-controls">
+                <button class="header-icon" id="zoom-out" style="width:28px; height:28px; font-size:12px">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <div class="zoom-text" id="zoom-text">100%</div>
+                <button class="header-icon" id="zoom-in" style="width:28px; height:28px; font-size:12px">
+                    <i class="fas fa-plus"></i>
+                </button>
             </div>
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
+
+            <button class="header-icon" id="expand-btn" title="Toggle Full Layout">
+                <i class="fas fa-expand"></i>
+            </button>
+
+            <button class="header-icon" id="fit-screen-btn" title="Fit to Screen">
+                <i class="fas fa-compress"></i>
+            </button>
         </div>
     </header>
 
-    <div id="s-c">
-        <div id="b-t" class="open">
-            <div id="fc"></div>
+    <div class="main-content" id="main-content">
+        <div class="loading" id="loading">
+            <i class="fas fa-circle-notch fa-spin"></i> Loading...
         </div>
+
+        <div class="error-container" id="error-container" style="display: none;">
+            <div class="error-icon"><i class="fas fa-book-open"></i></div>
+            <div class="error-title" id="error-title">File Not Found</div>
+            <div style="margin-bottom: 20px; color: #aaa;">Please select a PDF file.</div>
+            <button class="btn-primary" onclick="window.location.reload()">
+                <i class="fas fa-sync"></i> Retry
+            </button>
+        </div>
+
+        <input type="file" id="file-upload" accept=".pdf" style="display: none;">
+
+        <div id="flipbook-container"></div>
     </div>
 
-    <button id="pb" class="nb"><i class="fas fa-chevron-left"></i></button>
-    <button id="nb" class="nb"><i class="fas fa-chevron-right"></i></button>
-    <div class="ft flex justify-between gap-2 px-4" id="main-ft">
-        <div class="flex items-center gap-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleModal('bg-modal')" title="Settings"><i class="fas fa-cog text-xs"></i></button>
-        </div>
-
-        <div class="flex flex-col items-center gap-1 flex-1 max-w-[300px]">
-            <input type="range" id="ps" class="sl" min="0" max="0" value="0">
-            <div class="pi" id="pi">-- / --</div>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition" onclick="toggleChat()" title="Chat"><i class="fas fa-comment-dots text-xs"></i></button>
-        </div>
-    </div>
-
-    <div id="chat-w">
-        <div class="chat-h">
-            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Desk</span>
-            <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
-        </div>
-        <div class="chat-export px-5 py-2 border-b border-white/5 flex justify-end">
-            <button onclick="exportNotes()" class="text-[10px] uppercase font-bold tracking-widest opacity-60 hover:opacity-100 hover:text-${accent} transition"><i class="fas fa-file-export mr-1"></i> Export Data</button>
-        </div>
-        <div class="chat-tabs">
-            <div class="chat-tab active" data-tab="chat-notes" onclick="switchSidebarTab(this)">Notes</div>
-            <div class="chat-tab" data-tab="chat-highlights" onclick="switchSidebarTab(this)">Highlights</div>
-        </div>
-        <div class="chat-b">
-            <div id="chat-notes" class="chat-tab-c active"></div>
-            <div id="chat-highlights" class="chat-tab-c">
-                <p class="text-[10px] text-center opacity-40 py-10 mt-20">Highlights feature coming soon for PDF.</p>
+    <!-- Index Modal -->
+    <div class="index-modal" id="index-modal">
+        <div class="index-content">
+            <div class="index-header">
+                <div style="font-weight:600">Pages</div>
+                <button class="header-icon" id="index-close-btn" style="width:30px; height:30px">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        </div>
-        <div class="chat-f" id="chat-footer">
-            <div class="chat-i-w">
-                <textarea id="chat-i" placeholder="Add a multi-line note..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNote()}"></textarea>
-                <button onclick="sendNote()" class="chat-s"><i class="fas fa-paper-plane"></i></button>
+            <div class="index-list-container">
+                <div id="index-list"></div>
             </div>
         </div>
     </div>
 
-
-    <div id="index-modal" class="modal">
-        <div class="modal-c">
-            <div class="modal-h"><strong class="text-xs uppercase tracking-widest opacity-70">Contents</strong><button class="hdr-i" onclick="toggleModal('index-modal')" style="width:30px;height:30px">✕</button></div>
-            <div class="modal-b" id="index-list"></div>
-        </div>
-    </div>
-
-    <div id="bg-modal" class="modal" onclick="toggleModal('bg-modal')">
-        <div class="modal-c !w-[500px] !max-w-[95vw]" onclick="event.stopPropagation()">
-            <!-- Modern Header with Segmented Tabs -->
-            <div class="p-4 border-b border-white/10 flex flex-col gap-4 bg-white/5">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] uppercase font-bold tracking-[0.2em] opacity-60">Reader Settings</span>
-                    <button onclick="toggleModal('bg-modal')" class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition opacity-60 hover:opacity-100"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="flex p-1 bg-black/20 rounded-lg border border-white/5">
-                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition active" onclick="switchTab(event, 'p-bg')">Appearance</div>
-                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 'p-am')">Experience</div>
-                    <div class="tab-btn flex-1 text-center py-2 rounded-md text-[10px] uppercase font-bold tracking-wider transition" onclick="switchTab(event, 'p-in')">Guide</div>
-                </div>
+    <!-- Background Settings Modal -->
+    <div class="index-modal" id="bg-modal">
+        <div class="index-content" style="height: auto; max-height: 80vh;">
+            <div class="index-header">
+                <div style="font-weight:600">Background Settings</div>
+                <button class="header-icon" id="bg-close-btn" style="width:30px; height:30px">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="p-6 overflow-y-auto max-h-[60vh]">
-                <div id="p-bg" class="tab-content active">
-                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Backgrounds</p>
-                    <div class="grid grid-cols-5 gap-3 mb-6">
-                        <!-- Light -->
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Clean White" style="background:#ffffff" onclick="setBg('#ffffff', false)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Light Grey" style="background:#f3f4f6" onclick="setBg('#f3f4f6', false)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Cream" style="background:#fdfbf7" onclick="setBg('#fdfbf7', false)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Paper Gradient" style="background:linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)" onclick="setBg('linear-gradient(135deg, #fdfbf7 0%, #ebedee 100%)', false)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Light Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #e4d5b7" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #e4d5b7', false)"></div>
-                        
-                        <!-- Dark -->
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Dark" style="background:#1a1a1a" onclick="setBg('#1a1a1a', true)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Charcoal" style="background:#2c3e50" onclick="setBg('#2c3e50', true)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Midnight" style="background:#0f172a" onclick="setBg('#0f172a', true)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Metal" style="background:linear-gradient(135deg, #2c3e50 0%, #000000 100%)" onclick="setBg('linear-gradient(135deg, #2c3e50 0%, #000000 100%)', true)"></div>
-                        <div class="w-10 h-10 rounded-full cursor-pointer ring-1 ring-white/20 hover:ring-2 hover:ring-white/50 transition shadow-lg" title="Dark Wood" style="background:url('https://www.transparenttextures.com/patterns/wood-pattern.png') #2d241e" onclick="setBg('url(https://www.transparenttextures.com/patterns/wood-pattern.png) #2d241e', true)"></div>
+            <div style="padding: 20px; overflow-y: auto;">
+
+                <div style="margin-bottom: 10px; font-weight: 500; color: #ccc;">Dark Themes</div>
+                <div class="bg-grid">
+                    <div class="bg-option active" style="background: #1a1a1a;" data-bg="#1a1a1a" title="Dark (Default)">
                     </div>
+                    <div class="bg-option" style="background: #333333;" data-bg="#333333" title="Charcoal"></div>
+                    <div class="bg-option" style="background: #3e2723;" data-bg="#3e2723" title="Dark Wood"></div>
+                    <div class="bg-option" style="background: #0d1b2a;" data-bg="#0d1b2a" title="Midnight"></div>
+                    <div class="bg-option" style="background: linear-gradient(to right, #434343 0%, #000000 100%);"
+                        data-bg="linear-gradient(to right, #434343 0%, #000000 100%)" title="Metal"></div>
                 </div>
-                <div id="p-am" class="tab-content">
-                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Atmosphere</p>
-                    <div class="flex flex-col gap-6">
-                        <div class="flex flex-col gap-3">
-                            <span class="text-[13px] font-medium opacity-90">Ambient Sound</span>
-                            <select id="amb-s" onchange="playAmbient(this.value)" class="bg-black/40 text-[12px] border border-white/20 rounded-lg px-3 py-3 outline-none font-medium">
-                                <option value="none">None (Silent)</option>
-                                <option value="rain">Gentle Rain</option>
-                                <option value="fire">Crackling Fire</option>
-                                <option value="library">Library Ambience</option>
-                            </select>
-                        </div>
-                    </div>
+
+                <div style="margin-top: 15px; margin-bottom: 10px; font-weight: 500; color: #ccc;">Light Themes</div>
+                <div class="bg-grid">
+                    <div class="bg-option" style="background: #f5f5f5;" data-bg="#f5f5f5" title="Clean White"></div>
+                    <div class="bg-option" style="background: #e0e0e0;" data-bg="#e0e0e0" title="Light Grey"></div>
+                    <div class="bg-option" style="background: #d7ccc8;" data-bg="#d7ccc8" title="Light Wood"></div>
+                    <div class="bg-option" style="background: #fff8e1;" data-bg="#fff8e1" title="Cream"></div>
+                    <div class="bg-option" style="background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);"
+                        data-bg="linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)" title="Paper Gradient"></div>
                 </div>
-                <!-- Guide Tab -->
-                <div id="p-in" class="tab-content">
-                    <p class="text-[11px] uppercase opacity-60 mb-4 tracking-widest font-bold text-white/50">Quick Guide</p>
-                    <div class="flex flex-col gap-4 text-[13px] leading-relaxed opacity-90">
-                        <div class="flex gap-4">
-                            <i class="fas fa-hand-pointer mt-1 text-${accent} text-lg"></i>
-                            <p><b>Navigation:</b> Tap the left or right sides of the screen to turn pages. On desktop, use terminal arrows or mouse.</p>
-                        </div>
-                        <div class="flex gap-4">
-                            <i class="fas fa-magic mt-1 text-${accent} text-lg"></i>
-                            <p><b>AI Chat:</b> Click the conversation bubble to ask the AI about the document, summarize pages, or clarify text.</p>
-                        </div>
-                        <div class="flex gap-4">
-                            <i class="fas fa-cog mt-1 text-${accent} text-lg"></i>
-                            <p><b>Customization:</b> Use this menu to adjust background colors and atmospheric focus sounds.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Mobile Only Zoom -->
-                <div class="sm:hidden px-6 pb-6 pt-6 border-t border-white/10">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[13px] font-medium opacity-90">Dynamic Zoom</span>
-                        <div class="flex bg-white/10 rounded-lg overflow-hidden border border-white/20">
-                            <button onclick="document.getElementById('zo').click()" class="px-3 py-2 hover:bg-white/10 text-sm border-r border-white/20">-</button>
-                            <button onclick="document.getElementById('zi').click()" class="px-3 py-2 hover:bg-white/10 text-sm">+</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="pt-4 border-t border-white/5 flex flex-col gap-4">
-                    <a href="?mode=web" class="w-full text-center py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs uppercase font-bold tracking-widest transition">
-                        <i class="fas fa-globe mr-2"></i> Try Web View (Experimental)
-                    </a>
-                </div>
-                <div class="pt-4 border-t border-white/5 flex gap-2">
-                    <input type="file" id="bg-in" class="hidden" accept="image/*" onchange="loadBg(event)">
-                    <button class="flex-1 py-3 bg-white/5 hover:bg-white/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="document.getElementById('bg-in').click()">
-                        <i class="fas fa-image mr-2"></i> Wallpaper
-                    </button>
-                    <button class="flex-1 py-3 bg-white/5 hover:bg-red-500/20 rounded-xl text-[10px] uppercase font-bold tracking-widest transition" onclick="resetSettings()">
-                        <i class="fas fa-undo mr-2"></i> Reset
-                    </button>
-                </div>
+
+                <div style="margin-top: 20px; margin-bottom: 10px; font-weight: 500; color: #ccc;">Custom Image</div>
+                <button class="btn-primary" onclick="document.getElementById('bg-upload').click()" style="width: 100%;">
+                    <i class="fas fa-upload"></i> Upload Image
+                </button>
+                <input type="file" id="bg-upload" accept="image/*" style="display: none;">
             </div>
         </div>
     </div>
 
-    ${showBranding ? '<a class="br" href="https://flipread.pages.dev" target="_blank">FlipRead</a>' : ''}
+    <div class="controls" id="main-footer">
+        <button id="prev-btn" class="nav-button">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <input type="range" id="page-slider" class="page-slider" min="0" max="0" value="0">
+        <button id="next-btn" class="nav-button">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="page-info" id="page-info">-- / --</div>
+    </div>
 
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const FU='${fileUrl}';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        class PDFViewer {
+        class RealFlipbook {
             constructor() {
-                this.pdf = null; this.pf = null; this.tp = 0; this.zoom = 1; this.full = false;
-                this.rp = new Set(); this.rq = new Set(); this.ir = false;
-                this.panX = 0; this.panY = 0; this.isDragging = false; this.startX = 0; this.startY = 0;
-                this.buildTimeout = null;
+                this.pdfDoc = null;
+                this.pageFlip = null;
+                this.totalPages = 0;
+                this.currentUrl = null; // No default file
+                this.useFullHeight = false; // State for full layout
+
+                // Zoom & Pan
+                this.zoom = 1;
+                this.panX = 0;
+                this.panY = 0;
+                this.isDragging = false;
+                this.startX = 0;
+                this.startY = 0;
+                this.currentX = 0;
+                this.currentY = 0;
+                this.startTime = 0;
+
+                this.centerOffset = 0;
+                this.pageWidth = 0;
+                this.pageHeight = 0;
+
+                this.renderedPages = new Set();
+                this.renderingQueue = new Set();
+                this.isRendering = false;
+                this.targetPageIndex = 0; // Track the most recent target for prioritization
+
+                this.container = null; // Will be set in rebuildBook
+                this.mainContent = document.getElementById('main-content');
+                this.header = document.getElementById('main-header');
+                this.footer = document.getElementById('main-footer');
+                this.fileInput = document.getElementById('file-upload');
+                this.bgInput = document.getElementById('bg-upload');
+
                 this.init();
             }
-            async init() {
-                this.setup();
-                await this.load(FU);
+
+            init() {
+                this.setupEventListeners();
+                this.setupBackgroundSettings();
+                // Do not load default PDF
+                this.showLoading(false);
             }
-            async load(u) {
+
+            async loadPDF(urlOrData) {
                 try {
-                    this.pdf = await pdfjsLib.getDocument(u).promise;
-                    this.tp = this.pdf.numPages;
-                    document.getElementById('ps').max = this.tp - 1;
-                    
-                    await this.build();
-                    document.getElementById('ld').style.opacity='0';
-                    setTimeout(()=>document.getElementById('ld').style.display='none', 500);
-                    this.genIndex();
-                } catch(e) {
-                    document.getElementById('ld').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500"></i><p>Connection Error</p>';
+                    this.showLoading(true);
+                    this.hideError();
+
+                    // Load PDF Data Once
+                    this.pdfDoc = await pdfjsLib.getDocument(urlOrData).promise;
+                    this.totalPages = this.pdfDoc.numPages;
+
+                    document.getElementById('page-slider').max = this.totalPages - 1;
+
+                    // Render the book
+                    await this.rebuildBook(0);
+                    this.showLoading(false);
+
+                } catch (error) {
+                    console.error('Load Error:', error);
+                    this.showLoading(false);
+                    // Show error popup since this was a user action
+                    this.showError();
+                    this.fileInput.value = '';
                 }
             }
-            scheduleBuild() {
-                if(this.buildTimeout) clearTimeout(this.buildTimeout);
-                this.buildTimeout = setTimeout(() => this.build(), 250);
-            }
-            async build() {
-                if(!this.pdf) return;
-                let container = document.getElementById('fc');
-                if(!container) return;
-                
-                if(this.pf) { 
-                    try { this.pf.destroy(); } catch(e){}
-                    this.pf = null; 
-                }
-                
-                container.innerHTML = '';
-                this.rp.clear(); this.rq.clear();
 
-                let p1 = await this.pdf.getPage(1), vp = p1.getViewport({scale:1}), ar = vp.width/vp.height;
-                let dims = this.calcDims(ar);
-                container.style.width = window.innerWidth <= 768 ? dims.w+'px' : (dims.w*2)+'px';
-                container.style.height = dims.h+'px';
+            async rebuildBook(initialPage = 0) {
+                if (!this.pdfDoc) return;
 
-                for(let i=1; i<=this.tp; i++) {
-                    let div = document.createElement('div');
-                    div.className = (i===1 || i===this.tp) ? 'pg --hard' : 'pg --simple';
-                    div.innerHTML = '<div class="pc" id="pc-'+i+'"></div>';
-                    container.appendChild(div);
+                // 1. Completely Clean Up
+                if (this.pageFlip) {
+                    this.pageFlip.destroy();
+                    this.pageFlip = null;
                 }
 
-                // Wait for layout to settle before initializing PageFlip
-                setTimeout(() => {
-                    if(!document.getElementById('fc')) return; // Ensure container still exists
-                    
-                    try {
-                        // Ensure dimensions are valid before init
-                        if(container.clientWidth === 0 || container.clientHeight === 0) {
-                            // console.warn("Container has 0 dimensions, retrying build...");
-                            this.scheduleBuild();
-                            return;
-                        }
+                // Remove old container from DOM to clear any internal library state/styles
+                const oldContainer = document.getElementById('flipbook-container');
+                if (oldContainer) oldContainer.remove();
 
-                        this.pf = new St.PageFlip(container, {
-                            width: dims.w, height: dims.h, size: 'fixed',
-                            maxShadowOpacity: 0.4, showCover: true,
-                            mobileScrollSupport: false, useMouseEvents: true,
-                            flippingTime: 800, autoCenter: true,
-                            maxPageWidth: dims.w, maxPageHeight: dims.h
-                        });
-                        this.pf.loadFromHTML(container.querySelectorAll('.pg'));
-                        this.pf.on('flip', e => { this.update(); this.queue(e.data); });
-                        this.update(); this.queue(0);
-                    } catch(e) {
-                        console.error("PageFlip init error:", e);
+                // 2. Create Fresh Container
+                this.container = document.createElement('div');
+                this.container.id = 'flipbook-container';
+                // Important: Add to DOM before calculating anything
+                this.mainContent.appendChild(this.container);
+
+                this.renderedPages.clear();
+                this.renderingQueue.clear();
+                this.isRendering = false;
+
+                // 3. Recalculate dimensions based on current layout state
+                const p1 = await this.pdfDoc.getPage(1);
+                const vp = p1.getViewport({ scale: 1 });
+                const aspectRatio = vp.width / vp.height;
+
+                const dims = this.calculateOptimalSize(aspectRatio);
+                this.pageWidth = dims.width;
+                this.pageHeight = dims.height;
+
+                // STABILIZE: Explicitly set container size to prevent flexbox jump
+                // This matches the size logic passed to PageFlip
+                const isMobile = window.innerWidth <= 768;
+                this.container.style.width = isMobile ? \`\${dims.width}px\` : \`\${dims.width * 2}px\`;
+                this.container.style.height = \`\${dims.height}px\`;
+
+                // 4. Create DOM Nodes for Pages
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const div = document.createElement('div');
+                    if (i === 1 || i === this.totalPages) {
+                        div.className = 'page --hard';
+                    } else {
+                        div.className = 'page --simple';
                     }
-                }, 100);
-            }
-            calcDims(ar) {
-                const headH = this.full ? 0 : 50, footH = this.full ? 0 : 70, margin = this.full ? 10 : 40;
-                let h = window.innerHeight - headH - footH - margin, w = h * ar, aw = window.innerWidth;
-                if(aw > 768) { if(w*2 > aw-40) { w = (aw-40)/2; h = w/ar; } }
-                else { if(w > aw-20) { w = aw-20; h = w/ar; } }
-                let wf = Math.floor(w); if(wf%2!==0) wf--; 
-                return { w: wf, h: Math.floor(h) };
-            }
-            queue(i) {
-                this.target = i;
-                for(let j=Math.max(0,i-10); j<=Math.min(this.tp-1,i+10); j++) {
-                    if(!this.rp.has(j+1)) this.rq.add(j+1);
+                    div.innerHTML = \`<div class="page-content" id="page-content-\${i}"></div>\`;
+                    this.container.appendChild(div);
                 }
-                this.process();
+
+                // 5. Initialize PageFlip with new container
+                this.pageFlip = new St.PageFlip(this.container, {
+                    width: dims.width,
+                    height: dims.height,
+                    size: 'fixed',
+                    minWidth: 200,
+                    maxWidth: 2000,
+                    minHeight: 300,
+                    maxHeight: 2000,
+                    maxShadowOpacity: 0.5,
+                    showCover: true,
+                    mobileScrollSupport: false,
+                    useMouseEvents: true
+                });
+
+                this.pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
+                this.pageFlip.on('flip', (e) => {
+                    this.updateControls();
+                    this.updateCenterOffset(e.data);
+                    this.queueNearbyPages(e.data);
+                });
+
+                // 6. Restore State
+                this.generateIndex();
+                if (initialPage > 0 && initialPage < this.totalPages) {
+                    this.pageFlip.flip(initialPage);
+                }
+
+                this.updateControls();
+                this.updateCenterOffset(initialPage);
+                this.queueNearbyPages(initialPage); // Start rendering
             }
-            async process() {
-                if(this.ir) return; this.ir = true;
-                while(this.rq.size > 0) {
-                    let q = [...this.rq].sort((a,b) => Math.abs((a-1)-this.target) - Math.abs((b-1)-this.target));
-                    let n = q[0]; this.rq.delete(n);
-                    let el = document.getElementById('pc-'+n);
-                    if(!el || this.rp.has(n)) continue;
+
+            calculateOptimalSize(aspectRatio) {
+                // If using full height, ignore header/footer in calculation
+                const headerH = this.useFullHeight ? 0 : (this.header.offsetHeight || 60);
+                const footerH = this.useFullHeight ? 0 : (this.footer.offsetHeight || 70);
+                const margin = this.useFullHeight ? 20 : 40;
+
+                const availW = window.innerWidth;
+                const availH = window.innerHeight - headerH - footerH - margin;
+
+                let height = availH;
+                let width = height * aspectRatio;
+
+                if (window.innerWidth > 768) {
+                    if ((width * 2) > (availW - margin)) {
+                        width = (availW - margin) / 2;
+                        height = width / aspectRatio;
+                    }
+                } else {
+                    if (width > (availW - 20)) {
+                        width = availW - 20;
+                        height = width / aspectRatio;
+                    }
+                }
+
+                let w = Math.floor(width);
+                if (w % 2 !== 0) w--;
+                return { width: w, height: Math.floor(height) };
+            }
+
+            // NEW: Queueing Logic with Global Target Tracking
+            queueNearbyPages(currentIndex) {
+                this.targetPageIndex = currentIndex; // Update target page globally
+                const range = 10; // Preload 10 pages
+                const start = Math.max(0, currentIndex - range);
+                const end = Math.min(this.totalPages - 1, currentIndex + range);
+
+                // Add to queue if not rendered
+                for (let i = start; i <= end; i++) {
+                    const pageNum = i + 1;
+                    if (!this.renderedPages.has(pageNum)) {
+                        this.renderingQueue.add(pageNum);
+                    }
+                }
+
+                // Trigger Processor
+                this.processRenderQueue();
+            }
+
+            async processRenderQueue() {
+                if (this.isRendering) return; // Already running
+                this.isRendering = true;
+
+                while (this.renderingQueue.size > 0) {
+                    // Re-sort based on the *latest* targetPageIndex (supports rapid slider moves)
+                    const queueArray = Array.from(this.renderingQueue);
+                    queueArray.sort((a, b) => {
+                        const distA = Math.abs((a - 1) - this.targetPageIndex);
+                        const distB = Math.abs((b - 1) - this.targetPageIndex);
+                        return distA - distB;
+                    });
+
+                    const pageNum = queueArray[0];
+                    this.renderingQueue.delete(pageNum);
+
+                    // Check if already rendered (edge case)
+                    if (this.renderedPages.has(pageNum)) continue;
+
+                    // Check if element still exists (after layout reset)
+                    const container = document.getElementById(\`page-content-\${pageNum}\`);
+                    if (!container) {
+                        this.isRendering = false;
+                        return; // Stop if DOM is gone
+                    }
+
                     try {
-                        let pg = await this.pdf.getPage(n), vp = pg.getViewport({scale:2}), cv = document.createElement('canvas');
-                        cv.width = vp.width; cv.height = vp.height;
-                        await pg.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
-                        el.innerHTML = ''; el.appendChild(cv); this.rp.add(n);
-                    } catch(e) {}
+                        await this.renderPageContent(pageNum);
+                        this.renderedPages.add(pageNum);
+                    } catch (e) {
+                        console.error("Render Error Page " + pageNum, e);
+                    }
+
+                    // Small delay to let UI breathe
+                    await new Promise(r => setTimeout(r, 10));
                 }
-                this.ir = false;
+
+                this.isRendering = false;
             }
-            update() {
-                if(!this.pf) return;
+
+            async renderPageContent(pageNum) {
+                const container = document.getElementById(\`page-content-\${pageNum}\`);
+                if (!container) return;
+
+                // Only clear if empty (prevent flicker if re-rendering)
+                if (container.innerHTML.includes('loader')) container.innerHTML = '';
+
                 try {
-                    let i = this.pf.getCurrentPageIndex();
-                    document.getElementById('pi').textContent = (i+1) + " / " + this.tp;
-                    document.getElementById('ps').value = i;
-                    document.getElementById('pb').disabled = i === 0;
-                    document.getElementById('nb').disabled = i >= this.tp-1;
-                } catch(e) {}
-            }
-            genIndex() {
-                let list = document.getElementById('index-list');
-                for(let i=1; i<=this.tp; i++) {
-                    let d = document.createElement('div'); d.className = 'item';
-                    d.innerHTML = '<span>Page ' + i + '</span><i class="fas fa-chevron-right text-[10px] opacity-20"></i>';
-                    d.onclick = () => { this.pf.flip(i-1); toggleModal('index-modal'); };
-                    list.appendChild(d);
+                    const page = await this.pdfDoc.getPage(pageNum);
+
+                    // Adjust scale for quality vs performance
+                    const viewport = page.getViewport({ scale: 2.0 });
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    container.appendChild(canvas);
+
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                } catch (e) {
+                    throw e;
                 }
             }
-            setup() {
-                document.getElementById('pb').onclick = () => { if(this.zoom===1) this.pf.flipPrev(); };
-                document.getElementById('nb').onclick = () => { if(this.zoom===1) this.pf.flipNext(); };
-                document.getElementById('ps').oninput = e => { if(this.zoom===1) this.pf.flip(+e.target.value); };
-                document.getElementById('zi').onclick = () => { this.zoom = Math.min(this.zoom+0.5, 3); this.applyZoom(); };
-                document.getElementById('zo').onclick = () => { this.zoom = Math.max(this.zoom-0.5, 1); if(this.zoom===1) { this.panX=0; this.panY=0; } this.applyZoom(); };
-                document.getElementById('m-btn').onclick = () => this.toggleLayout();
-                
-                window.onmousemove = (e) => {
-                    if(this.isDragging) {
-                        e.preventDefault();
-                        this.panX = e.clientX - this.startX;
-                        this.panY = e.clientY - this.startY;
-                        this.applyZoom();
+
+            updateCenterOffset(targetIndex) {
+                if (window.innerWidth <= 768) {
+                    this.centerOffset = 0;
+                    if (this.container) {
+                        // FORCE No transition on mobile to prevent "jump"
+                        this.container.style.transition = 'none';
+                        this.applyTransform();
+                    }
+                    return;
+                }
+
+                // Desktop Logic
+                let index = targetIndex !== undefined ? targetIndex : this.pageFlip.getCurrentPageIndex();
+                if (index === 0) this.centerOffset = -this.pageWidth / 2;
+                else if (index === this.totalPages - 1 && this.totalPages % 2 === 0) this.centerOffset = this.pageWidth / 2;
+                else this.centerOffset = 0;
+
+                if (this.container) {
+                    // Smooth transition for Desktop centering
+                    this.container.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                    this.applyTransform();
+                }
+            }
+
+            updateControls() {
+                if (!this.pageFlip) return;
+                const index = this.pageFlip.getCurrentPageIndex();
+                const pageNum = index + 1;
+                let text = (window.innerWidth <= 768 || index === 0 || index === this.totalPages - 1)
+                    ? \`Page \${pageNum}\` : \`Pages \${pageNum}-\${pageNum + 1}\`;
+                document.getElementById('page-info').textContent = \`\${text} / \${this.totalPages}\`;
+                document.getElementById('page-slider').value = index;
+                document.getElementById('prev-btn').disabled = index === 0;
+                document.getElementById('next-btn').disabled = index >= this.totalPages - 1;
+            }
+
+            setupBackgroundSettings() {
+                const bgModal = document.getElementById('bg-modal');
+
+                // Open Modal
+                document.getElementById('bg-settings-btn').onclick = () => {
+                    bgModal.style.display = 'flex';
+                };
+
+                // Close Modal
+                document.getElementById('bg-close-btn').onclick = () => {
+                    bgModal.style.display = 'none';
+                };
+
+                // Presets
+                const options = document.querySelectorAll('.bg-option');
+                options.forEach(opt => {
+                    opt.onclick = () => {
+                        options.forEach(o => o.classList.remove('active'));
+                        opt.classList.add('active');
+                        document.body.style.backgroundImage = opt.dataset.bg;
+                        document.body.style.background = opt.dataset.bg;
+                    };
+                });
+
+                // Custom Upload
+                this.bgInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        document.body.style.background = \`url(\${url}) no-repeat center center fixed\`;
+                        document.body.style.backgroundSize = 'cover';
+                        options.forEach(o => o.classList.remove('active'));
+                        bgModal.style.display = 'none';
+                    }
+                };
+            }
+
+            setupEventListeners() {
+                document.getElementById('prev-btn').onclick = () => this.pageFlip.flipPrev();
+                document.getElementById('next-btn').onclick = () => this.pageFlip.flipNext();
+                document.getElementById('page-slider').oninput = (e) => this.pageFlip.flip(parseInt(e.target.value));
+
+                let resizeTimeout;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        if (this.pdfDoc) {
+                            this.resetZoom();
+                            let curr = 0;
+                            if (this.pageFlip) { try { curr = this.pageFlip.getCurrentPageIndex(); } catch (e) { } }
+                            this.rebuildBook(curr);
+                        }
+                    }, 500);
+                });
+
+                window.addEventListener('keydown', (e) => {
+                    if (!this.pageFlip) return;
+                    if (e.key === 'ArrowLeft') this.pageFlip.flipPrev();
+                    if (e.key === 'ArrowRight') this.pageFlip.flipNext();
+                });
+
+                document.getElementById('zoom-in').onclick = () => this.handleZoom(0.25);
+                document.getElementById('zoom-out').onclick = () => this.handleZoom(-0.25);
+                document.getElementById('fit-screen-btn').onclick = () => this.resetZoom();
+                document.getElementById('open-pdf-btn').onclick = () => this.fileInput.click();
+
+                document.getElementById('expand-btn').onclick = () => {
+                    this.useFullHeight = !this.useFullHeight;
+                    document.body.classList.toggle('full-mode', this.useFullHeight);
+                    const icon = document.querySelector('#expand-btn i');
+                    if (this.useFullHeight) {
+                        icon.classList.remove('fa-expand');
+                        icon.classList.add('fa-compress-arrows-alt');
+                    } else {
+                        icon.classList.remove('fa-compress-arrows-alt');
+                        icon.classList.add('fa-expand');
+                    }
+
+                    this.zoom = 1;
+                    this.panX = 0;
+                    this.panY = 0;
+                    this.updateZoomDisplay();
+
+                    let curr = 0;
+                    if (this.pageFlip) { try { curr = this.pageFlip.getCurrentPageIndex(); } catch (e) { } }
+                    this.rebuildBook(curr);
+                };
+
+                // UPDATED: Mousedown logic handles Flip on Press for background
+                this.mainContent.addEventListener('mousedown', (e) => {
+                    if (this.zoom > 1) {
+                        this.startPan(e, e.clientX, e.clientY);
                         return;
                     }
-                    if(!this.full) return;
-                    if(e.clientY < 70) this.showUI(true);
-                    else if(e.clientY > window.innerHeight - 70) this.showUI(true);
-                    else this.showUI(false);
-                };
-                
-                window.onmousedown = (e) => {
-                    if(this.zoom > 1) {
-                        this.isDragging = true;
-                        this.startX = e.clientX - this.panX;
-                        this.startY = e.clientY - this.panY;
-                        document.body.style.cursor = 'grabbing';
-                    }
-                };
-                
-                window.onmouseup = () => {
-                    this.isDragging = false;
-                    if(this.zoom > 1) document.body.style.cursor = 'grab';
-                    else document.body.style.cursor = 'default';
-                };
 
-                window.addEventListener('wheel', (e) => {
-                    if(e.ctrlKey || e.metaKey) {
+                    // Zoom == 1 (Fit to screen)
+                    const isUI = e.target.closest('.header') || e.target.closest('.controls') || e.target.closest('.index-modal');
+                    const isBook = e.target.closest('.page') || e.target.closest('.stf__wrapper');
+
+                    if (!isUI && !isBook && !e.target.closest('#error-container')) {
+                        // Background Click -> Flip Immediately
+                        if (this.pageFlip) {
+                            if (e.clientX > window.innerWidth / 2) this.pageFlip.flipNext();
+                            else this.pageFlip.flipPrev();
+
+                            this.blockClick = true; // Prevent click event later
+                        }
+                    }
+                });
+
+                // Mouse Move/Up handles Panning only
+                window.addEventListener('mousemove', (e) => this.movePan(e.clientX, e.clientY));
+                window.addEventListener('mouseup', (e) => this.endPan());
+
+                // Touch Events for Swipe/Pan
+                this.mainContent.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 1) {
+                        this.startPan(e, e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: false });
+
+                this.mainContent.addEventListener('touchmove', (e) => {
+                    if (e.touches.length === 1) {
+                        // Only prevent default if we are dragging Background/Pan
+                        if (this.isDragging) e.preventDefault();
+                        this.movePan(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: false });
+
+                this.mainContent.addEventListener('touchend', (e) => {
+                    this.endPan();
+                });
+
+                this.mainContent.addEventListener('click', (e) => {
+                    if (this.blockClick) {
+                        this.blockClick = false;
+                        return;
+                    }
+                    if (this.isDragging) return;
+                    if (this.zoom > 1) return;
+                    // No default handling here anymore for mouse, moved to mousedown
+                });
+
+                this.mainContent.addEventListener('wheel', (e) => {
+                    if (e.ctrlKey || true) {
                         e.preventDefault();
-                        const d = -Math.sign(e.deltaY) * 0.2;
-                        const newZoom = Math.min(Math.max(1, this.zoom + d), 3);
-                        if(newZoom !== this.zoom) {
-                            this.zoom = newZoom;
-                            if(this.zoom === 1) { this.panX = 0; this.panY = 0; }
-                            this.applyZoom();
-                        }
+                        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                        this.handleZoom(delta);
                     }
-                }, {passive: false});
+                });
 
-                document.onkeydown = e => { 
-                    if(this.zoom > 1) return;
-                    if(e.key==='ArrowLeft') this.pf.flipPrev();
-                    if(e.key==='ArrowRight') this.pf.flipNext();
-                    if(e.key==='f') this.toggleLayout();
+                document.getElementById('index-btn').onclick = () => document.getElementById('index-modal').style.display = 'flex';
+                document.getElementById('index-close-btn').onclick = () => document.getElementById('index-modal').style.display = 'none';
+
+                this.fileInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        this.currentUrl = url;
+                        this.fileInput.value = '';
+                        this.loadPDF(url);
+                    }
                 };
-                let sx=0, sy=0; 
-                document.addEventListener('touchstart', e => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive: true});
-                document.addEventListener('touchend', e => {
-                    if(this.zoom > 1) return;
-                    let dx = sx - e.changedTouches[0].clientX;
-                    let dy = sy - e.changedTouches[0].clientY;
-                    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                        const el = e.target.closest('#chat-w') || e.target.closest('.modal-c');
-                        if(!el) {
-                            dx > 0 ? this.pf.flipNext() : this.pf.flipPrev();
-                        }
-                    }
-                }, {passive: true});
-                window.onresize = () => this.scheduleBuild();
             }
-            toggleLayout() {
-                this.full = !this.full;
-                document.body.classList.toggle('full-mode', this.full);
-                document.getElementById('s-c').classList.toggle('full', this.full);
-                document.getElementById('m-btn').innerHTML = this.full ? '<i class="fas fa-compress-alt text-xs"></i>' : '<i class="fas fa-expand text-xs"></i>';
-                this.zoom = 1; this.panX = 0; this.panY = 0; this.applyZoom(); this.scheduleBuild();
-            }
-            showUI(v) { if(this.full) { document.getElementById('main-hdr').classList.toggle('v', v); document.getElementById('main-ft').classList.toggle('v', v); } }
-            applyZoom() {
-                const nav = document.getElementById('b-t');
-                nav.style.transform = \`translate(\${this.panX}px, \${this.panY}px) scale(\${this.zoom})\`;
-                document.getElementById('ztxt').textContent = Math.round(this.zoom*100)+'%';
-                
-                // Smart lock: Toggle pointer events on book container to disable drag-flip when zoomed
-                document.getElementById('fc').style.pointerEvents = this.zoom > 1 ? 'none' : 'auto';
-                document.body.style.cursor = this.zoom > 1 ? 'grab' : 'default';
-            }
-        }
-        window.saveNotes = (v) => localStorage.setItem('fr_nt_' + FU, v);
-        window.exportNotes = () => {
-            const n = localStorage.getItem('fr_nt_' + FU) || '';
-            const blob = new Blob([n], {type: 'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = '${safeTitle}_notes.txt'; a.click();
-            URL.revokeObjectURL(url);
-        };
-        window.toggleModal = (id) => document.getElementById(id).classList.toggle('o');
-        window.switchSidebarTab = (el) => {
-            const tabId = el.getAttribute('data-tab');
-            document.querySelectorAll('#chat-w .chat-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('#chat-w .chat-tab-c').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById('chat-footer').style.display = tabId === 'chat-highlights' ? 'none' : 'flex';
-        };
-        window.toggleChat = () => {
-            const w = document.getElementById('chat-w');
-            w.classList.toggle('o');
-            if(w.classList.contains('o')) renderNotes();
-        };
-        window.sendNote = () => {
-            const i = document.getElementById('chat-i'), v = i.value.trim();
-            if(!v) return;
-            let notes = [];
-            try { 
-                const raw = localStorage.getItem('fr_nt_'+FU);
-                notes = JSON.parse(raw) || [];
-                if(!Array.isArray(notes)) throw new Error();
-            } catch(e) {
-                const legacy = localStorage.getItem('fr_nt_'+FU);
-                if(legacy) notes = [{text: legacy, time: 'Legacy'}];
-            }
-            notes.push({text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
-            localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
-            i.value = '';
-            renderNotes();
-        };
-        window.renderNotes = () => {
-             const b = document.getElementById('chat-notes');
-             if(!b) return;
-             let notes = [];
-             try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
 
-             b.innerHTML = notes.map(n => 
-                 '<div class=\"search-item flex justify-between items-start group\">' +
-                 '<div>' +
-                 '<p class=\"text-xs leading-relaxed opacity-90 break-words w-full\" style=\"border-left: 2px solid #ffffff; padding-left: 8px\">' + n.text.replace(/\\n/g, '<br>') + '</p>' +
-                 '<p class=\"text-[9px] opacity-40 mt-1 pl-2\">' + n.time + '</p></div>' +
-                 '</div>'
-             ).join('');
-             b.scrollTop = b.scrollHeight;
-        };
-        window.loadBg = (e) => {
-            const f = e.target.files[0];
-            if(!f) return;
-            const r = new FileReader();
-            r.onload = (ev) => document.body.style.background = 'url('+ev.target.result+') center/cover fixed';
-            r.readAsDataURL(f);
-        };
-        window.resetZoom = () => { if(pdfViewer) { pdfViewer.zoom = 1; pdfViewer.applyZoom(); } };
-        window.bgClick = (e) => {
-            if(e.target.id !== 's-c' || !pdfViewer || pdfViewer.zoom > 1) return;
-            // Center is roughly window.innerWidth/2
-            if(e.clientX < window.innerWidth/2) pdfViewer.pf.flipPrev();
-            else pdfViewer.pf.flipNext();
-        };
-        document.getElementById('s-c').onclick = bgClick;
-        let pdfViewer;
-        window.setBg = (c, isDark) => {
-            document.body.style.background = c;
-            document.body.classList.toggle('light-ui', !isDark);
-        };
-        window.switchTab = (e, tabId) => {
-            const m = e.target.closest('.modal-c');
-            m.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            m.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            e.target.classList.add('active');
-            m.querySelector('#' + tabId).classList.add('active');
-        };
-        window.resetSettings = () => { if(confirm('Reset reader settings to default?')) { localStorage.clear(); location.reload(); } };
-        let amb;
-        window.playAmbient = (type) => {
-            if(amb) { amb.pause(); amb = null; }
-            if(type === 'none') return;
-            const urls = {
-                rain: 'https://cdn.pixabay.com/audio/2022/03/10/audio_51307b0f69.mp3',
-                fire: 'https://cdn.pixabay.com/audio/2021/08/09/audio_65b750170a.mp3',
-                library: 'https://cdn.pixabay.com/audio/2023/10/24/audio_985b8c9d0d.mp3'
-            };
-            amb = new Audio(urls[type]);
-            amb.loop = true; amb.play();
-        };
-        pdfViewer = new PDFViewer();
+            handleZoom(delta) {
+                const newZoom = this.zoom + delta;
+                if (newZoom >= 0.5 && newZoom <= 3.0) {
+                    this.zoom = newZoom;
+                    if (this.zoom <= 1) { this.panX = 0; this.panY = 0; }
+                    this.updateCenterOffset();
+                    this.updateZoomDisplay();
+
+                    if (this.zoom > 1) {
+                        // When zoomed, disable library interaction to allow panning
+                        this.container.style.pointerEvents = 'none';
+                        this.mainContent.style.cursor = 'grab';
+                        this.mainContent.classList.toggle('grabbing', false);
+                    } else {
+                        // When Fit, enable library interaction (page drag)
+                        this.container.style.pointerEvents = 'auto';
+                        this.mainContent.style.cursor = 'default';
+                        this.mainContent.classList.remove('grabbing');
+                    }
+                }
+            }
+
+            resetZoom() {
+                this.zoom = 1; this.panX = 0; this.panY = 0;
+
+                if (this.container) this.container.style.pointerEvents = 'auto';
+                this.mainContent.style.cursor = 'default';
+                this.mainContent.classList.remove('grabbing');
+
+                this.updateCenterOffset();
+                this.updateZoomDisplay();
+            }
+
+            startPan(e, x, y) {
+                // Check if target is book or background
+                const target = e.target;
+                const isBook = target.closest('.page') || target.closest('.stf__wrapper');
+
+                if (this.zoom > 1) {
+                    // If Zoomed, always Pan regardless of target
+                    this.isDragging = true;
+                    this.startX = x;
+                    this.startY = y;
+                    this.currentX = x;
+                    this.currentY = y;
+                    this.startTime = Date.now();
+
+                    if (this.container) this.container.style.transition = 'none';
+                    this.mainContent.classList.add('grabbing');
+                    this.mainContent.style.cursor = 'grabbing';
+                } else {
+                    // If Fit to Screen (Zoom=1)
+                    if (isBook) {
+                        // We touched the book -> Let library handle drag
+                        this.isDragging = false;
+                    } else {
+                        // We touched background -> Start Swipe detection
+                        this.isDragging = true;
+                        this.startX = x;
+                        this.startY = y;
+                        this.currentX = x;
+                        this.currentY = y;
+                        this.startTime = Date.now();
+                    }
+                }
+            }
+
+            movePan(x, y) {
+                if (!this.isDragging) return;
+
+                if (this.zoom > 1) {
+                    const dx = x - this.currentX;
+                    const dy = y - this.currentY;
+                    this.panX += dx;
+                    this.panY += dy;
+                    this.applyTransform();
+                }
+
+                this.currentX = x;
+                this.currentY = y;
+            }
+
+            endPan() {
+                if (!this.isDragging) return;
+
+                // Swipe Detection (Only if Zoom is 1 and dragging background)
+                if (this.zoom === 1) {
+                    const diffX = this.currentX - this.startX;
+                    const timeDiff = Date.now() - this.startTime;
+
+                    if (Math.abs(diffX) > 50 && timeDiff < 300) {
+                        if (diffX > 0) this.pageFlip.flipPrev();
+                        else this.pageFlip.flipNext();
+                    }
+                }
+
+                this.isDragging = false;
+
+                if (this.zoom > 1) {
+                    this.mainContent.classList.remove('grabbing');
+                    this.mainContent.style.cursor = 'grab';
+                    if (this.container && window.innerWidth > 768) {
+                        this.container.style.transition = 'transform 0.2s ease-out';
+                    }
+                }
+            }
+
+            applyTransform() {
+                if (!this.container) return;
+                const x = this.panX + this.centerOffset;
+                this.container.style.transform = \`translate(\${x}px, \${this.panY}px) scale(\${this.zoom})\`;
+            }
+
+            updateZoomDisplay() {
+                document.getElementById('zoom-text').textContent = Math.round(this.zoom * 100) + '%';
+            }
+
+            generateIndex() {
+                const list = document.getElementById('index-list');
+                list.innerHTML = '';
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'index-item';
+                    div.innerHTML = \`<span>Page \${i}</span> <span class="index-page-number">\${i}</span>\`;
+                    div.onclick = () => {
+                        this.pageFlip.flip(i - 1);
+                        document.getElementById('index-modal').style.display = 'none';
+                    };
+                    list.appendChild(div);
+                }
+            }
+
+            showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
+            showError() { document.getElementById('error-container').style.display = 'block'; }
+            hideError() { document.getElementById('error-container').style.display = 'none'; }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+             const book = new RealFlipbook();
+             const fileUrl = "${fileUrl}";
+             if(fileUrl) {
+                book.loadPDF(fileUrl);
+             }
+        });
     </script>
 </body>
+
 </html>`;
 }
