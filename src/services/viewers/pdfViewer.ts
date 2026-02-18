@@ -375,7 +375,16 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 try {
                     this.showLoading(true);
                     this.hideError();
-                    this.pdfDoc = await pdfjsLib.getDocument(urlOrData).promise;
+                    
+                    // Optimized streaming config for GB-sized files
+                    this.pdfDoc = await pdfjsLib.getDocument({
+                        url: urlOrData,
+                        disableAutoFetch: true,
+                        disableStream: false,
+                        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                        cMapPacked: true,
+                    }).promise;
+                    
                     this.totalPages = this.pdfDoc.numPages;
                     const sl = document.getElementById('page-slider');
                     if(sl) sl.max = this.totalPages - 1;
@@ -532,15 +541,28 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
                 container.appendChild(canvas);
+                
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                
+                // Cleanup worker resources for this page
+                page.cleanup();
+                this.pdfDoc.cleanup();
             }
             
             cleanupOldPages(currentIndex) {
-                const keepRange = 3;
+                const keepRange = 4; // Keep a small buffer for smooth flips
                 for (let i = 1; i <= this.totalPages; i++) {
                     if (Math.abs(i - currentIndex) > keepRange) {
                         const container = document.getElementById('page-content-' + i);
-                        if (container) container.innerHTML = '';
+                        if (container) {
+                            const canvas = container.querySelector('canvas');
+                            if (canvas) {
+                                // Force memory release before removing
+                                canvas.width = 0;
+                                canvas.height = 0;
+                            }
+                            container.innerHTML = '';
+                        }
                         this.renderedPages.delete(i);
                     }
                 }
