@@ -278,8 +278,9 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 display: flex !important;
                 gap: 8px;
             }
-            .header-icons > button:not(#notes-btn):not(#settings-btn) { display: none !important; }
+            .header-icons > button:not(#notes-btn):not(#settings-btn):not(#tts-btn):not(#tts-ctrls) { display: none !important; }
             .header-icons > a#standard-btn { display: flex !important; }
+            #tts-ctrls:not(.hidden) { display: flex !important; align-items: center; }
 
             .header-icons .header-icon {
                 width: 32px;
@@ -330,11 +331,12 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             #scroll-top { bottom: 80px; right: 20px; width: 40px; height: 40px; }
         }
         
-        #tts-btn.tts-active { color: #facc15; background: rgba(250, 204, 21, 0.2); border-color: rgba(250, 204, 21, 0.4); }
+        #tts-btn.tts-playing { color: #4ade80; background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.4); }
+        #tts-btn.tts-paused { color: #facc15; background: rgba(250, 204, 21, 0.2); border-color: rgba(250, 204, 21, 0.4); }
         .tts-playing i { animation: pulse-tts 2s infinite; }
         @keyframes pulse-tts { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        #tts-ctrls { display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(4px); margin-right: 8px; pointer-events: auto; }
+        #tts-ctrls { display: none; align-items: center; gap: 8px; pointer-events: auto; }
         
         ${extraStyles}
     </style>
@@ -368,13 +370,9 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         </div>
         <div class="header-icons">
             ${showTTS ? `
-            <div id="tts-ctrls" class="hidden sm:flex">
-                <button onclick="window.togglePlayPauseTTS()" class="text-white hover:text-indigo-300 transition w-6 h-6 flex items-center justify-center">
+            <div id="tts-ctrls" class="hidden">
+                <button onclick="window.togglePlayPauseTTS()" class="header-icon" title="Play/Pause TTS">
                     <i id="tts-pp-i" class="fas fa-pause"></i>
-                </button>
-                <div class="w-[1px] h-3 bg-white/20"></div>
-                <button onclick="window.stopTTS()" class="text-white hover:text-red-400 transition w-6 h-6 flex items-center justify-center">
-                    <i class="fas fa-stop text-[10px]"></i>
                 </button>
             </div>
             <button class="header-icon" id="tts-btn" onclick="window.toggleTTS()" title="Listen (TTS)">

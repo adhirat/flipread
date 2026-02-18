@@ -718,7 +718,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             const btn = document.getElementById('tts-btn');
             if(btn) {
                 btn.classList.toggle('tts-playing', speaking);
-                btn.classList.toggle('tts-active', speaking || ttsPaused);
+                btn.classList.toggle('tts-paused', ttsPaused);
             }
         }
 
