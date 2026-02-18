@@ -240,13 +240,13 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             setupNotes() {
                 this.editingNoteIndex = -1;
                 this.notesSidebar = document.getElementById('chat-w');
-                this.notesList = document.getElementById('notes-list');
+                this.notesList = document.getElementById('chat-notes');
                 this.noteInput = document.getElementById('note-input');
                 this.sendBtn = document.getElementById('send-note-btn');
                 
                 if (!this.notesSidebar) return;
                 
-                const onNotesToggle = () => this.notesSidebar.classList.toggle('open');
+                const onNotesToggle = () => window.toggleChat();
                 const nBtn = document.getElementById('notes-btn');
                 if(nBtn) nBtn.onclick = onNotesToggle;
                 const mnBtn = document.getElementById('notes-btn-mob');
@@ -254,17 +254,21 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 const closeBtn = document.getElementById('close-notes-btn');
                 if(closeBtn) closeBtn.onclick = () => this.notesSidebar.classList.remove('open');
                 
-                if(this.sendBtn) this.sendBtn.onclick = () => this.sendNote();
+                if(this.sendBtn) this.sendBtn.onclick = () => window.sendNote();
                 if(this.noteInput) this.noteInput.onkeydown = (e) => {
                     if(e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        this.sendNote();
+                        window.sendNote();
                     }
                 };
-                this.renderNotes();
+                window.renderNotes();
             }
             
             sendNote() {
+                if(!this.noteInput) {
+                    window.renderNotes();
+                    return;
+                }
                 const v = this.noteInput.value.trim();
                 if(!v) return;
                 let notes = [];
@@ -273,13 +277,13 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 if(this.editingNoteIndex > -1) {
                     if(notes[this.editingNoteIndex]) notes[this.editingNoteIndex].text = v;
                     this.editingNoteIndex = -1;
-                    this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    if(this.sendBtn) this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
                 } else {
                     notes.push({ text: v, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
                 }
                 localStorage.setItem('fr_nt_' + FU, JSON.stringify(notes));
                 this.noteInput.value = '';
-                this.renderNotes();
+                window.renderNotes();
             }
 
             renderNotes() {
@@ -300,18 +304,30 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                      '</div>'
                 ).join('');
                 
-                this.notesList.querySelectorAll('.chat-edit').forEach(el => el.onclick = () => this.editNote(parseInt(el.dataset.idx)));
-                this.notesList.querySelectorAll('.chat-del').forEach(el => el.onclick = () => this.deleteNote(parseInt(el.dataset.idx)));
+                this.notesList.querySelectorAll('.chat-edit').forEach(el => {
+                    el.onclick = () => {
+                        const i = parseInt(el.dataset.idx);
+                        window.editNote(i);
+                    };
+                });
+                this.notesList.querySelectorAll('.chat-del').forEach(el => {
+                    el.onclick = () => {
+                        const i = parseInt(el.dataset.idx);
+                        window.deleteNote(i);
+                    };
+                });
                 this.notesList.scrollTop = this.notesList.scrollHeight;
             }
             
             editNote(i) {
                 let notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || [];
                 if(!notes[i]) return;
-                this.noteInput.value = notes[i].text;
-                this.noteInput.focus();
+                if(this.noteInput) {
+                    this.noteInput.value = notes[i].text;
+                    this.noteInput.focus();
+                }
                 this.editingNoteIndex = i;
-                this.sendBtn.innerHTML = '<i class="fas fa-check"></i>';
+                if(this.sendBtn) this.sendBtn.innerHTML = '<i class="fas fa-check"></i>';
             }
             
             deleteNote(i) {
@@ -319,11 +335,11 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 let notes = JSON.parse(localStorage.getItem('fr_nt_' + FU)) || [];
                 notes.splice(i, 1);
                 localStorage.setItem('fr_nt_' + FU, JSON.stringify(notes));
-                this.renderNotes();
+                window.renderNotes();
                 if(this.editingNoteIndex === i) {
                     this.editingNoteIndex = -1;
-                    this.noteInput.value = '';
-                    this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    if(this.noteInput) this.noteInput.value = '';
+                    if(this.sendBtn) this.sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
                 }
             }
             
@@ -720,6 +736,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             'https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js'
         ],
         showZoom: true,
-        showWebViewLink: true
+        showWebViewLink: true,
+        showHighlights: false
     });
 }
