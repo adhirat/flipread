@@ -182,6 +182,17 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         #end-controls.v { opacity: 1; pointer-events: auto; }
         .eb { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
         .eb:hover { background: white; color: black; }
+
+        /* Back Cover Styles */
+        .bc-c { background: linear-gradient(135deg, #ffcfd2 0%, #d1d1f9 50%, #c1e1c1 100%); border: 1px solid rgba(0,0,0,0.05); color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .bc-t { font-size: 32px; font-weight: 900; margin: 0; color: #111; letter-spacing: -1px; text-transform: uppercase; line-height: 1; }
+        .bc-st { font-size: 11px; margin-top: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; line-height: 1.4; }
+        .bc-btns { display: flex; gap: 12px; margin-top: 40px; justify-content: center; width: 100%; position: absolute; bottom: 40px; }
+        .eb-btn { padding: 12px 24px; border-radius: 30px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .eb-btn.p { background: #1a1a1a; color: white; }
+        .eb-btn.p:hover { background: ${accent}; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .eb-btn.s { background: white; color: #1a1a1a; border: 1px solid rgba(0,0,0,0.1); }
+        .eb-btn.s:hover { background: #f8f9fa; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         
         /* Search Modal Styles */
         #search-m { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 2500; display: none; align-items: center; justify-content: center; }
@@ -198,14 +209,14 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                 </div>
             </div>
             <div id="back-c" class="c-b" style="display: none;" onclick="window.openFromBack()">
-                <div class="c-v" style="background: linear-gradient(135deg, #ffcfd2 0%, #d1d1f9 50%, #c1e1c1 100%); border: 1px solid rgba(0,0,0,0.05); color: #1a1a1a; display: flex; flex-direction: column;">
-                    <div class="flex-1 flex flex-col items-center justify-center pt-10">
-                        <span class="text-2xl mb-2 font-black tracking-tighter opacity-80">THE END</span>
-                        <span class="text-[10px] opacity-40 uppercase tracking-[0.3em] font-medium">Thank you for reading</span>
+                <div class="c-v bc-c">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <h2 class="bc-t">THE END</h2>
+                        <p class="bc-st">Thank you for reading</p>
                     </div>
-                    <div class="flex gap-2 mb-8 justify-center px-4" onclick="event.stopPropagation()">
-                        <button class="eb !bg-black/90 !text-white !border-none !px-4" onclick="window.openFromBack()">Flip Open</button>
-                        <button class="eb !bg-white/90 !text-black !border-black/5 !px-4" onclick="window.restartBook()">Start Over</button>
+                    <div class="bc-btns" onclick="event.stopPropagation()">
+                        <button class="eb-btn p" onclick="window.openFromBack()">Flip Open</button>
+                        <button class="eb-btn s" onclick="window.restartBook()">Start Over</button>
                     </div>
                 </div>
             </div>
@@ -461,6 +472,16 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         }
 
         function updateFooter(l) {
+            const prevBtns = [document.getElementById('prev-btn'), document.getElementById('mobile-prev-btn')];
+            const nextBtns = [document.getElementById('next-btn'), document.getElementById('mobile-next-btn')];
+            const cb = document.getElementById('c-b');
+            const bc = document.getElementById('back-c');
+            const isFrontCover = cb && cb.style.display !== 'none';
+            const isBackCover = bc && bc.style.display !== 'none';
+
+            prevBtns.forEach(b => b && (b.disabled = isFrontCover));
+            nextBtns.forEach(b => b && (b.disabled = isBackCover));
+
             if(!rend) return;
             if(!l) l = rend.currentLocation();
             if(!l || !l.start || !l.start.displayed) return;
@@ -476,11 +497,6 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             }
             info.textContent = text + " / " + total;
             info.classList.add('v');
-            
-            const prevBtns = [document.getElementById('prev-btn'), document.getElementById('mobile-prev-btn')];
-            const nextBtns = [document.getElementById('next-btn'), document.getElementById('mobile-next-btn')];
-            prevBtns.forEach(b => b && (b.disabled = l.atStart));
-            nextBtns.forEach(b => b && (b.disabled = l.atEnd));
         }
 
         window.openBook = () => {
