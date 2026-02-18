@@ -210,10 +210,31 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         .modern-range { flex: 1; max-width: 120px; display: flex; align-items: center; }
         .modern-range input { -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; }
         .modern-range input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 2px solid ${accent}; }
+        
+        /* Mobile Page Indicator */
+        #mobile-pi {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+        #mobile-pi.v { opacity: 0.7; }
     `;
 
     const extraHtml = `
         <div id="s-c">
+            <div id="mobile-pi">Page -- / --</div>
             <div id="c-b" class="c-b" onclick="window.openBook()">
                 <div class="c-v" id="c-v-inner">
                     ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:contain;background:transparent;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">READ NOW</span></div>'}
@@ -364,7 +385,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                 }
                 if(rend) {
                     rend.resize();
-                    setTimeout(() => rend.resize(), 100);
+                    setTimeout(() => {
+                        rend.resize();
+                        updateFooter();
+                    }, 350);
                 }
             };
         }
@@ -423,8 +447,15 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     renderHighlights();
                 });
 
+                let resizeTimeout;
                 window.addEventListener('resize', () => {
-                    if(rend) rend.resize();
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        if(rend) {
+                            rend.resize();
+                            updateFooter();
+                        }
+                    }, 250);
                 });
 
                 rend.on("relocated", (l) => {
@@ -490,11 +521,23 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             if (total <= 0) { info.textContent = "Loc " + l.start.location; return; }
             let text = "Page " + curr;
             if (window.innerWidth > 768 && curr > 1 && curr < total) {
-                const startPage = curr % 2 === 0 ? curr : curr - 1;
+                const startPage = curr % 2 !== 0 ? curr : curr - 1;
                 text = "Pages " + startPage + "-" + Math.min(startPage + 1, total);
             }
             info.textContent = text + " / " + total;
             info.classList.add('v');
+            
+            // Mobile single-page indicator
+            const mobilePi = document.getElementById('mobile-pi');
+            if (mobilePi) {
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile && !isFrontCover && !isBackCover && total > 0) {
+                    mobilePi.textContent = "Page " + curr + " / " + total;
+                    mobilePi.classList.add('v');
+                } else {
+                    mobilePi.classList.remove('v');
+                }
+            }
         }
 
         window.openBook = () => {
@@ -506,6 +549,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                 bt.classList.add('open');
                 document.getElementById('pi').classList.add('v');
                 if(rend.currentLocation().start.index === 0) rend.next();
+                // Update mobile indicator after opening book
+                setTimeout(() => updateFooter(), 900);
             }, 800);
         };
 
