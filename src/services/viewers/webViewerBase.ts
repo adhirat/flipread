@@ -121,27 +121,29 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         .hl-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s; }
         .hl-btn:hover { transform: scale(1.2); border-color: white; }
 
-        /* Chat Sidebar */
-        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); z-index: 2500; border-left: 1px solid rgba(0,0,0,0.1); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; }
-        @media (min-width: 640px) { #chat-w { width: 400px; right: -450px; } }
-        #chat-w.o { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
-        .chat-h { padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
-        .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
-        .chat-tab.active { opacity: 1; border-color: ${accent}; background: rgba(0,0,0,0.05); }
-        .chat-b { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-        .chat-tab-c { display: none; width: 100%; flex-direction: column; gap: 12px; }
+        /* Chat Sidebar (Personal Desk) - Enhanced Visibility */
+        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.99); backdrop-filter: blur(25px); z-index: 2500; border-left: 1px solid rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; }
+        @media (min-width: 640px) { #chat-w { width: 420px; right: -450px; } }
+        #chat-w.o { right: 0; box-shadow: -25px 0 60px rgba(0,0,0,0.15); }
+        .chat-h { padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; z-index: 10; }
+        .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(0,0,0,0.03); }
+        .chat-tab { flex: 1; padding: 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; color: #000; letter-spacing: 0.5px; }
+        .chat-tab.active { opacity: 1; border-color: ${accent}; background: white; }
+        .chat-b { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; background: white; }
+        .chat-tab-c { display: none; width: 100%; flex-direction: column; gap: 14px; }
         .chat-tab-c.active { display: flex; }
-        .chat-item { background: white; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(0,0,0,0.05); position: relative; }
-        .chat-del, .chat-edit { opacity: 0.6; cursor: pointer; transition: 0.2s; padding: 4px; }
+        .chat-item { background: white; padding: 14px; border-radius: 10px; font-size: 14px; border: 1px solid rgba(0,0,0,0.08); position: relative; color: #1a1a1a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); line-height: 1.5; }
+        .chat-del, .chat-edit { opacity: 0.7; cursor: pointer; transition: 0.2s; padding: 6px; }
         @media (min-width: 1024px) { .chat-del, .chat-edit { opacity: 0; } }
         .chat-del { color: #ef4444; }
         .chat-edit { color: var(--accent); }
         .chat-item:hover .chat-del, .chat-item:hover .chat-edit { opacity: 1; }
         
-        .chat-f { padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; background: rgba(0,0,0,0.02); }
-        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; }
-        .chat-s { width: 40px; border-radius: 8px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+        .chat-f { padding: 18px; border-top: 1px solid rgba(0,0,0,0.1); display: flex; gap: 10px; background: #fcfcfc; }
+        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.15); border-radius: 10px; padding: 12px; outline: none; font-size: 14px; resize: none; min-height: 48px; max-height: 150px; font-family: inherit; color: #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .chat-s { width: 48px; border-radius: 10px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; transition: all 0.2s; }
+        .chat-s:hover { opacity: 0.9; transform: scale(1.05); }
+        .chat-s:active { transform: scale(0.95); }
         
         .h-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); margin: 0 5px; opacity: 0.6; }
         
@@ -508,13 +510,13 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     <!-- Chat/Notes Sidebar -->
     <div id="chat-w">
         <div class="chat-h">
-            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Desk</span>
-            <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
+            <span class="text-[11px] font-black uppercase tracking-[0.1em] opacity-90">Personal Desk</span>
+            <button onclick="toggleChat()" class="opacity-60 hover:opacity-100 transition-opacity p-2 -mr-2"><i class="fas fa-times"></i></button>
         </div>
-        <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <span class="text-[10px] font-bold text-gray-400 tracking-wider">SYNCED LOCALLY</span>
-            <button onclick="exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95">
-                <i class="fas fa-file-export text-[12px]"></i> EXPORT ALL
+            <button onclick="exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+                <i class="fas fa-file-export text-[11px]"></i> EXPORT ALL
             </button>
         </div>
         ${showHighlights ? `

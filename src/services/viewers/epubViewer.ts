@@ -144,12 +144,30 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         .hl-pink { background-color: rgba(244, 143, 177, 0.4); border-bottom: 2px solid #ec407a; cursor: pointer; }
         .hl-purple { background-color: rgba(206, 147, 216, 0.4); border-bottom: 2px solid #ab47bc; cursor: pointer; }
 
-        /* Sidebar Tabs */
-        .chat-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.1); }
-        .chat-tab { flex: 1; padding: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; }
-        .chat-tab.active { opacity: 1; border-color: ${accent}; background: rgba(255,255,255,0.02); }
-        .chat-tab-c { display: none; width: 100%; flex-direction: column; }
+        /* Chat Sidebar (Personal Desk) from WebViewerBase - Enhanced Visibility */
+        #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.99); backdrop-filter: blur(25px); z-index: 2500; border-left: 1px solid rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; transform: none !important; }
+        @media (min-width: 640px) { #chat-w { width: 420px; right: -450px; } }
+        #chat-w.open { right: 0; box-shadow: -25px 0 60px rgba(0,0,0,0.15); }
+        .chat-h { padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; background: #fff; color: #000; z-index: 10; }
+        .chat-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(0,0,0,0.03); }
+        .chat-tab { flex: 1; padding: 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; text-align: center; cursor: pointer; opacity: 0.5; border-bottom: 2px solid transparent; transition: 0.2s; color: #000; letter-spacing: 0.5px; }
+        .chat-tab.active { opacity: 1; border-color: ${accent}; background: white; }
+        .chat-b { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; background: white; }
+        .chat-tab-c { display: none; width: 100%; flex-direction: column; gap: 14px; }
         .chat-tab-c.active { display: flex; }
+        
+        .chat-item { background: white; padding: 14px; border-radius: 10px; font-size: 14px; border: 1px solid rgba(0,0,0,0.08); position: relative; color: #1a1a1a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); line-height: 1.5; }
+        .chat-del, .chat-edit { opacity: 0.7; cursor: pointer; transition: 0.2s; padding: 6px; border: none; background: transparent; }
+        @media (min-width: 1024px) { .chat-del, .chat-edit { opacity: 0; } }
+        .chat-del { color: #ef4444; }
+        .chat-edit { color: ${accent}; }
+        .chat-item:hover .chat-del, .chat-item:hover .chat-edit { opacity: 1; }
+        
+        .chat-f { padding: 18px; border-top: 1px solid rgba(0,0,0,0.1); display: flex; gap: 10px; background: #fcfcfc; }
+        .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.15); border-radius: 10px; padding: 12px; outline: none; font-size: 14px; resize: none; min-height: 48px; max-height: 150px; font-family: inherit; color: #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .chat-s { width: 48px; border-radius: 10px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; transition: all 0.2s; }
+        .chat-s:hover { opacity: 0.9; transform: scale(1.05); }
+        .chat-s:active { transform: scale(0.95); }
         
         .search-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; transition: 0.2s; }
         .search-item:hover { background: rgba(255,255,255,0.05); }
@@ -386,13 +404,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             
             sidebar.innerHTML = \`
                 <div class="chat-h">
-                    <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px;">Personal Desk</span>
-                    <button class="close-chat-btn" id="close-notes-btn">✕</button>
+                    <span class="text-[11px] font-black uppercase tracking-[0.1em] opacity-90">Personal Desk</span>
+                    <button id="close-notes-btn" class="opacity-60 hover:opacity-100 transition-opacity p-2 -mr-2"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="px-5 py-3 border-b border-white/5 flex justify-between items-center bg-white/5">
-                    <span class="text-[9px] font-bold text-white/40 tracking-wider">SYNCED LOCALLY</span>
-                    <button onclick="window.exportData()" class="text-[9px] font-black text-white hover:text-white/80 flex items-center gap-2 transition-all active:scale-95">
-                        <i class="fas fa-file-export text-[10px]"></i> EXPORT ALL
+                <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <span class="text-[10px] font-bold text-gray-400 tracking-wider">SYNCED LOCALLY</span>
+                    <button onclick="window.exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+                        <i class="fas fa-file-export text-[11px]"></i> EXPORT ALL
                     </button>
                 </div>
                 <div class="chat-tabs">
@@ -402,12 +420,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                 <div class="chat-b">
                     <div id="chat-notes" class="chat-tab-c active"></div>
                     <div id="chat-highlights" class="chat-tab-c">
+                        <p class="text-xs text-center opacity-40 py-10 leading-relaxed font-medium">Select text in the content to<br>capture a highlight.</p>
                         <div id="hi-l" class="flex flex-col"></div>
                     </div>
                 </div>
                 <div class="chat-f" id="chat-footer">
-                    <textarea id="note-input" placeholder="Add a multi-line note..." class="chat-i"></textarea>
-                    <button id="send-note-btn" class="chat-s"><i class="fas fa-paper-plane"></i></button>
+                    <textarea id="note-input" placeholder="Type your realization here..." class="chat-i"></textarea>
+                    <button id="send-note-btn" class="chat-s" title="Add Note"><i class="fas fa-paper-plane"></i></button>
                 </div>
             \`;
 
@@ -911,7 +930,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         settingsHtml,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js',
-            'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js'
+            'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js',
+            'https://cdn.tailwindcss.com'
         ],
         showZoom: false,
         showWebViewLink: true,
