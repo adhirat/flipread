@@ -555,7 +555,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             const title = '${safeTitle}';
             const sName = '${storeName.replace(/'/g, "\\'")}';
             const url = window.location.href;
-            const text = 'Hi There, \\n I’ve been exploring "' + title + '" on the ' + sName + ' library published using FlipRead and found it quite insightful. If you have a moment, you can access the digital copy here: \\n ' + url + ' \\n Thanks';
+            const text = 'Hi there,\n\nI\'ve been exploring "' + title + '" on the ' + sName + ' library published using FlipRead and found it quite insightful.\n\n' + url + '\n\nThanks';
             
             if (navigator.share) {
                 try {

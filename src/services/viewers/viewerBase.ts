@@ -702,7 +702,7 @@ export function getViewerBase(options: ViewerOptions): string {
         window.shareBook = async () => {
             const url = window.location.href;
             const sName = '${storeName.replace(/'/g, "\\'")}';
-            const text = 'Hi There, \\n I’ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful. If you have a moment, you can access the digital copy here: \\n ' + url + ' \\n Thanks';
+            const text = 'Hi there,\n\nI\'ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful.\n\n' + url + '\n\nThanks';
             
             if (navigator.share) {
                 try {
