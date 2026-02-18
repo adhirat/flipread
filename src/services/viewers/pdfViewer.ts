@@ -39,38 +39,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             pointer-events: none;
         }
 
-        .page-slider {
-            flex: 1; max-width: 300px; -webkit-appearance: none; appearance: none;
-            height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px;
-            outline: none; pointer-events: auto;
-        }
-        .page-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 16px; height: 16px; background: #4CAF50;
-            border-radius: 50%; cursor: pointer; transition: transform 0.2s;
-        }
-
-        .nav-button {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 36px; height: 36px; border-radius: 50%;
-            cursor: pointer; font-size: 14px; color: white;
-            transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: auto; backdrop-filter: blur(4px);
-        }
-        .nav-button:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.2); transform: scale(1.1);
-        }
-        .nav-button:disabled {
-            opacity: 0.3; cursor: not-allowed; border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .page-info {
-            color: #ddd; font-size: 12px; min-width: 60px; text-align: center;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-        }
-
         /* Error Container */
         .error-container {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);

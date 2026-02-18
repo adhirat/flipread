@@ -210,28 +210,111 @@ export function getViewerBase(options: ViewerOptions): string {
 
         /* Footer Controls */
         .controls {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            justify-content: center;
+            width: fit-content;
+        }
+
+        .desktop-controls {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
-            padding: 15px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 100;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            padding: 8px 18px;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
         }
 
         body.full-mode .controls {
             opacity: 0;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            transform: translate(-50%, 30px);
         }
 
         body.full-mode .controls:hover {
             opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        /* Standard Slider & Nav Styles */
+        .page-slider {
+            -webkit-appearance: none;
+            width: 250px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .page-slider:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .page-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 3px solid #6366f1;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .page-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+        }
+
+        .nav-button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 12px;
+            font-weight: 600;
+            color: #aaa;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+            white-space: nowrap;
         }
 
         /* Loaders & Errors */
@@ -426,6 +509,23 @@ export function getViewerBase(options: ViewerOptions): string {
             }
             .header-left .header-name { display: none; }
             .header-name { max-width: 50vw; font-size: 13px; }
+
+            .controls {
+                bottom: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+                width: 100% !important;
+                max-width: none !important;
+                background: none !important;
+            }
+
+            .mobile-controls {
+                display: flex !important;
+                padding: 10px 15px;
+                background: rgba(20, 20, 20, 0.98);
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                pointer-events: auto !important;
+            }
         }
 
         .mobile-controls {
@@ -609,7 +709,7 @@ export function getViewerBase(options: ViewerOptions): string {
 
     <div class="controls" id="main-footer">
         <!-- Desktop: external footer html (slider etc) -->
-        <div class="desktop-controls" style="width:100%; display:flex; justify-content:center; align-items:center;">
+        <div class="desktop-controls">
              ${footerHtml}
         </div>
 
