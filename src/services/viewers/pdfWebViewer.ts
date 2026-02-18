@@ -122,9 +122,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     injectFullscreen();
                     document.getElementById('settings-btn').style.display = 'flex';
                     
-                    const res = await fetch(FU);
-                    const blob = await res.blob();
-                    await renderPDF(blob);
+                    await renderPDF(FU);
 
                     // Initial state from localstorage
                     const sn = localStorage.getItem('fr_web_ns_pdf');
@@ -153,15 +151,22 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             let activePages = new Set();
             const MAX_ACTIVE = 6;
 
-            async function renderPDF(blob) {
+            async function renderPDF(source) {
                 if (pdfDoc) {
                     try { await pdfDoc.destroy(); } catch(e) {}
                 }
                 if (observer) observer.disconnect();
                 
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-                const data = await blob.arrayBuffer();
-                pdfDoc = await pdfjsLib.getDocument(data).promise;
+                
+                // Pass source object to enable streaming/range requests
+                pdfDoc = await pdfjsLib.getDocument({
+                    url: source,
+                    disableAutoFetch: true,
+                    disableStream: false,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/',
+                    cMapPacked: true,
+                }).promise;
                 const container = document.getElementById('content-wrapper');
                 const tocList = document.getElementById('toc-list');
                 tocList.innerHTML = '';
@@ -175,8 +180,10 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                         if (entry.isIntersecting) {
                             renderPageOnDemand(pageIdx);
                         }
+                        // Note: We no longer purge on exit here. 
+                        // Purging is handled inside renderPageOnDemand when limit is hit.
                     });
-                }, { rootMargin: '120% 0px 120% 0px', threshold: 0 });
+                }, { rootMargin: '200% 0px 200% 0px', threshold: 0 });
 
                 for (let i = 1; i <= pdfDoc.numPages; i++) {
                     const section = document.createElement('div');
@@ -210,7 +217,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     
                     pageStates.set(i, { status: 'empty' });
                 }
-                currentPdfBlob = blob;
 
                 try {
                     const firstPage = await pdfDoc.getPage(1);
@@ -234,7 +240,8 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 const state = pageStates.get(i);
                 if (!state || state.status === 'rendered' || state.status === 'loading') return;
 
-                // Enforce strict limit on active canvases
+                // Enforce strict limit on active canvases to prevent memory exhaustion
+                // Prefer purging pages that are already not intersecting if possible
                 if (activePages.size >= MAX_ACTIVE) {
                     let furthestPage = -1;
                     let maxDist = -1;
@@ -247,7 +254,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     });
                     if (furthestPage !== -1) {
                         purgePage(furthestPage);
-                        activePages.delete(furthestPage);
                     }
                 }
 
@@ -294,12 +300,11 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
 
             function purgePage(i) {
                 const state = pageStates.get(i);
-                if (!state || state.status !== 'rendered') return;
+                if (!state || (state.status !== 'rendered' && state.status !== 'loading')) return;
 
                 const section = document.getElementById('page-' + i);
                 if (section) {
                     if (state.canvas) {
-                        // Crucial: set width/height to 0 before removing to force GC on mobile
                         state.canvas.width = 0;
                         state.canvas.height = 0;
                         state.canvas.remove();
@@ -307,6 +312,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     if (state.textLayer) state.textLayer.remove();
                 }
                 
+                activePages.delete(i);
                 pageStates.set(i, { status: 'empty' });
             }
 
