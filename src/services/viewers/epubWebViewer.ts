@@ -554,6 +554,14 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 
                 if(window.renderHighlights) window.renderHighlights();
             };
+
+            window.goToHighlight = (i) => {
+                const h = highlights[i];
+                if(h && h.cfi && bookRender) {
+                    bookRender.display(h.cfi);
+                    if(window.innerWidth < 1024) toggleChat(); // Close sidebar on mobile
+                }
+            };
         `
     });
 }

@@ -389,6 +389,12 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px;">Personal Desk</span>
                     <button class="close-chat-btn" id="close-notes-btn">✕</button>
                 </div>
+                <div class="px-5 py-3 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <span class="text-[9px] font-bold text-white/40 tracking-wider">SYNCED LOCALLY</span>
+                    <button onclick="window.exportData()" class="text-[9px] font-black text-white hover:text-white/80 flex items-center gap-2 transition-all active:scale-95">
+                        <i class="fas fa-file-export text-[10px]"></i> EXPORT ALL
+                    </button>
+                </div>
                 <div class="chat-tabs">
                     <div class="chat-tab active" data-tab="chat-notes" onclick="window.switchSidebarTab(this)">Notes</div>
                     <div class="chat-tab" data-tab="chat-highlights" onclick="window.switchSidebarTab(this)">Highlights</div>
@@ -710,6 +716,46 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             notes.splice(i, 1);
             localStorage.setItem('fr_nt_'+FU, JSON.stringify(notes));
             window.renderNotes();
+        };
+
+        window.exportData = () => {
+            let notes = [];
+            try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
+            
+            let content = "--- " + document.title.toUpperCase() + " ---\\n";
+            content += "Exported from FlipRead\\n";
+            content += "Date: " + new Date().toLocaleString() + "\\n";
+            content += "------------------------------------------\\n\\n";
+            
+            if(highlights.length > 0) {
+                content += "=== HIGHLIGHTS (" + highlights.length + ") ===\\n";
+                highlights.forEach((h, i) => {
+                    content += "[" + (i+1) + "]: \\"" + (h.t || "[Loading...]") + "\\"\\n";
+                });
+                content += "\\n";
+            }
+            
+            if(notes.length > 0) {
+                content += "=== PERSONAL NOTES (" + notes.length + ") ===\\n";
+                notes.forEach((n, i) => {
+                    content += "[" + n.time + "]: " + n.text + "\\n";
+                });
+            }
+            
+            if(notes.length === 0 && highlights.length === 0) {
+                alert("No notes or highlights found to export.");
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "FlipRead-Export-" + document.title.replace(/[^a-z0-9]/gi, '_') + ".txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         };
 
         window.toggleSearch = () => document.getElementById('search-m').classList.toggle('o');

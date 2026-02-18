@@ -711,11 +711,11 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              const b = document.getElementById('hi-list');
              if(!b) return;
              b.innerHTML = highlights.map((h, i) => 
-                 '<div class=\"chat-item\">' +
+                 '<div class=\"chat-item cursor-pointer hover:bg-gray-100 transition-colors\" onclick=\"goToHighlight('+i+')\">' +
                  '<p class=\"italic text-xs opacity-60\">\"' + (h.text || '<i>Loading highlight...</i>') + '\"</p>' +
                  '<div class=\"flex justify-between items-center mt-2\">' +
                      '<div class=\"w-3 h-3 rounded-full bg-hl-' + (h.c || 'yellow') + '\"></div>' +
-                     '<i class=\"fas fa-trash chat-del text-xs\" onclick=\"deleteHighlight('+i+')\"></i>' +
+                     '<i class=\"fas fa-trash chat-del text-xs\" onclick=\"event.stopPropagation(); deleteHighlight('+i+')\"></i>' +
                  '</div>' +
                  '</div>'
              ).join('');
