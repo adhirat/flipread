@@ -702,14 +702,13 @@ export function getViewerBase(options: ViewerOptions): string {
         window.shareBook = async () => {
             const url = window.location.href;
             const sName = '${storeName.replace(/'/g, "\\'")}';
-            const text = 'Hi there,\n\nI\'ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful.\n\n' + url + '\n\nThanks';
+            const text = 'Hi There,\\n\\nI\\'ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful.\\n\\n' + url + '\\n\\nThanks';
             
             if (navigator.share) {
                 try {
                     await navigator.share({
                         title: TITLE,
-                        text: text,
-                        url: url
+                        text: text
                     });
                 } catch (err) {
                     console.error('Error sharing:', err);

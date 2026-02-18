@@ -112,7 +112,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         // Background Logic
         window.setBg = (c) => {
              document.body.style.background = c;
-             document.body.style.color = (c.includes('#f') || c.includes('#e') || c.includes('#d')) ? '#333' : '#fff';
+             document.body.style.color = ((c.includes('#f') || c.includes('#e') || c.includes('#d')) ? '#333' : '#fff');
              
              // Update active state in UI
              document.querySelectorAll('.bg-option').forEach(opt => {
