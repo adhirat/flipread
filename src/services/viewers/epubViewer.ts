@@ -324,6 +324,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
     `;
 
     const extraScripts = `
+        function escapeHtml(unsafe) { return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
         const FU='${fileUrl}'.split('?')[0];
         let book=null, rend=null, isAnimating=false;
         let z=100, fz=100, lh=1.6, ff='Georgia, serif';
@@ -606,7 +607,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                         <button class="chat-del text-xs" onclick="event.stopPropagation();window.deleteHighlight(\${i})"><i class="fas fa-trash"></i></button>
                     </div>
                     <p class="text-xs opacity-80 italic italic leading-relaxed">"\${h.t}"</p>
-                    <p class="text-[9px] opacity-40 mt-1 uppercase tracking-tighter">\${escapeHtml(title.substring(0,20))} • \${new Date().toLocaleDateString()}</p>
+                    <p class="text-[9px] opacity-40 mt-1 uppercase tracking-tighter">${escapeHtml(safeTitle.substring(0,20))} • ${new Date().toLocaleDateString()}</p>
                 </div>
             \`).join('');
         };
@@ -690,7 +691,6 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
 
         // Bridge listeners for viewerBase buttons
         document.addEventListener('DOMContentLoaded', () => {
-            setupEpubSidebar();
             injectFitToggle();
             
             const idxModal = document.getElementById('index-modal');

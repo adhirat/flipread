@@ -244,12 +244,15 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 this.noteInput = document.getElementById('note-input');
                 this.sendBtn = document.getElementById('send-note-btn');
                 
+                if (!this.notesSidebar) return;
+                
                 const onNotesToggle = () => this.notesSidebar.classList.toggle('open');
                 const nBtn = document.getElementById('notes-btn');
                 if(nBtn) nBtn.onclick = onNotesToggle;
                 const mnBtn = document.getElementById('notes-btn-mob');
                 if(mnBtn) mnBtn.onclick = onNotesToggle;
-                document.getElementById('close-notes-btn').onclick = () => this.notesSidebar.classList.remove('open');
+                const closeBtn = document.getElementById('close-notes-btn');
+                if(closeBtn) closeBtn.onclick = () => this.notesSidebar.classList.remove('open');
                 
                 if(this.sendBtn) this.sendBtn.onclick = () => this.sendNote();
                 if(this.noteInput) this.noteInput.onkeydown = (e) => {
