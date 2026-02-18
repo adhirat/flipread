@@ -19,7 +19,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             justify-content: center; 
             perspective: 3500px; 
             overflow: hidden; 
-            transition: opacity 0.5s ease, inset 0.4s, height 0.4s; 
+            transition: opacity 0.5s ease; 
             width: 100%; 
         }
         body.full-mode #s-c { inset: 0 !important; height: 100dvh !important; }
@@ -326,9 +326,9 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             btn.title = 'Toggle Fit Mode';
             btn.innerHTML = '<i class="fas fa-expand"></i>';
             
-            const shareBtn = document.getElementById('share-twitter-btn');
-            if(shareBtn && headerIcons.contains(shareBtn)) {
-                headerIcons.insertBefore(btn, shareBtn);
+            const zoomCtrl = document.getElementById('zoom-controls');
+            if(zoomCtrl && headerIcons.contains(zoomCtrl)) {
+                headerIcons.insertBefore(btn, zoomCtrl);
             } else {
                 headerIcons.appendChild(btn);
             }
@@ -344,7 +344,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     icon.classList.remove('fa-compress');
                     icon.classList.add('fa-expand');
                 }
-                if(rend) rend.resize();
+                if(rend) {
+                    rend.resize();
+                    setTimeout(() => rend.resize(), 100);
+                }
             };
         }
 
@@ -431,6 +434,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                         try { rend.annotations.add("highlight", h.cfi, {}, null, 'hl-' + (h.c || 'yellow')); } catch(e){}
                     });
                     renderHighlights();
+                });
+
+                window.addEventListener('resize', () => {
+                    if(rend) rend.resize();
                 });
 
                 rend.on("relocated", (l) => {

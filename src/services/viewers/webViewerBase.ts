@@ -17,10 +17,11 @@ export interface WebViewerOptions {
     showTTS?: boolean;
     storeName?: string;
     showHighlights?: boolean;
+    showZoom?: boolean;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead', showHighlights = true } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead', showHighlights = true, showZoom = false } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -141,6 +142,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         .chat-f { padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; background: rgba(0,0,0,0.02); }
         .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; }
         .chat-s { width: 40px; border-radius: 8px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+        
+        .h-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); margin: 0 5px; }
         
         /* Loading */
         #ld { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s; }
@@ -427,7 +430,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <a href="${storeUrl}"><img src="${logoUrl || '/logo.png'}" alt="Logo" class="header-logo" /></a>
         </div>
         <div class="header-name">${safeTitle}</div>
-        <div class="header-icons">
+        <div class="header-icons" id="header-icons">
             ${showTTS ? `
             <div id="tts-ctrls" class="hidden">
                 <button onclick="window.togglePlayPauseTTS()" class="header-icon" title="Play/Pause TTS">
@@ -444,12 +447,29 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <a href="?mode=standard" class="header-icon" id="standard-btn" title="Standard View">
                 <i class="fas fa-book-open"></i>
             </a>
+
+            <div class="h-divider"></div>
+
             <button class="header-icon" id="settings-btn" onclick="toggleSettings()" title="Settings">
                 <i class="fas fa-palette"></i>
             </button>
             <button class="header-icon" id="notes-btn" onclick="toggleChat()" title="Notes">
                 <i class="fas fa-pen-fancy"></i>
             </button>
+
+            ${showZoom ? `
+            <div class="zoom-controls-inline flex items-center gap-2 ml-1" id="zoom-controls">
+                <button class="header-icon" id="zoom-out" style="width:28px; height:28px; font-size:12px">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <div class="zoom-text text-[11px] font-bold min-w-[35px] text-center opacity-60" id="zoom-v-hdr">1.5x</div>
+                <button class="header-icon" id="zoom-in" style="width:28px; height:28px; font-size:12px">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            ` : ''}
+            
+            <div id="extra-header-icons" class="flex gap-2.5 items-center"></div>
         </div>
     </header>
 

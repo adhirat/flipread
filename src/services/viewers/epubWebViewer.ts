@@ -62,6 +62,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
 
             async function init() {
                 try {
+                    injectFullscreen();
                     document.getElementById('settings-btn').style.display = 'flex';
                     const res = await fetch(FU);
                     const blob = await res.blob();
@@ -236,6 +237,32 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 m.classList.toggle('o');
                 document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
             };
+
+            function injectFullscreen() {
+                const hdr = document.getElementById('header-icons');
+                const btn = document.createElement('button');
+                btn.className = 'header-icon';
+                btn.title = 'Toggle Fullscreen';
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+                
+                // Place after notes-btn if exists
+                const notesBtn = document.getElementById('notes-btn');
+                if(notesBtn && hdr.contains(notesBtn)) {
+                    hdr.insertBefore(btn, notesBtn.nextSibling);
+                } else {
+                    hdr.appendChild(btn);
+                }
+                
+                btn.onclick = () => {
+                    if(!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                        btn.innerHTML = '<i class="fas fa-compress"></i>';
+                    } else {
+                        document.exitFullscreen();
+                        btn.innerHTML = '<i class="fas fa-expand"></i>';
+                    }
+                };
+            }
 
             window.toggleTTS = () => { if(speaking || ttsPaused) stopTTS(); else startTTS(); };
             window.startTTS = () => {

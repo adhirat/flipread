@@ -11,10 +11,11 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         logoUrl,
         storeUrl, storeName,
         showTTS: false,
-        showHighlights: false,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
+        showZoom: true,
+        showHighlights: false,
         extraStyles: `
             .textLayer {
                 position: absolute;
@@ -61,9 +62,12 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             let utter = null;
             let speaking = false;
             let ttsPaused = false;
+            let isFullscreen = false;
 
             async function init() {
                 try {
+                    injectFullscreen();
+                    setupHeaderZoom();
                     document.getElementById('settings-btn').style.display = 'flex';
                     const res = await fetch(FU);
                     const blob = await res.blob();
@@ -144,9 +148,44 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
 
             window.changeZoom = (d) => {
                 pdfScale = Math.max(0.5, Math.min(3.0, pdfScale + d));
-                document.getElementById('zoom-v').textContent = pdfScale.toFixed(1) + 'x';
+                const txt = pdfScale.toFixed(1) + 'x';
+                const el1 = document.getElementById('zoom-v');
+                const el2 = document.getElementById('zoom-v-hdr');
+                if(el1) el1.textContent = txt;
+                if(el2) el2.textContent = txt;
                 if(window.currentPdfBlob) renderPDF(window.currentPdfBlob);
             };
+
+            function setupHeaderZoom() {
+                const zi = document.getElementById('zoom-in');
+                const zo = document.getElementById('zoom-out');
+                if(zi) zi.onclick = () => window.changeZoom(0.1);
+                if(zo) zo.onclick = () => window.changeZoom(-0.1);
+                const hdrV = document.getElementById('zoom-v-hdr');
+                if(hdrV) hdrV.textContent = pdfScale.toFixed(1) + 'x';
+            }
+
+            function injectFullscreen() {
+                const hdr = document.getElementById('header-icons');
+                const btn = document.createElement('button');
+                btn.className = 'header-icon';
+                btn.title = 'Toggle Fullscreen';
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+                
+                const zoomCtrl = document.getElementById('zoom-controls');
+                if(zoomCtrl) hdr.insertBefore(btn, zoomCtrl);
+                else hdr.appendChild(btn);
+                
+                btn.onclick = () => {
+                    if(!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                        btn.innerHTML = '<i class="fas fa-compress"></i>';
+                    } else {
+                        document.exitFullscreen();
+                        btn.innerHTML = '<i class="fas fa-expand"></i>';
+                    }
+                };
+            }
 
             window.toggleTTS = () => {
                 if(speaking || ttsPaused) {
