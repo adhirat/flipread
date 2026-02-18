@@ -211,7 +211,7 @@ export function getViewerBase(options: ViewerOptions): string {
         /* Footer Controls */
         .controls {
             position: fixed;
-            bottom: 25px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
@@ -496,36 +496,34 @@ export function getViewerBase(options: ViewerOptions): string {
             
             /* Hide desktop footer content */
             .desktop-controls { display: none !important; }
-            /* Show mobile controls */
-            .mobile-controls { display: flex !important; }
             
             .controls {
-                justify-content: center !important;
-                padding: 10px 15px !important;
-                background: rgba(20, 20, 20, 0.95) !important;
-                backdrop-filter: blur(15px);
-                border-top: 1px solid rgba(255, 255, 255, 0.05);
-                pointer-events: auto !important;
-            }
-            .header-left .header-name { display: none; }
-            .header-name { max-width: 50vw; font-size: 13px; }
-
-            .controls {
-                bottom: 0 !important;
-                left: 0 !important;
-                transform: none !important;
-                width: 100% !important;
-                max-width: none !important;
+                bottom: 8px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: calc(100% - 30px) !important;
+                max-width: 500px !important;
                 background: none !important;
+                pointer-events: none !important;
             }
 
             .mobile-controls {
                 display: flex !important;
-                padding: 10px 15px;
-                background: rgba(20, 20, 20, 0.98);
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                width: 100%;
+                padding: 6px 15px;
+                background: rgba(20, 20, 20, 0.85);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 50px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
                 pointer-events: auto !important;
+                justify-content: space-between;
+                align-items: center;
             }
+
+            .header-left .header-name { display: none; }
+            .header-name { max-width: 50vw; font-size: 13px; }
         }
 
         .mobile-controls {
