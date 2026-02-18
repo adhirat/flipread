@@ -490,8 +490,9 @@ export function getViewerBase(options: ViewerOptions): string {
         @media (max-width: 768px) {
             .zoom-controls-inline,
             .h-divider { display: none !important; }
-            /* Only show Fit Toggle in header match user request */
-            .header-icons > *:not(#fit-toggle-btn) { display: none !important; }
+            /* Only show Fit Toggle and TTS in header on mobile */
+            .header-icons > *:not(#fit-toggle-btn):not(#tts-btn):not(#tts-ctrls) { display: none !important; }
+            #tts-ctrls:not(.hidden) { display: flex !important; align-items: center; gap: 8px; margin-right: 10px; }
             .header-icons { display: flex !important; pointer-events: auto !important; }
             
             /* Hide desktop footer content */
@@ -587,7 +588,7 @@ export function getViewerBase(options: ViewerOptions): string {
 
         <div class="header-icons" id="header-icons">
             ${showTTS ? `
-            <div id="tts-ctrls" class="hidden sm:flex">
+            <div id="tts-ctrls" class="hidden">
                 <button onclick="window.togglePlayPauseTTS()" class="text-white hover:text-indigo-300 transition w-6 h-6 flex items-center justify-center">
                     <i id="tts-pp-i" class="fas fa-pause"></i>
                 </button>
@@ -713,7 +714,7 @@ export function getViewerBase(options: ViewerOptions): string {
 
         <!-- Mobile: Nav corners + Center Icons -->
         <div class="mobile-controls">
-            <button class="nav-btn-mob" id="mobile-prev-btn"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-btn-mob" id="mobile-prev-btn" onclick="if(window.prev)window.prev()"><i class="fas fa-chevron-left"></i></button>
             
             <div class="mobile-icons-center">
                 <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
@@ -726,7 +727,7 @@ export function getViewerBase(options: ViewerOptions): string {
                 <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
             </div>
 
-            <button class="nav-btn-mob" id="mobile-next-btn"><i class="fas fa-chevron-right"></i></button>
+            <button class="nav-btn-mob" id="mobile-next-btn" onclick="if(window.next)window.next()"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 

@@ -571,6 +571,10 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 if(mpBtn) mpBtn.onclick = () => this.pageFlip.flipPrev();
                 const mnBtn = document.getElementById('mobile-next-btn');
                 if(mnBtn) mnBtn.onclick = () => this.pageFlip.flipNext();
+                
+                // Bridge for viewerBase mobile buttons
+                window.prev = () => this.pageFlip.flipPrev();
+                window.next = () => this.pageFlip.flipNext();
 
                 let resizeTimeout;
                 window.addEventListener('resize', () => {
