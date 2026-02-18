@@ -100,12 +100,24 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               .modal-c p.text-[9px] { font-size: 11px !important; }
               .modal-c .p-6 { padding: 40px !important; }
           }
+          #tts-p { display: none !important; }
+          @media(max-width:768px) { #tts-p.v { bottom: 65px; width: 90%; } }
           .br { position: fixed; bottom: 52px; right: 12px; z-index: 200; font-size: 10px; color: rgba(255,255,255,0.2); text-decoration: none; }
           
           #end-controls { position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 300; }
           #end-controls.v { opacity: 1; pointer-events: auto; }
           .eb { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
           .eb:hover { background: white; color: black; }
+  
+          /* TTS Pulse Animation */
+          @keyframes tts-pulse { 
+              0% { box-shadow: 0 0 0 0 rgba(${accent.replace('rgb(','').replace(')','')}, 0.4); }
+              70% { box-shadow: 0 0 0 10px rgba(${accent.replace('rgb(','').replace(')','')}, 0); }
+              100% { box-shadow: 0 0 0 0 rgba(${accent.replace('rgb(','').replace(')','')}, 0); }
+          }
+          .tts-active { animation: tts-pulse 2s infinite; }
+          .tts-playing { color: #4ade80 !important; border-color: #4ade80 !important; background: rgba(74, 222, 128, 0.1) !important; }
+          .tts-paused-state { color: #f87171 !important; border-color: #f87171 !important; background: rgba(248, 113, 113, 0.1) !important; }
   
           @media(max-width:768px){ 
               #b-t { width: 92%; height: 92%; }
@@ -210,7 +222,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           @media(max-width:768px) {
               #chat-w { width: 100vw !important; right: -100vw !important; border-left: none; } 
               #chat-w.o { right: 0 !important; }
-              #zoom-cluster, #tts-btn, #search-btn { display: none !important; }
+              #zoom-cluster, #search-btn { display: none !important; }
               
               /* Swipe Actions */
               .search-item, .chat-m { transition: transform 0.2s; touch-action: pan-y; position: relative; }
@@ -225,7 +237,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               .edit-btn { color: ${accent}; }
               .edit-btn:hover { background: ${accent}; color: white; }
           }
-          #pi { transition: opacity 0.5s; opacity: 0; }
+          #pi { transition: opacity 0.3s; opacity: 0; pointer-events: none; }
           #pi.v { opacity: 0.7; }
           #nav-l, #nav-r { box-shadow: none !important; -webkit-tap-highlight-color: transparent; outline: none !important; }
       </style>
@@ -294,7 +306,12 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                </div>
            </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-              <button class="ib rounded-full" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i class="fas fa-volume-up text-xs"></i></button>
+              <div id="tts-ctrls" class="hidden items-center gap-1 sm:gap-2">
+                  <button id="tts-pp-btn" onclick="event.stopPropagation();togglePlayPauseTTS()" class="ib rounded-full bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300 flex items-center justify-center" title="Pause/Resume">
+                      <i id="tts-pp-i" class="fas fa-pause text-xs"></i>
+                  </button>
+              </div>
+              <button class="ib rounded-full transition-all duration-300" onclick="event.stopPropagation();toggleTTS()" id="tts-btn" title="Text to Speech"><i id="tts-btn-i" class="fas fa-volume-up text-xs"></i></button>
               
               <div id="zoom-cluster" class="flex bg-white/10 rounded-full p-0.5 gap-0.5 items-center mx-1">
                   <button onclick="event.stopPropagation();zoom(-10)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition text-[10px]"><i class="fas fa-minus"></i></button>
@@ -524,7 +541,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           let z=100, fz=100, lh=1.6, ff='Georgia, serif';
           let highlights = [];
           try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
-          let syn = window.speechSynthesis, utter, speaking=false;
+          let syn = window.speechSynthesis, utter, speaking=false, ttsPaused=false;
           let startingIndex = 0;
   
           async function init(){
@@ -569,7 +586,9 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                   if(toc.length===0) tl.innerHTML = '<p class="text-center py-10 opacity-40 text-xs">No table of contents found.</p>';
                   
                   // Trigger location generation for accurate page numbers
-                  book.locations.generate(1000); 
+                  book.locations.generate(1000).then(() => {
+                      if(window.lastLoc && window.updateFooter) window.updateFooter(window.lastLoc);
+                  }); 
                   
                   // Restore Highlights
                   highlights.forEach(h => {
@@ -580,30 +599,44 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                   renderHighlights();
               });
   
-              rend.on("relocated", (l) => {
-                  // Ensure locations are generated for accurate page numbers
-                  if (!book.locations.length()) {
-                       // If locations aren't generated, we can't show "Page X of Y" accurately.
-                       // We'll show a "Calculating..." state or just the location once.
-                       // But usually valid page numbers require book.locations.generate().
-                       // We'll check if we should trigger generation.
-                       // For now, let's use what we have, but cleaner.
+              window.updateFooter = (l) => {
+                  if(!rend) return;
+                  if(!l) l = rend.currentLocation();
+                  if(!l || !l.start || !l.start.displayed) return;
+                  
+                  const isMobile = window.innerWidth <= 768;
+                  const info = document.getElementById('pi');
+                  if(!info) return;
+
+                  const curr = l.start.displayed.page;
+                  const total = l.start.displayed.total;
+                  
+                  if (total <= 0) {
+                      info.textContent = "Location " + l.start.location;
+                      return;
                   }
-                  
-                  // Check spread mode based on window width or rendered logic
-                  // Ideally checks if book.renderer.settings.width > specific breakpoint for spreads
-                  const isSpread = window.innerWidth > 768; 
-                  
-                  let text = 'Location ' + l.start.displayed.page;
-                  if (l.start.displayed.page && l.start.displayed.total > 0) {
-                      if (isSpread && l.end && l.end.displayed && l.end.displayed.page > l.start.displayed.page) {
-                          text = \`Page \${l.start.displayed.page}-\${l.end.displayed.page} / \${l.start.displayed.total}\`;
+
+                  let text = "";
+                  if (isMobile || curr === 1 || curr >= total) {
+                      text = "Page " + curr;
+                  } else {
+                      // Normalize to standard even-odd spread (e.g. 2-3, 4-5)
+                      const startPage = curr % 2 === 0 ? curr : curr - 1;
+                      const endPage = startPage + 1;
+                      if (startPage <= 1) {
+                          text = "Page " + curr;
                       } else {
-                          text = \`Page \${l.start.displayed.page} / \${l.start.displayed.total}\`;
+                          text = "Pages " + startPage + "-" + Math.min(endPage, total);
                       }
                   }
                   
-                  document.getElementById('pi').textContent = text;
+                  info.textContent = text + " / " + total;
+                  info.classList.add('v');
+              };
+
+              rend.on("relocated", (l) => {
+                  window.lastLoc = l;
+                  window.updateFooter(l);
                   document.getElementById('nav-l').style.display = l.atStart ? 'none' : 'block';
                   
                   // Check end
@@ -915,7 +948,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               const blob = new Blob([content], {type: 'text/plain'});
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
-              a.href = url; a.download = '${safeTitle}_export.txt'; a.click();
+              a.href = url; a.download = safeTitle + "_export.txt"; a.click();
           };
           
           function switchTab(e, id){
@@ -978,14 +1011,77 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               }
           }
   
-          function toggleTTS(){
-              if(speaking) { syn.cancel(); speaking = false; document.getElementById('tts-btn').classList.remove('text-indigo-400'); return; }
-              const text = rend.getContents()[0].document.body.innerText;
+          window.toggleTTS = () => {
+              if(speaking || ttsPaused) {
+                  stopTTS();
+              } else {
+                  startTTS();
+              }
+          };
+          window.startTTS = () => {
+              const contents = rend.getContents();
+              if(!contents || !contents[0]) return;
+              
+              // Simplest approach: Just read the current chapter contents
+              const text = contents[0].document.body.innerText;
+              if(!text) return;
+
               utter = new SpeechSynthesisUtterance(text);
-              utter.onend = () => { speaking = false; document.getElementById('tts-btn').classList.remove('text-indigo-400'); };
-              syn.speak(utter); speaking = true;
-              document.getElementById('tts-btn').classList.add('text-indigo-400');
-          }
+              utter.onend = () => { stopTTS(); };
+              utter.onstart = () => {
+                  speaking = true;
+                  ttsPaused = false;
+                  updateTTSUI();
+              };
+              
+              syn.cancel(); 
+              setTimeout(() => {
+                  syn.resume();
+                  syn.speak(utter);
+              }, 100);
+              
+              document.getElementById('tts-ctrls').classList.add('flex');
+              document.getElementById('tts-ctrls').classList.remove('hidden');
+          };
+          window.togglePlayPauseTTS = () => {
+              if (syn.paused) {
+                  syn.resume();
+                  ttsPaused = false;
+                  speaking = true;
+              } else {
+                  syn.pause();
+                  ttsPaused = true;
+                  speaking = false;
+              }
+              updateTTSUI();
+          };
+          window.stopTTS = () => {
+              syn.cancel();
+              speaking = false;
+              ttsPaused = false;
+              document.getElementById('tts-ctrls').classList.remove('flex');
+              document.getElementById('tts-ctrls').classList.add('hidden');
+              updateTTSUI();
+          };
+          window.updateTTSUI = () => {
+              const ppIcon = document.getElementById('tts-pp-i');
+              const ttsBtn = document.getElementById('tts-btn');
+              
+              if (ppIcon) {
+                  ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
+              }
+              
+              if (ttsBtn) {
+                  ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
+                  if (speaking || ttsPaused) {
+                      if (ttsPaused) {
+                          ttsBtn.classList.add('tts-paused-state');
+                      } else {
+                          ttsBtn.classList.add('tts-playing', 'tts-active');
+                      }
+                  }
+              }
+          };
   
           function playAmbient(type){
               if(amb) { amb.pause(); amb = null; }
@@ -1056,44 +1152,52 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
           function resetZoom(){ z=100; document.getElementById('b-t').style.transform='scale(1)'; document.getElementById('z-v').textContent='100%'; }
           
           function prev(){ flip('p'); } function next(){ flip('n'); }
-          function flip(d){
+          async function flip(d){
               if(!rend || isAnimating) return;
               const loc = rend.currentLocation();
               if(!loc) return;
               
-              // Closing to cover logic
               const isTrulyAtStart = loc.atStart && (loc.start.index <= startingIndex);
-              if(d === 'p' && isTrulyAtStart) {
-                  closeToFront();
-                  return;
-              }
+              if(d === 'p' && isTrulyAtStart) { closeToFront(); return; }
               if(d === 'n' && loc.atEnd && loc.end.index >= book.spine.length - 1) { closeToBack(); return; }
+              
               isAnimating = true;
               const mobile = window.innerWidth < 768;
               const bv = document.getElementById('b-v');
+              
               if (mobile) {
-                  bv.style.transition = 'transform 0.15s ease-in, opacity 0.15s ease-in';
-                  bv.style.transform = d === 'n' ? 'translateX(-120%)' : 'translateX(120%)';
-                  bv.style.opacity = '0.8';
-                  setTimeout(() => {
-                      const action = d === 'n' ? rend.next() : rend.prev();
-                      action.then(() => {
-                          bv.style.transition = 'none'; bv.style.transform = d === 'n' ? 'translateX(120%)' : 'translateX(-120%)';
-                          void bv.offsetWidth; bv.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
-                          bv.style.transform = 'translateX(0)'; bv.style.opacity = '1'; isAnimating = false;
-                      });
-                  }, 150);
+                  bv.style.transition = 'transform 0.2s ease-in, opacity 0.2s ease-in';
+                  bv.style.transform = d === 'n' ? 'translateX(-100%)' : 'translateX(100%)';
+                  bv.style.opacity = '0.7';
               } else {
-                  bv.style.transition = 'transform 0.15s ease-in';
+                  bv.style.transition = 'transform 0.2s ease-in';
                   bv.style.transform = d === 'n' ? 'rotateY(90deg)' : 'rotateY(-90deg)';
-                  setTimeout(() => {
-                      const action = d === 'n' ? rend.next() : rend.prev();
-                      action.then(() => {
-                          bv.style.transition = 'none'; bv.style.transform = d === 'n' ? 'rotateY(-90deg)' : 'rotateY(90deg)';
-                          void bv.offsetWidth; bv.style.transition = 'transform 0.15s ease-out'; bv.style.transform = 'rotateY(0)'; isAnimating = false;
-                      });
-                  }, 150);
               }
+
+              console.log("Flipping " + (d === 'n' ? 'forward' : 'backward') + "...");
+              const action = d === 'n' ? rend.next() : rend.prev();
+              await Promise.all([action, new Promise(r => setTimeout(r, 100))]);
+              
+              if(window.updateFooter) window.updateFooter(rend.currentLocation());
+              
+              if (mobile) {
+                  bv.style.transition = 'none';
+                  bv.style.transform = d === 'n' ? 'translateX(100%)' : 'translateX(-100%)';
+                  void bv.offsetWidth;
+                  bv.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+                  bv.style.transform = 'translateX(0)';
+                  bv.style.opacity = '1';
+              } else {
+                  bv.style.transition = 'none';
+                  bv.style.transform = d === 'n' ? 'rotateY(-90deg)' : 'rotateY(90deg)';
+                  void bv.offsetWidth;
+                  bv.style.transition = 'transform 0.2s ease-out';
+                  bv.style.transform = 'rotateY(0)';
+              }
+              
+              setTimeout(() => { 
+                  isAnimating = false; 
+              }, 200);
           }
   
           function toggleTOC(){ 
@@ -1112,7 +1216,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
               clearTimeout(rt); rt = setTimeout(() => { 
                   if (rend && rend.manager) { 
                       rend.settings.spread = window.innerWidth <= 768 ? 'none' : 'auto'; 
-                      try { rend.resize(); } catch(e){}
+                      try { 
+                          rend.resize(); 
+                          if(window.lastLoc && window.updateFooter) window.updateFooter(window.lastLoc);
+                      } catch(e){}
                   } 
               }, 250);
           });
