@@ -10,7 +10,7 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         showBranding,
         logoUrl,
         storeUrl,
-        showTTS: true,
+        showTTS: false,
         dependencies: [
             'https://code.jquery.com/jquery-3.6.0.min.js',
             'https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.js'

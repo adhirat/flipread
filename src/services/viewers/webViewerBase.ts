@@ -301,9 +301,29 @@ export function getWebViewerBase(options: WebViewerOptions): string {
 
             .controls {
                 display: flex !important;
+                bottom: 12px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: calc(100% - 32px) !important;
+                max-width: 500px !important;
+                background: none !important;
+                border: none !important;
+                pointer-events: none !important;
+                padding: 0 !important;
             }
             .footer-icons-mobile {
                 display: flex !important;
+                width: 100%;
+                padding: 8px 20px;
+                background: rgba(20, 20, 20, 0.85);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 50px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                pointer-events: auto !important;
+                justify-content: space-between;
+                align-items: center;
             }
 
             .header-left .header-name {

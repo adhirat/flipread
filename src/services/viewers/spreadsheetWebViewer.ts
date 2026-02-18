@@ -10,7 +10,7 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
         showBranding,
         logoUrl,
         storeUrl,
-        showTTS: true,
+        showTTS: false,
         dependencies: [
             'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'
         ],

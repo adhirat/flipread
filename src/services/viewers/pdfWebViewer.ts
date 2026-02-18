@@ -10,7 +10,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         showBranding,
         logoUrl,
         storeUrl,
-        showTTS: true,
+        showTTS: false,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],

@@ -10,7 +10,7 @@ export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         showBranding,
         logoUrl,
         storeUrl,
-        showTTS: true,
+        showTTS: false,
         dependencies: [
             'https://unpkg.com/docx-preview/dist/docx-preview.min.js'
         ],
