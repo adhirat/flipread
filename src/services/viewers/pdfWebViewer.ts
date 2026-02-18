@@ -147,19 +147,43 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 }
             }
 
+            let pdfDoc = null;
+            let pageStates = new Map(); 
+            let observer = null;
+            let activePages = new Set();
+            const MAX_ACTIVE = 6;
+
             async function renderPDF(blob) {
+                if (pdfDoc) {
+                    try { await pdfDoc.destroy(); } catch(e) {}
+                }
+                if (observer) observer.disconnect();
+                
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
                 const data = await blob.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(data).promise;
+                pdfDoc = await pdfjsLib.getDocument(data).promise;
                 const container = document.getElementById('content-wrapper');
                 const tocList = document.getElementById('toc-list');
                 tocList.innerHTML = '';
                 container.innerHTML = '';
+                pageStates.clear();
+                activePages.clear();
 
-                for (let i = 1; i <= pdf.numPages; i++) {
+                observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const pageIdx = parseInt(entry.target.getAttribute('data-page'));
+                        if (entry.isIntersecting) {
+                            renderPageOnDemand(pageIdx);
+                        }
+                    });
+                }, { rootMargin: '120% 0px 120% 0px', threshold: 0 });
+
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
                     const section = document.createElement('div');
                     section.id = 'page-' + i;
                     section.className = 'page-content mb-12 flex flex-col items-center relative';
+                    section.setAttribute('data-page', i);
+                    section.style.minHeight = '500px'; 
                     
                     const head = document.createElement('div');
                     head.className = 'section-header mb-4';
@@ -167,34 +191,13 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     section.appendChild(head);
 
                     const canvasWrapper = document.createElement('div');
-                    canvasWrapper.className = 'relative shadow-2xl rounded-sm overflow-hidden';
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'max-w-full h-auto block';
-                    canvasWrapper.appendChild(canvas);
-                    
-                    const textLayer = document.createElement('div');
-                    textLayer.className = 'textLayer absolute inset-0';
-                    canvasWrapper.appendChild(textLayer);
+                    canvasWrapper.className = 'canvas-wrapper relative shadow-2xl rounded-sm overflow-hidden';
+                    canvasWrapper.style.minWidth = '200px';
+                    canvasWrapper.style.minHeight = '300px';
                     
                     section.appendChild(canvasWrapper);
                     container.appendChild(section);
-
-                    pdf.getPage(i).then(async (page) => {
-                        const vp = page.getViewport({ scale: pdfScale });
-                        canvas.width = vp.width;
-                        canvas.height = vp.height;
-                        
-                        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-                        
-                        const textContent = await page.getTextContent();
-                        pdfjsLib.renderTextLayer({
-                            textContent: textContent,
-                            container: textLayer,
-                            viewport: vp,
-                            textDivs: []
-                        });
-                    });
+                    observer.observe(section);
 
                     const item = document.createElement('div');
                     item.className = 'toc-item';
@@ -204,8 +207,107 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                         toggleTOC();
                     };
                     tocList.appendChild(item);
+                    
+                    pageStates.set(i, { status: 'empty' });
                 }
                 currentPdfBlob = blob;
+
+                try {
+                    const firstPage = await pdfDoc.getPage(1);
+                    const vp = firstPage.getViewport({ scale: pdfScale });
+                    const ratio = vp.height / vp.width;
+                    const containerWidth = container.clientWidth || 900;
+                    const w = Math.min(window.innerWidth - 40, containerWidth);
+                    
+                    document.querySelectorAll('.page-content').forEach(s => {
+                        s.style.minHeight = (w * ratio) + 'px';
+                        const cw = s.querySelector('.canvas-wrapper');
+                        if(cw) {
+                            cw.style.width = w + 'px';
+                            cw.style.height = (w * ratio) + 'px';
+                        }
+                    });
+                } catch(e) { console.error("Error setting aspect ratios:", e); }
+            }
+
+            async function renderPageOnDemand(i) {
+                const state = pageStates.get(i);
+                if (!state || state.status === 'rendered' || state.status === 'loading') return;
+
+                // Enforce strict limit on active canvases
+                if (activePages.size >= MAX_ACTIVE) {
+                    let furthestPage = -1;
+                    let maxDist = -1;
+                    activePages.forEach(p => {
+                        const dist = Math.abs(p - i);
+                        if (dist > maxDist) {
+                            maxDist = dist;
+                            furthestPage = p;
+                        }
+                    });
+                    if (furthestPage !== -1) {
+                        purgePage(furthestPage);
+                        activePages.delete(furthestPage);
+                    }
+                }
+
+                pageStates.set(i, { status: 'loading' });
+                activePages.add(i);
+
+                try {
+                    const page = await pdfDoc.getPage(i);
+                    const section = document.getElementById('page-' + i);
+                    if (!section) return;
+                    const wrapper = section.querySelector('.canvas-wrapper');
+                    
+                    const vp = page.getViewport({ scale: pdfScale });
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'max-w-full h-auto block';
+                    canvas.width = vp.width;
+                    canvas.height = vp.height;
+                    wrapper.appendChild(canvas);
+
+                    const textLayer = document.createElement('div');
+                    textLayer.className = 'textLayer absolute inset-0';
+                    wrapper.appendChild(textLayer);
+
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                    
+                    const textContent = await page.getTextContent();
+                    pdfjsLib.renderTextLayer({
+                        textContent: textContent,
+                        container: textLayer,
+                        viewport: vp,
+                        textDivs: []
+                    });
+
+                    pageStates.set(i, { status: 'rendered', canvas, textLayer });
+                    // Cleanup worker resources for this page
+                    page.cleanup();
+                    pdfDoc.cleanup();
+                } catch (e) {
+                    console.error("Error rendering page " + i, e);
+                    pageStates.set(i, { status: 'empty' });
+                    activePages.delete(i);
+                }
+            }
+
+            function purgePage(i) {
+                const state = pageStates.get(i);
+                if (!state || state.status !== 'rendered') return;
+
+                const section = document.getElementById('page-' + i);
+                if (section) {
+                    if (state.canvas) {
+                        // Crucial: set width/height to 0 before removing to force GC on mobile
+                        state.canvas.width = 0;
+                        state.canvas.height = 0;
+                        state.canvas.remove();
+                    }
+                    if (state.textLayer) state.textLayer.remove();
+                }
+                
+                pageStates.set(i, { status: 'empty' });
             }
 
             window.toggleSettings = () => {
