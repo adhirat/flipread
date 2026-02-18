@@ -508,8 +508,14 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     <!-- Chat/Notes Sidebar -->
     <div id="chat-w">
         <div class="chat-h">
-            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">My Notes</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Desk</span>
             <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
+        </div>
+        <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <span class="text-[10px] font-bold text-gray-400 tracking-wider">SYNCED LOCALLY</span>
+            <button onclick="exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95">
+                <i class="fas fa-file-export text-[12px]"></i> EXPORT ALL
+            </button>
         </div>
         ${showHighlights ? `
         <div class="chat-tabs">
@@ -706,7 +712,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              if(!b) return;
              b.innerHTML = highlights.map((h, i) => 
                  '<div class=\"chat-item\">' +
-                 '<p class=\"italic text-xs opacity-60\">\"' + h.text + '\"</p>' +
+                 '<p class=\"italic text-xs opacity-60\">\"' + (h.text || '<i>Loading highlight...</i>') + '\"</p>' +
                  '<div class=\"flex justify-between items-center mt-2\">' +
                      '<div class=\"w-3 h-3 rounded-full bg-hl-' + (h.c || 'yellow') + '\"></div>' +
                      '<i class=\"fas fa-trash chat-del text-xs\" onclick=\"deleteHighlight('+i+')\"></i>' +
@@ -722,6 +728,46 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              renderHighlights();
         };
         ` : ""}
+
+        window.exportData = () => {
+            let notes = [];
+            try { notes = JSON.parse(localStorage.getItem('fr_nt_'+FU)) || []; } catch(e) {}
+            
+            let content = "--- " + document.title.toUpperCase() + " ---\\n";
+            content += "Exported from FlipRead\\n";
+            content += "Date: " + new Date().toLocaleString() + "\\n";
+            content += "------------------------------------------\\n\\n";
+            
+            if(highlights.length > 0) {
+                content += "=== HIGHLIGHTS (" + highlights.length + ") ===\\n";
+                highlights.forEach((h, i) => {
+                    content += "[" + (i+1) + "]: \\"" + (h.text || "[Loading...]") + "\\"\\n";
+                });
+                content += "\\n";
+            }
+            
+            if(notes.length > 0) {
+                content += "=== PERSONAL NOTES (" + notes.length + ") ===\\n";
+                notes.forEach((n, i) => {
+                    content += "[" + n.time + "]: " + n.text + "\\n";
+                });
+            }
+            
+            if(notes.length === 0 && highlights.length === 0) {
+                alert("No notes or highlights found to export.");
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "FlipRead-Export-" + document.title.replace(/[^a-z0-9]/gi, '_') + ".txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
 
         ${extraScripts}
         

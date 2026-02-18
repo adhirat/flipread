@@ -83,11 +83,6 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                             <div class="bg-option" style="background: #fffbef;" data-bg="#fffbef" title="Cream"></div>
                             <div class="bg-option" style="background: #fdf6e3;" data-bg="#fdf6e3" title="Solarized"></div>
                             <div class="bg-option" style="background: #f2ede4;" data-bg="#f2ede4" title="Paper"></div>
-                            <div class="bg-option" style="background: #1e1e1e;" data-bg="#1e1e1e" title="Dark"></div>
-                            <div class="bg-option" style="background: #2d3436;" data-bg="#2d3436" title="Midnight"></div>
-                            <div class="bg-option" style="background: #0f172a;" data-bg="#0f172a" title="Deep Sea"></div>
-                            <div class="bg-option" style="background: linear-gradient(135deg, #1a1a1a, #000000);" data-bg="linear-gradient(135deg, #1a1a1a, #000000)" title="Obsidian"></div>
-                            <div class="bg-option" style="background: linear-gradient(135deg, #2c3e50, #000000);" data-bg="linear-gradient(135deg, #2c3e50, #000000)" title="Galaxy"></div>
                         </div>
 
                         <div class="set-section">
@@ -319,6 +314,15 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 book.ready.then(() => {
                     highlights.forEach(h => {
                         try { bookRender.annotations.add("highlight", h.cfi, {}, null, 'hl-' + (h.c || 'yellow')); } catch(e){}
+                        
+                        // Repair highlights with missing text (from previous schema)
+                        if(!h.text && h.cfi) {
+                            book.getRange(h.cfi).then(range => {
+                                h.text = range.toString();
+                                localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
+                                if(window.renderHighlights) window.renderHighlights();
+                            }).catch(err => console.error("Highlight repair error:", err));
+                        }
                     });
                     
                     const fs = localStorage.getItem('fr_web_fs');
@@ -532,6 +536,23 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                     btn.classList.toggle('tts-playing', speaking);
                     btn.classList.toggle('tts-paused', ttsPaused);
                 }
+            };
+
+            window.addHighlight = (color) => {
+                if(!window.currentSelection) return;
+                const { cfiRange, text, contents } = window.currentSelection;
+                
+                try {
+                    bookRender.annotations.add("highlight", cfiRange, {}, null, 'hl-' + color);
+                } catch(e) { console.error("Highlight error:", e); }
+                
+                highlights.push({ cfi: cfiRange, text, c: color });
+                localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
+                
+                contents.window.getSelection().removeAllRanges();
+                document.getElementById('hl-menu').style.display = 'none';
+                
+                if(window.renderHighlights) window.renderHighlights();
             };
         `
     });
