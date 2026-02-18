@@ -143,7 +143,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         .chat-i { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 10px; outline: none; font-size: 13px; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; }
         .chat-s { width: 40px; border-radius: 8px; background: ${accent}; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
         
-        .h-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); margin: 0 5px; }
+        .h-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); margin: 0 5px; opacity: 0.6; }
         
         /* Loading */
         #ld { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s; }
@@ -317,6 +317,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             }
             .header-icons > button:not(#tts-btn):not(#tts-ctrls) { display: none !important; }
             .header-icons > a#standard-btn { display: none !important; }
+            .header-icons .h-divider { display: none !important; }
             #tts-ctrls:not(.hidden) { display: flex !important; align-items: center; }
 
             .header-icons .header-icon {
@@ -548,7 +549,13 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              const curS = window.pageYOffset || document.documentElement.scrollTop;
              const diff = curS - lastS;
              
-             // Header & Footer Hiding
+             // Header & Footer Hiding - skip if a modal is open
+             const isModalOpen = document.querySelector('#toc-menu.open, #chat-w.o, #set-m.o');
+             if (isModalOpen) {
+                lastS = curS;
+                return;
+             }
+
              if (Math.abs(diff) < 5) return; 
              
              if (diff > 0 && curS > 80) {

@@ -202,6 +202,25 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         #search-m.o { display: flex; }
         .search-modal-c { background: #1c1c1c; width: 90%; max-width: 500px; max-height: 85vh; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); color: #eee; display: flex; flex-direction: column; overflow: hidden; }
         #s-q { width: 100%; padding: 16px; background: transparent; border-bottom: 1px solid rgba(255,255,255,0.1); outline: none; }
+
+        /* Modern Settings Styles */
+        .set-section { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .set-label-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .set-label-group i { font-size: 12px; opacity: 0.6; }
+
+        .modern-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 12px; border-radius: 10px; font-size: 12px; outline: none; width: 140px; cursor: pointer; transition: all 0.2s ease; }
+        .modern-select:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+
+        .modern-stepper { display: flex; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        .modern-stepper button { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modern-stepper button:hover { background: rgba(255,255,255,0.1); }
+        .modern-stepper span { font-size: 11px; font-weight: 700; min-width: 45px; text-align: center; }
+
+        .modern-toggle { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 6px 16px; border-radius: 20px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s; width: auto; line-height: 1; }
+        
+        .modern-range { flex: 1; max-width: 120px; display: flex; align-items: center; }
+        .modern-range input { -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; }
+        .modern-range input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); border: 2px solid ${accent}; }
     `;
 
     const extraHtml = `
@@ -257,11 +276,15 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
     `;
 
     const settingsHtml = `
-        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-            <div class="set-label" style="margin-bottom:10px; color:#888;">Typography</div>
+        <div class="set-section">
+            <div class="set-label-group">
+                <i class="fas fa-font"></i>
+                <span>Typography</span>
+            </div>
+            
             <div class="set-opt-row">
                 <span class="set-label">Font Family</span>
-                <select onchange="window.setFF(this.value)" style="width: 140px;">
+                <select class="modern-select" onchange="window.setFF(this.value)">
                     <option value="Georgia, serif">Georgia</option>
                     <option value="'Lora', serif">Lora</option>
                     <option value="'EB Garamond', serif">Garamond</option>
@@ -270,38 +293,43 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     <option value="Monaco, monospace">Monaco</option>
                 </select>
             </div>
+
             <div class="set-opt-row">
                 <span class="set-label">Font Size</span>
-                <div style="display:flex; gap:5px; align-items:center;">
-                    <button class="header-icon" style="width:24px; height:24px;" onclick="window.changeFontSize(-10)">-</button>
-                    <span id="fs-v" style="font-size:11px; min-width:30px; text-align:center;">100%</span>
-                    <button class="header-icon" style="width:24px; height:24px;" onclick="window.changeFontSize(10)">+</button>
+                <div class="modern-stepper">
+                    <button onclick="window.changeFontSize(-10)"><i class="fas fa-minus"></i></button>
+                    <span id="fs-v">100%</span>
+                    <button onclick="window.changeFontSize(10)"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
+
             <div class="set-opt-row">
                 <span class="set-label">Line Height</span>
-                <input type="range" min="1" max="2.5" step="0.1" value="1.6" oninput="window.setLH(this.value)" style="width:80px;">
+                <div class="modern-range">
+                    <input type="range" min="1" max="2.5" step="0.1" value="1.6" oninput="window.setLH(this.value)">
+                </div>
             </div>
         </div>
 
-        <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div class="set-section">
+            <div class="set-label-group">
+                <i class="fas fa-sliders-h"></i>
+                <span>Experience</span>
+            </div>
+
             <div class="set-opt-row">
                 <span class="set-label">Night Shift</span>
-                <button id="ns-toggle" onclick="window.toggleNight()" class="header-icon" style="width:auto; padding:0 10px; border-radius:12px; font-size:10px; background:#444;">OFF</button>
+                <button id="ns-toggle" onclick="window.toggleNight()" class="modern-toggle">OFF</button>
             </div>
+
             <div class="set-opt-row">
                 <span class="set-label">Ambient Sound</span>
-                <select id="amb-s" onchange="window.playAmbient(this.value)" style="width: 120px;">
+                <select id="amb-s" class="modern-select" onchange="window.playAmbient(this.value)">
                     <option value="none">None</option>
                     <option value="rain">Rain</option>
                     <option value="fire">Fire</option>
                     <option value="library">Library</option>
                 </select>
-            </div>
-            <div class="set-opt-row">
-                <button onclick="window.toggleSearch()" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-size:11px; color:white; cursor:pointer;">
-                    <i class="fas fa-search" style="margin-right:5px;"></i> Search Book
-                </button>
             </div>
         </div>
     `;

@@ -2,6 +2,8 @@
 import { getWebViewerBase } from './webViewerBase';
 
 export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+    const accent = (settings.accent_color as string) || '#4f46e5';
+
     return getWebViewerBase({
         title,
         fileUrl,
@@ -17,6 +19,12 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         showZoom: true,
         showHighlights: false,
         extraStyles: `
+            /* Hide desktop footer if any */
+            @media (min-width: 769px) { #main-footer { display: none !important; } }
+
+            #content-wrapper { width: 100%; max-width: 900px; margin: 0 auto; min-height: 100vh; position: relative; transition: filter 0.3s ease; }
+            .page-content canvas { border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: transform 0.3s ease; }
+            
             .textLayer {
                 position: absolute;
                 left: 0;
@@ -35,21 +43,63 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 cursor: text;
                 transform-origin: 0% 0%;
             }
+
+            /* Modern Settings Styles */
+            .set-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(0,0,0,0.06); }
+            .set-label-group { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: #888; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
+            .set-label-group i { font-size: 14px; opacity: 0.5; }
+
+            .set-opt-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; min-height: 44px; width: 100%; gap: 15px; }
+            .set-label { font-size: 14px; font-weight: 500; color: #444; flex: 1; text-align: left; }
+
+            .modern-stepper { display: flex; align-items: center; background: rgba(0,0,0,0.04); border-radius: 16px; padding: 4px; border: 1px solid rgba(0,0,0,0.08); width: fit-content; flex-shrink: 0; }
+            .modern-stepper button { width: 34px; height: 34px; border-radius: 12px; border: none; background: white; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+            .modern-stepper button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+            .modern-stepper span { font-size: 13px; font-weight: 800; min-width: 60px; text-align: center; color: #111; }
+            
+            .modern-toggle { background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); color: #333; padding: 10px 22px; border-radius: 25px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: auto; line-height: 1; letter-spacing: 0.8px; flex-shrink: 0; }
+
+            body.night-shift #content-wrapper { filter: sepia(0.6) brightness(0.9) contrast(0.95); }
+            
+            #set-m-c { border-top-left-radius: 36px; border-bottom-left-radius: 36px; overflow: hidden; width: 360px; box-shadow: -20px 0 60px rgba(0,0,0,0.15); }
+            @media (max-width: 640px) { #set-m-c { border-radius: 0; width: 100% !important; max-width: 100vw !important; } }
+            
+            .appearance-label { font-size: 11px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+            .appearance-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.04); }
         `,
         settingsHtml: `
             <div id="set-m" onclick="toggleSettings()">
                 <div id="set-m-c" onclick="event.stopPropagation()">
-                    <div class="set-m-h">
-                        <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">PDF Options</h3>
-                        <button onclick="toggleSettings()" class="text-lg opacity-40 hover:opacity-100">✕</button>
+                    <div class="set-m-h" style="padding: 28px 28px 20px 28px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                        <div style="font-weight:900; text-transform:uppercase; letter-spacing:2px; font-size:14px; color:#111; display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-sliders-h" style="font-size: 16px; color: ${accent};"></i>
+                            Reader Settings
+                        </div>
+                        <button class="header-icon" onclick="toggleSettings()" style="width:40px; height:40px; color:#555; background:rgba(0,0,0,0.05); border:none; font-size: 14px; border-radius: 50%; transition: 0.3s;">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="set-m-b">
-                        <div>
-                            <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Zoom Level</label>
-                            <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
-                                <button onclick="changeZoom(-0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
-                                <span id="zoom-v" class="flex-1 text-center font-bold text-sm">1.5x</span>
-                                <button onclick="changeZoom(0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                    <div class="set-m-b" style="padding: 28px; overflow-y: overlay;">
+                        <span class="appearance-label">Canvas Control</span>
+                        
+                        <div class="set-opt-row">
+                            <span class="set-label">Zoom level</span>
+                            <div class="modern-stepper">
+                                <button onclick="window.changeZoom(-0.1)"><i class="fas fa-minus"></i></button>
+                                <span id="zoom-v">1.5x</span>
+                                <button onclick="window.changeZoom(0.1)"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="set-section">
+                            <div class="set-label-group">
+                                <i class="fas fa-wind"></i>
+                                <span>Immersion</span>
+                            </div>
+
+                            <div class="set-opt-row">
+                                <span class="set-label">Reading Tint</span>
+                                <button id="ns-toggle" onclick="window.toggleNight()" class="modern-toggle">OFF</button>
                             </div>
                         </div>
                     </div>
@@ -62,16 +112,31 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             let utter = null;
             let speaking = false;
             let ttsPaused = false;
-            let isFullscreen = false;
+            let currentPdfBlob = null;
 
             async function init() {
                 try {
                     injectFullscreen();
                     setupHeaderZoom();
                     document.getElementById('settings-btn').style.display = 'flex';
+                    
                     const res = await fetch(FU);
                     const blob = await res.blob();
                     await renderPDF(blob);
+
+                    // Initial state from localstorage
+                    const sn = localStorage.getItem('fr_web_ns_pdf');
+                    if(sn === 'true') {
+                        document.body.classList.add('night-shift');
+                        const nsToggle = document.getElementById('ns-toggle');
+                        if(nsToggle) { 
+                            nsToggle.innerText = 'ON'; 
+                            nsToggle.style.background = '${accent}'; 
+                            nsToggle.style.color = 'white'; 
+                            nsToggle.style.borderColor = 'transparent';
+                        }
+                    }
+
                     document.getElementById('ld').style.opacity = '0';
                     setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
                 } catch(e) {
@@ -92,15 +157,15 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const section = document.createElement('div');
                     section.id = 'page-' + i;
-                    section.className = 'page-content mb-8 flex flex-col items-center relative';
+                    section.className = 'page-content mb-12 flex flex-col items-center relative';
                     
                     const head = document.createElement('div');
-                    head.className = 'section-header mb-2';
+                    head.className = 'section-header mb-4';
                     head.innerHTML = '<div class="pg-elegant text-xs opacity-40">' + i + '</div>';
                     section.appendChild(head);
 
                     const canvasWrapper = document.createElement('div');
-                    canvasWrapper.className = 'relative shadow-2xl';
+                    canvasWrapper.className = 'relative shadow-2xl rounded-sm overflow-hidden';
                     
                     const canvas = document.createElement('canvas');
                     canvas.className = 'max-w-full h-auto block';
@@ -138,12 +203,21 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     };
                     tocList.appendChild(item);
                 }
-                window.currentPdfBlob = blob;
+                currentPdfBlob = blob;
             }
 
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
-                m.classList.toggle('o');
+                const isOpen = m.classList.toggle('o');
+                
+                // Block/Unblock background scroll
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+
+                // Ensure header and footer are visible when modal opens
+                const hdr = document.getElementById('main-header');
+                const ftr = document.getElementById('main-footer');
+                if(hdr) { hdr.classList.remove('down'); hdr.classList.add('up'); }
+                if(ftr) { ftr.classList.remove('down'); ftr.classList.add('up'); }
             };
 
             window.changeZoom = (d) => {
@@ -153,7 +227,17 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 const el2 = document.getElementById('zoom-v-hdr');
                 if(el1) el1.textContent = txt;
                 if(el2) el2.textContent = txt;
-                if(window.currentPdfBlob) renderPDF(window.currentPdfBlob);
+                if(currentPdfBlob) renderPDF(currentPdfBlob);
+            };
+
+            window.toggleNight = () => {
+                const active = document.body.classList.toggle('night-shift');
+                localStorage.setItem('fr_web_ns_pdf', active);
+                const btn = document.getElementById('ns-toggle');
+                btn.innerText = active ? 'ON' : 'OFF';
+                btn.style.background = active ? '${accent}' : 'rgba(0,0,0,0.04)';
+                btn.style.color = active ? 'white' : '#333';
+                btn.style.borderColor = active ? 'transparent' : 'rgba(0,0,0,0.08)';
             };
 
             function setupHeaderZoom() {
@@ -187,90 +271,42 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 };
             }
 
-            window.toggleTTS = () => {
-                if(speaking || ttsPaused) {
-                    stopTTS();
-                } else {
-                    startTTS();
-                }
-            };
+            window.toggleTTS = () => { if(speaking || ttsPaused) stopTTS(); else startTTS(); };
             window.startTTS = () => {
                 const layers = document.querySelectorAll('.textLayer');
                 let text = '';
-                layers.forEach(layer => {
-                    text += layer.innerText + ' ';
-                });
-                
+                layers.forEach(layer => { text += layer.innerText + ' '; });
                 if(!text.trim()) {
-                    // Fallback to searching for spans if innerText is empty (sometimes happens with absolute positioning)
                     layers.forEach(layer => {
                         const spans = layer.querySelectorAll('span');
                         spans.forEach(s => text += s.innerText + ' ');
                     });
                 }
-                
                 if(!text.trim()) return;
-
                 utter = new SpeechSynthesisUtterance(text);
                 utter.onend = () => { stopTTS(); };
-                utter.onstart = () => {
-                    speaking = true;
-                    ttsPaused = false;
-                    updateTTSUI();
-                };
-                
+                utter.onstart = () => { speaking = true; ttsPaused = false; updateTTSUI(); };
                 syn.cancel(); 
-                setTimeout(() => {
-                    syn.resume();
-                    syn.speak(utter);
-                }, 100);
-                
-                const ctrls = document.getElementById('tts-ctrls');
-                if(ctrls) {
-                    ctrls.classList.add('flex');
-                    ctrls.classList.remove('hidden');
-                }
+                setTimeout(() => { syn.resume(); syn.speak(utter); }, 100);
+                document.getElementById('tts-ctrls').classList.remove('hidden');
             };
             window.togglePlayPauseTTS = () => {
-                if (syn.paused) {
-                    syn.resume();
-                    ttsPaused = false;
-                    speaking = true;
-                } else {
-                    syn.pause();
-                    ttsPaused = true;
-                    speaking = false;
-                }
+                if (syn.paused) { syn.resume(); ttsPaused = false; speaking = true; }
+                else { syn.pause(); ttsPaused = true; speaking = false; }
                 updateTTSUI();
             };
             window.stopTTS = () => {
-                syn.cancel();
-                speaking = false;
-                ttsPaused = false;
-                const ctrls = document.getElementById('tts-ctrls');
-                if(ctrls) {
-                    ctrls.classList.remove('flex');
-                    ctrls.classList.add('hidden');
-                }
+                syn.cancel(); speaking = false; ttsPaused = false;
+                document.getElementById('tts-ctrls').classList.add('hidden');
                 updateTTSUI();
             };
             window.updateTTSUI = () => {
-                const ppIcon = document.getElementById('tts-pp-i');
-                const ttsBtn = document.getElementById('tts-btn');
-                
-                if (ppIcon) {
-                    ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
-                }
-                
-                if (ttsBtn) {
-                    ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
-                    if (speaking || ttsPaused) {
-                        if (ttsPaused) {
-                            ttsBtn.classList.add('tts-paused-state');
-                        } else {
-                            ttsBtn.classList.add('tts-playing', 'tts-active');
-                        }
-                    }
+                const pp = document.getElementById('tts-pp-i');
+                const btn = document.getElementById('tts-btn');
+                if (pp) pp.className = ttsPaused ? 'fas fa-play' : 'fas fa-pause';
+                if (btn) {
+                    btn.classList.toggle('tts-playing', speaking);
+                    btn.classList.toggle('tts-paused', ttsPaused);
                 }
             };
         `
