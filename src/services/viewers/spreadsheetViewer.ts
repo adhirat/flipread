@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
   const bg = (settings.background as string) || '#f3f0e8';
   const accent = (settings.accent_color as string) || '#4f46e5';
   const safeTitle = escapeHtml(title);

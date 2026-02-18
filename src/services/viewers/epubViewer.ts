@@ -2,7 +2,7 @@
 import { getViewerBase } from './viewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/'): string {
+export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -822,7 +822,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         extraStyles,
         extraHtml,
         footerHtml,

@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,7 +9,7 @@ export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         showTTS: false,
         dependencies: [
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js'

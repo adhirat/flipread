@@ -14,7 +14,7 @@ import {
   passwordPage, errorPage, memberAccessPage 
 } from '../services/viewerTemplates';
 
-export function viewerPage(book: Book & { author_name: string; author_plan: string; store_handle?: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
+export function viewerPage(book: Book & { author_name: string; author_plan: string; store_handle?: string; store_logo_key?: string; store_name?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
   const authorPlan = getPlanLimits(book.author_plan);
   const showBranding = !authorPlan.removeBranding;
@@ -24,31 +24,33 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
   
   const storeHandle = book.store_handle || book.author_name.toLowerCase().replace(/ /g, '-');
   const storeUrl = `${appUrl}/store/${storeHandle}`;
+  const storeName = book.store_name || book.author_name;
+  const common = [book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName];
 
   if (mode === 'web') {
-    if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
-    return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
 
   if (book.type === 'pdf') {
-    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['doc', 'docx'].includes(book.type)) {
-    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['ppt', 'pptx'].includes(book.type)) {
-    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['xlsx', 'xls', 'csv'].includes(book.type)) {
-    return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['txt', 'md', 'rtf', 'html'].includes(book.type)) {
-    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (book.type === 'image') {
-    return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else {
-    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
 }
 

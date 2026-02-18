@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,7 +9,7 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         showTTS: false,
         dependencies: [
             'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'

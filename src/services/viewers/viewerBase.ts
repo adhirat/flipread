@@ -18,6 +18,7 @@ export interface ViewerOptions {
     showWebViewLink?: boolean;
     footerHtml?: string;
     showTTS?: boolean;
+    storeName?: string;
 }
 
 export function getViewerBase(options: ViewerOptions): string {
@@ -37,7 +38,8 @@ export function getViewerBase(options: ViewerOptions): string {
         showZoom = false,
         showWebViewLink = true,
         footerHtml = '',
-        showTTS = false
+        showTTS = false,
+        storeName = 'FlipRead'
     } = options;
     
     const safeTitle = escapeHtml(title);
@@ -740,7 +742,8 @@ export function getViewerBase(options: ViewerOptions): string {
         // --- Shared Logic ---
         window.shareBook = async () => {
             const url = window.location.href;
-            const text = '✨ Exploring something amazing on FlipRead! \\n\\n📖 Read "' + TITLE + '" here:';
+            const sName = '${storeName.replace(/'/g, "\\'")}';
+            const text = 'Hi There, \\n I’ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful. If you have a moment, you can access the digital copy here: \\n ' + url + ' \\n Thanks';
             
             if (navigator.share) {
                 try {

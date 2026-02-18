@@ -15,10 +15,11 @@ export interface WebViewerOptions {
     settingsHtml?: string;
     dependencies?: string[];
     showTTS?: boolean;
+    storeName?: string;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead' } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -502,7 +503,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         const hdr = document.getElementById('main-header');
         const ftr = document.getElementById('main-footer');
         const stBtn = document.getElementById('scroll-top');
-
+        let isNavScroll = false;
+        let navScrollTimeout = null;
         window.addEventListener('scroll', () => {
              const curS = window.pageYOffset || document.documentElement.scrollTop;
              const diff = curS - lastS;
@@ -512,6 +514,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              
              if (diff > 0 && curS > 80) {
                  // Scrolling down - hide
+                 if (isNavScroll) return;
                  document.getElementById('main-header').classList.remove('up');
                  document.getElementById('main-header').classList.add('down');
                  document.getElementById('main-footer').classList.remove('up');
@@ -531,10 +534,16 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         });
 
         window.prevPage = () => {
+            isNavScroll = true;
+            if(navScrollTimeout) clearTimeout(navScrollTimeout);
+            navScrollTimeout = setTimeout(() => { isNavScroll = false; }, 1000);
             const h = window.innerHeight * 0.8;
             window.scrollBy({ top: -h, behavior: 'smooth' });
         };
         window.nextPage = () => {
+            isNavScroll = true;
+            if(navScrollTimeout) clearTimeout(navScrollTimeout);
+            navScrollTimeout = setTimeout(() => { isNavScroll = false; }, 1000);
             const h = window.innerHeight * 0.8;
             window.scrollBy({ top: h, behavior: 'smooth' });
         };
@@ -543,8 +552,9 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         
         window.shareBook = async () => {
             const title = '${safeTitle}';
+            const sName = '${storeName.replace(/'/g, "\\'")}';
             const url = window.location.href;
-            const text = '✨ Exploring something amazing on FlipRead! \\n\\n📖 Read "' + title + '" here:';
+            const text = 'Hi There, \\n I’ve been exploring "' + title + '" on the ' + sName + ' library published using FlipRead and found it quite insightful. If you have a moment, you can access the digital copy here: \\n ' + url + ' \\n Thanks';
             
             if (navigator.share) {
                 try {

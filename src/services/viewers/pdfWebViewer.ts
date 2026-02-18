@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,7 +9,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         showTTS: false,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'

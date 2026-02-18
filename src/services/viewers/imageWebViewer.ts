@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,7 +9,7 @@ export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: str
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         settingsHtml: `
             <div id="set-m">
                 <div class="flex justify-between items-center mb-4">

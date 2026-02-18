@@ -2,7 +2,7 @@
 import { getViewerBase } from './viewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function documentViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
+export function documentViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     const safeTitle = escapeHtml(title);
 
     const extraStyles = `
@@ -184,7 +184,7 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
         settings,
         showBranding,
         logoUrl,
-        storeUrl,
+        storeUrl, storeName,
         showTTS: true,
         extraStyles,
         extraHtml,
