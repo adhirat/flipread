@@ -1,5 +1,5 @@
-
 import { escapeHtml } from './viewerUtils';
+import { getSidebarStyles, getSidebarHtml, getSidebarScripts } from './sidebarCentral';
 
 export interface ViewerOptions {
     title: string;
@@ -19,6 +19,7 @@ export interface ViewerOptions {
     footerHtml?: string;
     showTTS?: boolean;
     storeName?: string;
+    showHighlights?: boolean;
 }
 
 export function getViewerBase(options: ViewerOptions): string {
@@ -39,7 +40,8 @@ export function getViewerBase(options: ViewerOptions): string {
         showWebViewLink = true,
         footerHtml = '',
         showTTS = false,
-        storeName = 'FlipRead'
+        storeName = 'FlipRead',
+        showHighlights = true
     } = options;
     
     const safeTitle = escapeHtml(title);
@@ -58,6 +60,7 @@ export function getViewerBase(options: ViewerOptions): string {
 
     <!-- Dependencies -->
     ${depScripts}
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -453,55 +456,7 @@ export function getViewerBase(options: ViewerOptions): string {
         .bg-option:hover { transform: scale(1.1); border-color: white; }
         .bg-option.active { border-color: #4CAF50; box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3); }
 
-        /* Notes Sidebar */
-        #chat-w {
-            position: fixed;
-            right: -100vw;
-            top: 0;
-            bottom: 0;
-            width: 100vw;
-            background: rgba(30, 30, 30, 0.98);
-            backdrop-filter: blur(20px);
-            z-index: 2100;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            color: #eee;
-        }
-        @media (min-width: 640px) { #chat-w { width: 350px; right: -400px; } }
-        #chat-w.open { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
-        
-        .chat-h {
-            padding: 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .chat-h span {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.7;
-        }
-        .close-chat-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; opacity: 0.6; }
-        .close-chat-btn:hover { opacity: 1; }
-
-        .chat-b { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .chat-item { background: #333; padding: 15px; border-radius: 8px; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.05); position: relative; }
-        .chat-text { white-space: pre-wrap; line-height: 1.5; color: #ddd; }
-        .chat-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px; color: #888; }
-        .chat-actions { display: flex; gap: 10px; opacity: 0.5; transition: opacity 0.2s; }
-        .chat-item:hover .chat-actions { opacity: 1; }
-        .chat-action-btn { cursor: pointer; color: #bbb; transition: color 0.2s; }
-        .chat-action-btn:hover { color: #fff; }
-
-        .chat-f { padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 10px; background: rgba(0, 0, 0, 0.2); }
-        .chat-i { flex: 1; background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px; outline: none; font-size: 14px; resize: none; min-height: 45px; max-height: 120px; font-family: inherit; color: white; }
-        .chat-i:focus { border-color: #4CAF50; }
-        .chat-s { width: 45px; border-radius: 8px; background: #4CAF50; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+        ${getSidebarStyles('#6366f1')}
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -711,18 +666,7 @@ export function getViewerBase(options: ViewerOptions): string {
         </div>
     </div>
 
-    <!-- Notes Sidebar -->
-    <div id="chat-w">
-        <div class="chat-h">
-            <span>My Notes</span>
-            <button class="close-chat-btn" id="close-notes-btn">✕</button>
-        </div>
-        <div class="chat-b" id="notes-list"></div>
-        <div class="chat-f">
-            <textarea class="chat-i" id="note-input" placeholder="Add a note..."></textarea>
-            <button class="chat-s" id="send-note-btn"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
+    ${getSidebarHtml(showHighlights)}
 
     <div class="controls" id="main-footer">
         <!-- Desktop: external footer html (slider etc) -->
@@ -779,6 +723,8 @@ export function getViewerBase(options: ViewerOptions): string {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
         };
+
+        ${getSidebarScripts(fileUrl, showHighlights)}
 
         ${extraScripts}
     </script>
