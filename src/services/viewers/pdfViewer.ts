@@ -83,7 +83,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // Unique Key
-        const FU = '${encodeURIComponent(fileUrl)}';
+        const FU = '${fileUrl}'.split('?')[0];
 
         // Background Logic
         window.setBg = (c) => {
@@ -168,8 +168,8 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 
                 // Index Modal
                 const idxBtn = document.getElementById('index-btn');
-                if(idxBtn) idxBtn.onclick = () => document.getElementById('index-modal').style.display = 'flex';
-                document.getElementById('index-close-btn').onclick = () => document.getElementById('index-modal').style.display = 'none';
+                if(idxBtn) idxBtn.onclick = () => document.getElementById('index-modal').classList.add('open');
+                document.getElementById('index-close-btn').onclick = () => document.getElementById('index-modal').classList.remove('open');
 
                 // Initial Load
                 this.loadPDF('${fileUrl}');
@@ -544,7 +544,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                      item.innerHTML = '<span>Page ' + i + '</span>';
                      item.onclick = () => {
                          this.pageFlip.flip(i-1);
-                         document.getElementById('index-modal').style.display = 'none';
+                         document.getElementById('index-modal').classList.remove('open');
                      };
                      list.appendChild(item);
                 }

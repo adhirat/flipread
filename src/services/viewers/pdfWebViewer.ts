@@ -11,6 +11,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         logoUrl,
         storeUrl, storeName,
         showTTS: false,
+        showHighlights: false,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
@@ -24,7 +25,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 overflow: hidden;
                 opacity: 0.2;
                 line-height: 1.0;
-                pointer-events: auto;
+                pointer-events: none;
             }
             .textLayer > span {
                 color: transparent;
@@ -33,21 +34,22 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 cursor: text;
                 transform-origin: 0% 0%;
             }
-            ::selection { background: rgba(79, 70, 229, 0.3); }
         `,
         settingsHtml: `
-            <div id="set-m">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">PDF Options</h3>
-                    <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Zoom Level</label>
-                        <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
-                            <button onclick="changeZoom(-0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
-                            <span id="zoom-v" class="flex-1 text-center font-bold text-sm">1.5x</span>
-                            <button onclick="changeZoom(0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+            <div id="set-m" onclick="toggleSettings()">
+                <div id="set-m-c" onclick="event.stopPropagation()">
+                    <div class="set-m-h">
+                        <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">PDF Options</h3>
+                        <button onclick="toggleSettings()" class="text-lg opacity-40 hover:opacity-100">✕</button>
+                    </div>
+                    <div class="set-m-b">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Zoom Level</label>
+                            <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                                <button onclick="changeZoom(-0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                                <span id="zoom-v" class="flex-1 text-center font-bold text-sm">1.5x</span>
+                                <button onclick="changeZoom(0.1)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -135,52 +137,9 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 window.currentPdfBlob = blob;
             }
 
-            // Selection Handling for PDF
-            document.addEventListener('mouseup', () => {
-                const sel = window.getSelection();
-                if (!sel.rangeCount || sel.isCollapsed) {
-                    document.getElementById('hl-menu').style.display = 'none';
-                    return;
-                }
-                
-                const range = sel.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
-                const menu = document.getElementById('hl-menu');
-                
-                // Position above selection
-                menu.style.top = (window.scrollY + rect.top - 60) + 'px';
-                menu.style.left = (window.scrollX + rect.left + rect.width / 2) + 'px';
-                menu.style.display = 'flex';
-                
-                window.currentSelection = {
-                    text: sel.toString(),
-                    range: range
-                };
-            });
-
-            window.addHighlight = (color) => {
-                if(!window.currentSelection) return;
-                const { range, text } = window.currentSelection;
-                
-                const span = document.createElement('span');
-                span.className = 'hl-' + color;
-                try {
-                    range.surroundContents(span);
-                    highlights.push({ text, c: color });
-                    localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
-                    renderHighlights();
-                } catch(e) {
-                    // fall back if range is too complex (cross divs)
-                    console.warn("Could not surround selection precisely", e);
-                }
-                
-                document.getElementById('hl-menu').style.display = 'none';
-                window.getSelection().removeAllRanges();
-            };
-
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
-                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+                m.classList.toggle('o');
             };
 
             window.changeZoom = (d) => {

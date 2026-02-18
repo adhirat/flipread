@@ -344,23 +344,36 @@ export function getViewerBase(options: ViewerOptions): string {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: stretch;
+            justify-content: flex-start;
             z-index: 2000;
             backdrop-filter: blur(5px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
-
+        .index-modal.open { 
+            opacity: 1; 
+            visibility: visible; 
+        }
+        
         .index-content {
             background: #252525;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-            max-height: 70vh;
+            color: white;
+            width: 320px;
+            max-width: 80vw;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (max-width: 640px) { .index-content { width: 100% !important; max-width: 100vw !important; } }
+        .index-modal.open .index-content {
+            transform: translateX(0);
         }
 
         .index-header {
@@ -377,6 +390,17 @@ export function getViewerBase(options: ViewerOptions): string {
             flex: 1;
             padding: 10px 0;
         }
+        .index-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .index-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .index-item:active { background: rgba(255, 255, 255, 0.1); }
 
         /* Social & Divider */
         .h-divider { width:1px; height:24px; background:rgba(255,255,255,0.2); margin:0 5px; }
@@ -384,31 +408,21 @@ export function getViewerBase(options: ViewerOptions): string {
         /* Modern Settings Modal */
         .settings-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2500;
-            display: none; align-items: center; justify-content: center;
+            display: flex; align-items: stretch; justify-content: flex-end;
             backdrop-filter: blur(4px);
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
-        .settings-modal.open { display: flex; }
+        .settings-modal.open { opacity: 1; visibility: visible; }
         
         .settings-content {
             background: #252525; color: white;
-            width: 100%; height: 100%; max-width: none; border-radius: 0;
+            width: 320px; max-width: 80vw; height: 100%;
             display: flex; flex-direction: column;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        @media (min-width: 768px) {
-            .settings-modal { 
-                background: transparent; pointer-events: none;
-                align-items: flex-start; justify-content: flex-end;
-                padding-top: 60px; padding-right: 20px;
-            }
-            .settings-modal.open { pointer-events: auto; }
-            .settings-content {
-                width: 320px; height: auto; max-height: 80vh;
-                border-radius: 12px;
-                border: 1px solid rgba(255,255,255,0.1);
-            }
-        }
+        @media (max-width: 640px) { .settings-content { width: 100% !important; max-width: 100vw !important; } }
+        .settings-modal.open .settings-content { transform: translateX(0); }
 
         .set-header {
             padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -607,6 +621,13 @@ export function getViewerBase(options: ViewerOptions): string {
             ` : ''}
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+            
+            ${showWebViewLink ? `
+            <a href="?mode=web" class="header-icon" id="web-view-icon-hdr" title="Web View">
+                <i class="fas fa-globe"></i>
+            </a>
+            ` : ''}
+
             <div class="h-divider"></div>
 
             <button class="header-icon" id="bg-settings-btn" title="Appearance">
@@ -626,12 +647,6 @@ export function getViewerBase(options: ViewerOptions): string {
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
-            ` : ''}
-
-            ${showWebViewLink ? `
-            <a href="?mode=web" class="header-icon" id="web-view-icon-hdr" title="Web View">
-                <i class="fas fa-globe"></i>
-            </a>
             ` : ''}
 
 
@@ -722,11 +737,11 @@ export function getViewerBase(options: ViewerOptions): string {
             <div class="mobile-icons-center">
                 <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
                 <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
-                <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
-                <button class="header-icon" id="notes-btn-mob"><i class="fas fa-pen-fancy"></i></button>
                 ${showWebViewLink ? `
                 <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>
                 ` : ''}
+                <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
+                <button class="header-icon" id="notes-btn-mob"><i class="fas fa-pen-fancy"></i></button>
             </div>
 
             <button class="nav-btn-mob" id="mobile-next-btn" onclick="if(window.next)window.next()"><i class="fas fa-chevron-right"></i></button>

@@ -21,34 +21,35 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             .epub-container { height: auto !important; width: 100% !important; overflow: visible !important; }
         `,
         settingsHtml: `
-            <!-- Settings Modal -->
-            <div id="set-m">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Typography</h3>
-                    <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Size</label>
-                        <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
-                            <button onclick="changeFontSize(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
-                            <span id="wfz-v" class="flex-1 text-center font-bold text-sm">100%</span>
-                            <button onclick="changeFontSize(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
-                        </div>
+            <div id="set-m" onclick="toggleSettings()">
+                <div id="set-m-c" onclick="event.stopPropagation()">
+                    <div class="set-m-h">
+                        <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">Typography</h3>
+                        <button onclick="toggleSettings()" class="text-lg opacity-40 hover:opacity-100">✕</button>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Family</label>
-                        <select id="wff-s" onchange="setFont(this.value)" class="w-full bg-gray-50 border p-2 rounded-lg text-sm outline-none focus:ring-2 ring-indigo-500">
-                            <option value="'Inter', sans-serif">Modern Sans (Inter)</option>
-                            <option value="'Lora', serif">Literary Serif (Lora)</option>
-                            <option value="'EB Garamond', serif">Elegant Garamond</option>
-                            <option value="'Crimson Pro', serif">Journal Serif (Crimson)</option>
-                            <option value="'Merriweather', serif">Classic Serif</option>
-                            <option value="'Playfair Display', serif">Display Serif</option>
-                            <option value="'Open Sans', sans-serif">Clean Sans</option>
-                            <option value="'Montserrat', sans-serif">Sharp Sans</option>
-                            <option value="system-ui">System Default</option>
-                        </select>
+                    <div class="set-m-b">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Size</label>
+                            <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                                <button onclick="changeFontSize(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                                <span id="wfz-v" class="flex-1 text-center font-bold text-sm">100%</span>
+                                <button onclick="changeFontSize(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Font Family</label>
+                            <select id="wff-s" onchange="setFont(this.value)" class="w-full bg-gray-50 border p-2 rounded-lg text-sm outline-none focus:ring-2 ring-indigo-500">
+                                <option value="'Inter', sans-serif">Modern Sans (Inter)</option>
+                                <option value="'Lora', serif">Literary Serif (Lora)</option>
+                                <option value="'EB Garamond', serif">Elegant Garamond</option>
+                                <option value="'Crimson Pro', serif">Journal Serif (Crimson)</option>
+                                <option value="'Merriweather', serif">Classic Serif</option>
+                                <option value="'Playfair Display', serif">Display Serif</option>
+                                <option value="'Open Sans', sans-serif">Clean Sans</option>
+                                <option value="'Montserrat', sans-serif">Sharp Sans</option>
+                                <option value="system-ui">System Default</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -232,7 +233,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
 
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
-                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+                m.classList.toggle('o');
                 document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
             };
 

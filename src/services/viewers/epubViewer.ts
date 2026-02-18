@@ -307,7 +307,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
     `;
 
     const extraScripts = `
-        const FU='${fileUrl}';
+        const FU='${fileUrl}'.split('?')[0];
         let book=null, rend=null, isAnimating=false;
         let z=100, fz=100, lh=1.6, ff='Georgia, serif';
         let highlights = [];

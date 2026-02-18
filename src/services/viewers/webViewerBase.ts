@@ -16,10 +16,11 @@ export interface WebViewerOptions {
     dependencies?: string[];
     showTTS?: boolean;
     storeName?: string;
+    showHighlights?: boolean;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead' } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead', showHighlights = true } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -99,11 +100,11 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             #toc-panel { width: 100% !important; max-width: 100vw !important; }
         }
         
-        #toc-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        #toc-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         #toc-list { flex: 1; overflow-y: auto; padding: 10px 0; }
         .toc-item { 
-            padding: 12px 20px; font-size: 0.95rem; cursor: pointer; border-left: 3px solid transparent; 
-            transition: 0.2s; color: #555;
+            padding: 14px 20px; font-size: 0.95rem; cursor: pointer; border-left: 3px solid transparent; 
+            transition: 0.2s; color: #555; border-bottom: 1px solid rgba(0,0,0,0.03);
         }
         .toc-item:hover { background: #f9f9f9; color: var(--accent); }
         .toc-item.active { border-left-color: var(--accent); background: #f0f0f0; font-weight: 600; color: black; }
@@ -143,13 +144,25 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         
         /* Loading */
         #ld { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s; }
-        /* Settings Modal */
+        /* Settings Drawer */
         #set-m {
-            position: fixed; top: 70px; right: 20px; z-index: 2000; background: white;
-            padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            width: 300px; display: none; flex-direction: column; gap: 16px;
-            border: 1px solid rgba(0,0,0,0.05);
+            position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.5);
+            display: flex; align-items: stretch; justify-content: flex-end;
+            backdrop-filter: blur(4px);
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
+        #set-m.o { opacity: 1; visibility: visible; }
+        
+        #set-m-c {
+            background: white; width: 320px; max-width: 85vw; height: 100%;
+            display: flex; flex-direction: column; padding: 0;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (max-width: 640px) { #set-m-c { width: 100% !important; max-width: 100vw !important; } }
+        #set-m.o #set-m-c { transform: translateX(0); }
+        .set-m-h { padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .set-m-b { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         /* Header */
         .header {
             display: flex;
@@ -396,6 +409,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     </div>
 
     <!-- Highlight Menu -->
+    ${showHighlights ? `
     <div id="hl-menu">
          <div class="hl-btn" style="background:#ffeb3b" onclick="addHighlight('yellow')"></div>
          <div class="hl-btn" style="background:#a5d6a7" onclick="addHighlight('green')"></div>
@@ -403,6 +417,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
          <div class="hl-btn" style="background:#f48fb1" onclick="addHighlight('pink')"></div>
          <div class="hl-btn" style="background:#ce93d8" onclick="addHighlight('purple')"></div>
     </div>
+    ` : ''}
 
     <header class="header up" id="main-header">
         <div class="header-left">
@@ -475,16 +490,20 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">My Notes</span>
             <button onclick="toggleChat()" class="opacity-40 hover:opacity-100">✕</button>
         </div>
+        ${showHighlights ? `
         <div class="chat-tabs">
             <div class="chat-tab active" data-tab="chat-notes" onclick="switchSidebarTab(this)">Notes</div>
             <div class="chat-tab" data-tab="chat-highlights" onclick="switchSidebarTab(this)">Highlights</div>
         </div>
+        ` : ''}
         <div class="chat-b">
             <div id="chat-notes" class="chat-tab-c active"></div>
+            ${showHighlights ? `
             <div id="chat-highlights" class="chat-tab-c">
                 <p class="text-xs text-center opacity-40 py-10">Select text in the content to highlight.</p>
                 <div id="hi-list"></div>
             </div>
+            ` : ''}
         </div>
         <div class="chat-f" id="chat-footer">
             <textarea id="chat-i" placeholder="Add a multi-line note..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendNote()}"></textarea>
@@ -493,10 +512,10 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     </div>
 
     <script>
-        const FU='${fileUrl}';
+        const FU='${fileUrl}'.split('?')[0];
         let bookRender = null;
         let highlights = [];
-        try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
+        ${showHighlights ? "try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}" : ""}
 
         // --- Layout Utils ---
         let lastS = 0;
@@ -580,7 +599,10 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         function toggleChat() { 
             const w = document.getElementById('chat-w');
             w.classList.toggle('o');
-            if(w.classList.contains('o')) { renderNotes(); renderHighlights(); }
+            if(w.classList.contains('o')) { 
+                renderNotes(); 
+                ${showHighlights ? "renderHighlights();" : ""}
+            }
         }
         
         window.switchSidebarTab = (el) => {
@@ -651,6 +673,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              renderNotes();
         };
 
+        ${showHighlights ? `
         window.renderHighlights = () => {
              const b = document.getElementById('hi-list');
              if(!b) return;
@@ -671,6 +694,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              localStorage.setItem('fr_hi_'+FU, JSON.stringify(highlights));
              renderHighlights();
         };
+        ` : ""}
 
         ${extraScripts}
         
