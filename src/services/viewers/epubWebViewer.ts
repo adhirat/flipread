@@ -10,6 +10,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         showBranding,
         logoUrl,
         storeUrl,
+        showTTS: true,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js',
             'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js'
@@ -53,6 +54,11 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             </div>
         `,
         extraScripts: `
+            let syn = window.speechSynthesis;
+            let utter = null;
+            let speaking = false;
+            let ttsPaused = false;
+
             async function init() {
                 try {
                     document.getElementById('settings-btn').style.display = 'flex';
@@ -228,6 +234,84 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 const m = document.getElementById('set-m');
                 m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
                 document.getElementById('wfz-v').textContent = (window.wfz || 100) + '%';
+            };
+
+            window.toggleTTS = () => {
+                if(speaking || ttsPaused) {
+                    stopTTS();
+                } else {
+                    startTTS();
+                }
+            };
+            window.startTTS = () => {
+                if(!bookRender) return;
+                const contents = bookRender.getContents();
+                if(!contents || !contents[0]) return;
+                
+                const text = contents[0].document.body.innerText;
+                if(!text) return;
+
+                utter = new SpeechSynthesisUtterance(text);
+                utter.onend = () => { stopTTS(); };
+                utter.onstart = () => {
+                    speaking = true;
+                    ttsPaused = false;
+                    updateTTSUI();
+                };
+                
+                syn.cancel(); 
+                setTimeout(() => {
+                    syn.resume();
+                    syn.speak(utter);
+                }, 100);
+                
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) {
+                    ctrls.classList.add('flex');
+                    ctrls.classList.remove('hidden');
+                }
+            };
+            window.togglePlayPauseTTS = () => {
+                if (syn.paused) {
+                    syn.resume();
+                    ttsPaused = false;
+                    speaking = true;
+                } else {
+                    syn.pause();
+                    ttsPaused = true;
+                    speaking = false;
+                }
+                updateTTSUI();
+            };
+            window.stopTTS = () => {
+                syn.cancel();
+                speaking = false;
+                ttsPaused = false;
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) {
+                    ctrls.classList.remove('flex');
+                    ctrls.classList.add('hidden');
+                }
+                updateTTSUI();
+            };
+            window.updateTTSUI = () => {
+                const ppIcon = document.getElementById('tts-pp-i');
+                const ttsBtn = document.getElementById('tts-btn');
+                
+                if (ppIcon) {
+                    ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
+                }
+                
+                if (ttsBtn) {
+                    ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
+                    if (speaking || ttsPaused) {
+                        if (ttsPaused) {
+                            ttsBtn.classList.add('tts-paused-state');
+                        } else {
+                            ttsBtn.classList.add('tts-playing', 'tts-active');
+                        }
+                    }
+                }
             };
         `
     });

@@ -14,10 +14,11 @@ export interface WebViewerOptions {
     extraScripts?: string;
     settingsHtml?: string;
     dependencies?: string[];
+    showTTS?: boolean;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [] } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -329,6 +330,12 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             #scroll-top { bottom: 80px; right: 20px; width: 40px; height: 40px; }
         }
         
+        #tts-btn.tts-active { color: #facc15; background: rgba(250, 204, 21, 0.2); border-color: rgba(250, 204, 21, 0.4); }
+        .tts-playing i { animation: pulse-tts 2s infinite; }
+        @keyframes pulse-tts { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        #tts-ctrls { display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(4px); margin-right: 8px; pointer-events: auto; }
+        
         ${extraStyles}
     </style>
 </head>
@@ -360,6 +367,20 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <div class="header-name">${safeTitle}</div>
         </div>
         <div class="header-icons">
+            ${showTTS ? `
+            <div id="tts-ctrls" class="hidden sm:flex">
+                <button onclick="window.togglePlayPauseTTS()" class="text-white hover:text-indigo-300 transition w-6 h-6 flex items-center justify-center">
+                    <i id="tts-pp-i" class="fas fa-pause"></i>
+                </button>
+                <div class="w-[1px] h-3 bg-white/20"></div>
+                <button onclick="window.stopTTS()" class="text-white hover:text-red-400 transition w-6 h-6 flex items-center justify-center">
+                    <i class="fas fa-stop text-[10px]"></i>
+                </button>
+            </div>
+            <button class="header-icon" id="tts-btn" onclick="window.toggleTTS()" title="Listen (TTS)">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            ` : ''}
             <button class="header-icon" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
             <button class="header-icon" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>

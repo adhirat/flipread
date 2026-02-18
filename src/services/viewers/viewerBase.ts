@@ -17,6 +17,7 @@ export interface ViewerOptions {
     showZoom?: boolean;
     showWebViewLink?: boolean;
     footerHtml?: string;
+    showTTS?: boolean;
 }
 
 export function getViewerBase(options: ViewerOptions): string {
@@ -35,7 +36,8 @@ export function getViewerBase(options: ViewerOptions): string {
         dependencies = [],
         showZoom = false,
         showWebViewLink = true,
-        footerHtml = ''
+        footerHtml = '',
+        showTTS = false
     } = options;
     
     const safeTitle = escapeHtml(title);
@@ -165,6 +167,13 @@ export function getViewerBase(options: ViewerOptions): string {
             background: rgba(255, 255, 255, 0.2);
             transform: scale(1.05);
         }
+
+        #tts-btn.tts-active { color: #facc15; background: rgba(250, 204, 21, 0.2); border-color: rgba(250, 204, 21, 0.4); }
+        .tts-playing i { animation: pulse-tts 2s infinite; }
+        @keyframes pulse-tts { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        #tts-ctrls { display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(4px); margin-right: 8px; pointer-events: auto; }
+
 
         .zoom-controls-inline {
             display: flex;
@@ -479,6 +488,20 @@ export function getViewerBase(options: ViewerOptions): string {
         <div class="header-name">${safeTitle}</div>
 
         <div class="header-icons" id="header-icons">
+            ${showTTS ? `
+            <div id="tts-ctrls" class="hidden sm:flex">
+                <button onclick="window.togglePlayPauseTTS()" class="text-white hover:text-indigo-300 transition w-6 h-6 flex items-center justify-center">
+                    <i id="tts-pp-i" class="fas fa-pause"></i>
+                </button>
+                <div class="w-[1px] h-3 bg-white/20"></div>
+                <button onclick="window.stopTTS()" class="text-white hover:text-red-400 transition w-6 h-6 flex items-center justify-center">
+                    <i class="fas fa-stop text-[10px]"></i>
+                </button>
+            </div>
+            <button class="header-icon" id="tts-btn" onclick="window.toggleTTS()" title="Listen (TTS)">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            ` : ''}
             <button class="header-icon" id="share-twitter-btn" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
             <button class="header-icon" id="share-facebook-btn" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
             <button class="header-icon" id="copy-link-btn" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>

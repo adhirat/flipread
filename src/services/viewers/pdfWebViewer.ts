@@ -10,6 +10,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         showBranding,
         logoUrl,
         storeUrl,
+        showTTS: true,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
@@ -54,6 +55,11 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         `,
         extraScripts: `
             let pdfScale = 1.5;
+            let syn = window.speechSynthesis;
+            let utter = null;
+            let speaking = false;
+            let ttsPaused = false;
+
             async function init() {
                 try {
                     document.getElementById('settings-btn').style.display = 'flex';
@@ -181,6 +187,93 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 pdfScale = Math.max(0.5, Math.min(3.0, pdfScale + d));
                 document.getElementById('zoom-v').textContent = pdfScale.toFixed(1) + 'x';
                 if(window.currentPdfBlob) renderPDF(window.currentPdfBlob);
+            };
+
+            window.toggleTTS = () => {
+                if(speaking || ttsPaused) {
+                    stopTTS();
+                } else {
+                    startTTS();
+                }
+            };
+            window.startTTS = () => {
+                const layers = document.querySelectorAll('.textLayer');
+                let text = '';
+                layers.forEach(layer => {
+                    text += layer.innerText + ' ';
+                });
+                
+                if(!text.trim()) {
+                    // Fallback to searching for spans if innerText is empty (sometimes happens with absolute positioning)
+                    layers.forEach(layer => {
+                        const spans = layer.querySelectorAll('span');
+                        spans.forEach(s => text += s.innerText + ' ');
+                    });
+                }
+                
+                if(!text.trim()) return;
+
+                utter = new SpeechSynthesisUtterance(text);
+                utter.onend = () => { stopTTS(); };
+                utter.onstart = () => {
+                    speaking = true;
+                    ttsPaused = false;
+                    updateTTSUI();
+                };
+                
+                syn.cancel(); 
+                setTimeout(() => {
+                    syn.resume();
+                    syn.speak(utter);
+                }, 100);
+                
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) {
+                    ctrls.classList.add('flex');
+                    ctrls.classList.remove('hidden');
+                }
+            };
+            window.togglePlayPauseTTS = () => {
+                if (syn.paused) {
+                    syn.resume();
+                    ttsPaused = false;
+                    speaking = true;
+                } else {
+                    syn.pause();
+                    ttsPaused = true;
+                    speaking = false;
+                }
+                updateTTSUI();
+            };
+            window.stopTTS = () => {
+                syn.cancel();
+                speaking = false;
+                ttsPaused = false;
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) {
+                    ctrls.classList.remove('flex');
+                    ctrls.classList.add('hidden');
+                }
+                updateTTSUI();
+            };
+            window.updateTTSUI = () => {
+                const ppIcon = document.getElementById('tts-pp-i');
+                const ttsBtn = document.getElementById('tts-btn');
+                
+                if (ppIcon) {
+                    ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
+                }
+                
+                if (ttsBtn) {
+                    ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
+                    if (speaking || ttsPaused) {
+                        if (ttsPaused) {
+                            ttsBtn.classList.add('tts-paused-state');
+                        } else {
+                            ttsBtn.classList.add('tts-playing', 'tts-active');
+                        }
+                    }
+                }
             };
         `
     });
