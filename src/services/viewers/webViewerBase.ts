@@ -263,22 +263,37 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         .controls.up { transform: translateY(0); }
 
         .footer-icons-mobile {
-            display: none;
-            gap: 12px;
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            flex: 1;
+            gap: 10px;
         }
 
-        .footer-icons-mobile .header-icon {
+        .mobile-icons-center {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-icons-center .header-icon {
             margin: 0;
             width: 32px;
             height: 32px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
 
         @media (max-width: 768px) {
+            .header.up { transform: translateY(0) !important; opacity: 1 !important; }
+            .header.down { transform: translateY(-70px) !important; opacity: 0 !important; }
+
             .header-icons {
                 display: flex !important;
                 gap: 8px;
@@ -301,16 +316,19 @@ export function getWebViewerBase(options: WebViewerOptions): string {
 
             .controls {
                 display: flex !important;
-                bottom: 12px !important;
+                bottom: 15px !important;
                 left: 50% !important;
-                transform: translateX(-50%) !important;
+                transform: translate(-50%, 0) !important;
                 width: calc(100% - 32px) !important;
                 max-width: 500px !important;
                 background: none !important;
                 border: none !important;
                 pointer-events: none !important;
                 padding: 0 !important;
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s !important;
             }
+            .controls.down { transform: translate(-50%, 100px) !important; opacity: 0 !important; }
+            .controls.up { transform: translate(-50%, 0) !important; opacity: 1 !important; }
             .footer-icons-mobile {
                 display: flex !important;
                 width: 100%;
@@ -422,12 +440,16 @@ export function getWebViewerBase(options: WebViewerOptions): string {
 
     <div class="controls up" id="main-footer">
         <div class="footer-icons-mobile">
-            <button class="header-icon" onclick="window.shareSocial('twitter')" title="Twitter"><i class="fab fa-twitter"></i></button>
-            <button class="header-icon" onclick="window.shareSocial('facebook')" title="Facebook"><i class="fab fa-facebook"></i></button>
-            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
-            <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
-            <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>
-            <button class="header-icon" onclick="toggleChat()" title="Notes"><i class="fas fa-pen-fancy"></i></button>
+            <button class="header-icon" onclick="window.prevPage()" title="Previous"><i class="fas fa-chevron-up"></i></button>
+            <div class="mobile-icons-center">
+                <button class="header-icon" onclick="window.shareSocial('twitter')" title="Twitter"><i class="fab fa-twitter"></i></button>
+                <button class="header-icon" onclick="window.shareSocial('facebook')" title="Facebook"><i class="fab fa-facebook"></i></button>
+                <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+                <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
+                <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>
+                <button class="header-icon" onclick="toggleChat()" title="Notes"><i class="fas fa-pen-fancy"></i></button>
+            </div>
+            <button class="header-icon" onclick="window.nextPage()" title="Next"><i class="fas fa-chevron-down"></i></button>
         </div>
     </div>
 
@@ -484,18 +506,24 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         const stBtn = document.getElementById('scroll-top');
 
         window.addEventListener('scroll', () => {
-             const curS = window.scrollY;
+             const curS = window.pageYOffset || document.documentElement.scrollTop;
+             const diff = curS - lastS;
+             
              // Header & Footer Hiding
-             if (curS > lastS && curS > 100) {
-                 hdr.classList.remove('up');
-                 hdr.classList.add('down');
-                 ftr.classList.remove('up');
-                 ftr.classList.add('down');
-             } else {
-                 hdr.classList.remove('down');
-                 hdr.classList.add('up');
-                 ftr.classList.remove('down');
-                 ftr.classList.add('up');
+             if (Math.abs(diff) < 5) return; 
+             
+             if (diff > 0 && curS > 80) {
+                 // Scrolling down - hide
+                 document.getElementById('main-header').classList.remove('up');
+                 document.getElementById('main-header').classList.add('down');
+                 document.getElementById('main-footer').classList.remove('up');
+                 document.getElementById('main-footer').classList.add('down');
+             } else if (diff < -10 || curS < 50) {
+                 // Scrolling up or at top - show
+                 document.getElementById('main-header').classList.remove('down');
+                 document.getElementById('main-header').classList.add('up');
+                 document.getElementById('main-footer').classList.remove('down');
+                 document.getElementById('main-footer').classList.add('up');
              }
              lastS = curS;
 
@@ -503,6 +531,15 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              if (curS > 200) stBtn.classList.add('v');
              else stBtn.classList.remove('v');
         });
+
+        window.prevPage = () => {
+            const h = window.innerHeight * 0.8;
+            window.scrollBy({ top: -h, behavior: 'smooth' });
+        };
+        window.nextPage = () => {
+            const h = window.innerHeight * 0.8;
+            window.scrollBy({ top: h, behavior: 'smooth' });
+        };
 
         function toggleTOC() { document.getElementById('toc-menu').classList.toggle('open'); }
         
