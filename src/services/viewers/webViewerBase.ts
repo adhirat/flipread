@@ -8,6 +8,7 @@ export interface WebViewerOptions {
     settings: Record<string, any>;
     showBranding: boolean;
     logoUrl?: string;
+    storeUrl?: string;
     extraStyles?: string;
     extraHtml?: string;
     extraScripts?: string;
@@ -16,7 +17,7 @@ export interface WebViewerOptions {
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [] } = options;
+    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [] } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -355,7 +356,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <button class="header-icon" onclick="toggleTOC()" title="Contents">
                 <i class="fas fa-list-ul"></i>
             </button>
-            <img src="${logoUrl || '/logo.png'}" alt="Logo" class="header-logo" />
+            <a href="${storeUrl}"><img src="${logoUrl || '/logo.png'}" alt="Logo" class="header-logo" /></a>
             <div class="header-name">${safeTitle}</div>
         </div>
         <div class="header-icons">

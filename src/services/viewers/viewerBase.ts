@@ -8,6 +8,7 @@ export interface ViewerOptions {
     settings: Record<string, any>;
     showBranding: boolean;
     logoUrl?: string;
+    storeUrl?: string;
     extraStyles?: string;
     extraHtml?: string;
     extraScripts?: string;
@@ -26,6 +27,7 @@ export function getViewerBase(options: ViewerOptions): string {
         settings, 
         showBranding, 
         logoUrl = '', 
+        storeUrl = '/',
         extraStyles = '', 
         extraHtml = '', 
         extraScripts = '', 
@@ -472,7 +474,7 @@ export function getViewerBase(options: ViewerOptions): string {
             <button class="header-icon" id="index-btn" title="Table of Contents">
                 <i class="fas fa-list"></i>
             </button>
-            ${showBranding && logoUrl ? `<img src="${logoUrl}" alt="Logo" class="header-logo">` : ''}
+            ${showBranding && logoUrl ? `<a href="${storeUrl}" style="pointer-events: auto;"><img src="${logoUrl}" alt="Logo" class="header-logo"></a>` : ''}
         </div>
         <div class="header-name">${safeTitle}</div>
 

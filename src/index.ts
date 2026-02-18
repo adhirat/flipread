@@ -29,10 +29,10 @@ app.use('*', async (c, next) => {
   if (hostname !== appHostname && hostname !== 'localhost' && !hostname.endsWith('.workers.dev')) {
     // 1. Check for Book Domain
     const book = await c.env.DB.prepare(
-      `SELECT b.*, u.name as author_name, u.plan as author_plan
+      `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_handle, u.store_logo_key
        FROM books b JOIN users u ON b.user_id = u.id
        WHERE LOWER(b.custom_domain) = ?`
-    ).bind(hostname.toLowerCase()).first<Book & { author_name: string; author_plan: string }>();
+    ).bind(hostname.toLowerCase()).first<Book & { author_name: string; author_plan: string; store_handle?: string; store_logo_key?: string }>();
 
     if (book) {
       c.set('book', book);

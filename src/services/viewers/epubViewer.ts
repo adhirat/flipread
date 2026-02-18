@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
+export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/'): string {
     const bg = (settings.background as string) || '#f3f0e8';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -301,7 +301,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
            <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
                 <button class="ib rounded-full" onclick="event.stopPropagation();toggleTOC()"><i class="fas fa-list-ul text-sm"></i></button>
                <div class="flex items-center gap-2 min-w-0">
-                   <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
+                   <a href="${storeUrl}"><img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" /></a>
                     <h1 class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</h1>
                </div>
            </div>

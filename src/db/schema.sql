@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT, -- null for OAuth users
   avatar_url TEXT DEFAULT '',
   plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'basic', 'pro', 'business')),
+  store_handle TEXT UNIQUE DEFAULT NULL,
   store_name TEXT DEFAULT NULL,
   store_logo_url TEXT DEFAULT '',
   store_logo_key TEXT DEFAULT '',

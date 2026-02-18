@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = ''): string {
+export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,6 +9,7 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         settings,
         showBranding,
         logoUrl,
+        storeUrl,
         dependencies: [
             'https://code.jquery.com/jquery-3.6.0.min.js',
             'https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.js'

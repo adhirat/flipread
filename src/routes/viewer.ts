@@ -14,38 +14,41 @@ import {
   passwordPage, errorPage, memberAccessPage 
 } from '../services/viewerTemplates';
 
-export function viewerPage(book: Book & { author_name: string; author_plan: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
+export function viewerPage(book: Book & { author_name: string; author_plan: string; store_handle?: string; store_logo_key?: string }, appUrl: string, mode: string = 'standard'): string {
   const settings = JSON.parse(book.settings || '{}');
   const authorPlan = getPlanLimits(book.author_plan);
   const showBranding = !authorPlan.removeBranding;
   const fileUrl = `${appUrl}/read/api/file/${book.id}`;
   const coverUrl = book.cover_key ? `${appUrl}/read/api/cover/${book.id}` : '';
   const logoUrl = book.store_logo_key ? `${appUrl}/read/api/logo/${book.user_id}` : '';
+  
+  const storeHandle = book.store_handle || book.author_name.toLowerCase().replace(/ /g, '-');
+  const storeUrl = `${appUrl}/store/${storeHandle}`;
 
   if (mode === 'web') {
-    if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
-    return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
+    return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   }
 
   if (book.type === 'pdf') {
-    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else if (['doc', 'docx'].includes(book.type)) {
-    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else if (['ppt', 'pptx'].includes(book.type)) {
-    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else if (['xlsx', 'xls', 'csv'].includes(book.type)) {
-    return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else if (['txt', 'md', 'rtf', 'html'].includes(book.type)) {
-    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else if (book.type === 'image') {
-    return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   } else {
-    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl);
+    return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl);
   }
 }
 
@@ -56,10 +59,10 @@ viewer.get('/:slug', async (c) => {
   const slug = c.req.param('slug');
 
   const book = await c.env.DB.prepare(
-    `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_logo_key, u.store_settings, u.store_name, u.store_logo_url
+    `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_handle, u.store_logo_key, u.store_settings, u.store_name, u.store_logo_url
      FROM books b JOIN users u ON b.user_id = u.id
      WHERE b.slug = ? AND b.is_public = 1`
-  ).bind(slug).first<Book & { author_name: string; author_plan: string; store_logo_key?: string; store_settings?: string; store_name?: string; store_logo_url?: string }>();
+  ).bind(slug).first<Book & { author_name: string; author_plan: string; store_handle: string; store_logo_key?: string; store_settings?: string; store_name?: string; store_logo_url?: string }>();
 
   if (!book) {
     return c.html(errorPage('Book Not Found', 'This book does not exist or has been made private.'), 404);

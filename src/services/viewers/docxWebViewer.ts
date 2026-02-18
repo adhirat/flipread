@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = ''): string {
+export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -9,6 +9,7 @@ export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         settings,
         showBranding,
         logoUrl,
+        storeUrl,
         dependencies: [
             'https://unpkg.com/docx-preview/dist/docx-preview.min.js'
         ],

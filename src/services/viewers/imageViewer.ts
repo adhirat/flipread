@@ -2,7 +2,7 @@
 import { getViewerBase } from './viewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function imageViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
+export function imageViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
     const safeTitle = escapeHtml(title);
     const accent = (settings.accent_color as string) || '#4f46e5';
 
@@ -197,6 +197,7 @@ export function imageViewerHTML(title: string, fileUrl: string, coverUrl: string
         settings,
         showBranding,
         logoUrl,
+        storeUrl,
         extraStyles,
         extraHtml,
         footerHtml,

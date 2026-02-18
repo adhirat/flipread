@@ -1,7 +1,7 @@
 
 import { escapeHtml } from './viewerUtils';
 
-export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = ''): string {
+export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = ''): string {
     const bg = (settings.background as string) || '#f3f0e8';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -164,7 +164,7 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
   
       <header class="hdr" id="main-hdr">
           <div class="flex items-center gap-3 flex-1 min-w-0 mr-2">
-              <img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" />
+              <a href="${storeUrl}"><img src="${logoUrl || '/logo.png'}" alt="Logo" class="h-6 w-6 object-contain rounded-sm" /></a>
               <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
           </div>
           <div class="flex items-center gap-1 sm:gap-2 shrink-0">
