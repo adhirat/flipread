@@ -422,8 +422,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 <i class="fas fa-volume-up"></i>
             </button>
             ` : ''}
-            <button class="header-icon" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
-            <button class="header-icon" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
+            <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
             <a href="?mode=standard" class="header-icon" id="standard-btn" title="Standard View">
@@ -442,8 +441,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         <div class="footer-icons-mobile">
             <button class="header-icon" onclick="window.prevPage()" title="Previous"><i class="fas fa-chevron-up"></i></button>
             <div class="mobile-icons-center">
-                <button class="header-icon" onclick="window.shareSocial('twitter')" title="Twitter"><i class="fab fa-twitter"></i></button>
-                <button class="header-icon" onclick="window.shareSocial('facebook')" title="Facebook"><i class="fab fa-facebook"></i></button>
+                <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
                 <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
                 <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
                 <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>
@@ -543,14 +541,25 @@ export function getWebViewerBase(options: WebViewerOptions): string {
 
         function toggleTOC() { document.getElementById('toc-menu').classList.toggle('open'); }
         
-        window.shareSocial = (p) => {
-            const u = encodeURIComponent(window.location.href);
-            const t = encodeURIComponent('${safeTitle} on FlipRead');
-            let url = '';
-            if(p === 'twitter') url = \`https://twitter.com/intent/tweet?url=\${u}&text=\${t}\`;
-            if(p === 'facebook') url = \`https://www.facebook.com/sharer/sharer.php?u=\${u}\`;
-            if(p === 'linkedin') url = \`https://www.linkedin.com/sharing/share-offsite/?url=\${u}\`;
-            if(url) window.open(url, '_blank', 'width=600,height=400');
+        window.shareBook = async () => {
+            const title = '${safeTitle}';
+            const url = window.location.href;
+            const text = '✨ Exploring something amazing on FlipRead! \\n\\n📖 Read "' + title + '" here:';
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    console.error('Error sharing:', err);
+                }
+            } else {
+                // Fallback for desktop/unsupported browsers
+                await window.copyLink();
+            }
         };
         
         window.copyLink = () => {

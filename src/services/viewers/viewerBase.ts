@@ -537,17 +537,22 @@ export function getViewerBase(options: ViewerOptions): string {
 
         .mobile-icons-center {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .mobile-icons-center .header-icon {
             margin: 0;
-            width: 36px;
-            height: 36px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
 
         .nav-btn-mob {
@@ -598,9 +603,8 @@ export function getViewerBase(options: ViewerOptions): string {
                 <i class="fas fa-volume-up"></i>
             </button>
             ` : ''}
-            <button class="header-icon" id="share-twitter-btn" onclick="window.shareSocial('twitter')" title="Share on Twitter"><i class="fab fa-twitter"></i></button>
-            <button class="header-icon" id="share-facebook-btn" onclick="window.shareSocial('facebook')" title="Share on Facebook"><i class="fab fa-facebook"></i></button>
-            <button class="header-icon" id="copy-link-btn" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+            <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             <div class="h-divider"></div>
 
             <button class="header-icon" id="bg-settings-btn" title="Appearance">
@@ -714,14 +718,13 @@ export function getViewerBase(options: ViewerOptions): string {
             <button class="nav-btn-mob" id="mobile-prev-btn" onclick="if(window.prev)window.prev()"><i class="fas fa-chevron-left"></i></button>
             
             <div class="mobile-icons-center">
+                <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
                 <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
                 <button class="header-icon" id="notes-btn-mob"><i class="fas fa-pen-fancy"></i></button>
                 ${showWebViewLink ? `
                 <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>
                 ` : ''}
-                <button class="header-icon" id="share-twitter-btn-mob" onclick="window.shareSocial('twitter')"><i class="fab fa-twitter"></i></button>
-                <button class="header-icon" id="share-facebook-btn-mob" onclick="window.shareSocial('facebook')"><i class="fab fa-facebook"></i></button>
-                <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
             </div>
 
             <button class="nav-btn-mob" id="mobile-next-btn" onclick="if(window.next)window.next()"><i class="fas fa-chevron-right"></i></button>
@@ -735,13 +738,23 @@ export function getViewerBase(options: ViewerOptions): string {
 
 
         // --- Shared Logic ---
-        window.shareSocial = (p) => {
-            const u = encodeURIComponent(window.location.href);
-            const t = encodeURIComponent(TITLE + ' on FlipRead');
-            let url = '';
-            if(p === 'twitter') url = 'https://twitter.com/intent/tweet?url=' + u + '&text=' + t;
-            if(p === 'facebook') url = 'https://www.facebook.com/sharer/sharer.php?u=' + u;
-            if(url) window.open(url, '_blank', 'width=600,height=400');
+        window.shareBook = async () => {
+            const url = window.location.href;
+            const text = '✨ Exploring something amazing on FlipRead! \\n\\n📖 Read "' + TITLE + '" here:';
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: TITLE,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    console.error('Error sharing:', err);
+                }
+            } else {
+                await window.copyLink();
+            }
         };
         
         window.copyLink = () => {
