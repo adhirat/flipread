@@ -16,9 +16,12 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
-        showZoom: true,
+        showZoom: false,
         showHighlights: false,
         extraStyles: `
+            /* Hide zoom controls */
+            #zoom-controls, .zoom-controls { display: none !important; }
+            
             /* Hide desktop footer if any */
             @media (min-width: 769px) { #main-footer { display: none !important; } }
 
@@ -117,7 +120,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             async function init() {
                 try {
                     injectFullscreen();
-                    setupHeaderZoom();
                     document.getElementById('settings-btn').style.display = 'flex';
                     
                     const res = await fetch(FU);
