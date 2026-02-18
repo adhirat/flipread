@@ -185,6 +185,10 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         }
 
         .header-name {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             font-size: 14px;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -194,8 +198,9 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             text-overflow: ellipsis;
             max-width: 40vw;
             pointer-events: auto;
-            text-align: left;
+            text-align: center;
             color: #fff;
+            z-index: 10;
         }
 
         .header-icons {
@@ -366,8 +371,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 <i class="fas fa-list-ul"></i>
             </button>
             <a href="${storeUrl}"><img src="${logoUrl || '/logo.png'}" alt="Logo" class="header-logo" /></a>
-            <div class="header-name">${safeTitle}</div>
         </div>
+        <div class="header-name">${safeTitle}</div>
         <div class="header-icons">
             ${showTTS ? `
             <div id="tts-ctrls" class="hidden">

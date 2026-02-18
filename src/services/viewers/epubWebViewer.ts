@@ -240,14 +240,26 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             window.startTTS = () => {
                 if(!bookRender) return;
                 const contents = bookRender.getContents();
-                if(!contents || !contents[0]) return;
-                const text = contents[0].document.body.innerText;
-                if(!text) return;
+                if(!contents || contents.length === 0) return;
+                
+                // Get text from all visible content chunks in scrolled mode
+                let text = contents.map(c => c.document.body.innerText).join(' ');
+                if(!text || text.trim().length === 0) return;
+
                 utter = new SpeechSynthesisUtterance(text);
                 utter.onend = stopTTS;
                 utter.onstart = () => { speaking = true; ttsPaused = false; updateTTSUI(); };
+                
+                // Safety: cancel any current speech and ensure resume is called 
+                // to unstick some browser speech engines
+                if (syn.paused) syn.resume();
                 syn.cancel(); 
-                setTimeout(() => syn.speak(utter), 100);
+                
+                setTimeout(() => {
+                    if (syn.paused) syn.resume();
+                    syn.speak(utter);
+                }, 150);
+                
                 document.getElementById('tts-ctrls').classList.remove('hidden');
             };
             window.togglePlayPauseTTS = () => {
