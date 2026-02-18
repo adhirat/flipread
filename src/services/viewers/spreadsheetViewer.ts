@@ -81,6 +81,11 @@ export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: 
             #sheet-c{border-radius:0}
             #sheet-c td,#sheet-c th{padding:6px 10px;font-size:11px}
         }
+
+        #tts-ctrls { display: none; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(10px); margin-right: 8px; }
+        .tts-active { color: #facc15 !important; background: rgba(250, 204, 21, 0.2) !important; border-color: rgba(250, 204, 21, 0.4) !important; }
+        .tts-playing i { animation: pulse-tts 2s infinite; }
+        @keyframes pulse-tts { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="light-ui" style="background:#ffffff">
@@ -98,6 +103,18 @@ export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: 
             <div class="font-bold text-xs sm:text-sm truncate opacity-90">${safeTitle}</div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+            <div id="tts-ctrls" class="hidden sm:flex">
+                <button onclick="togglePlayPauseTTS()" class="text-white hover:text-indigo-300 transition w-6 h-6 flex items-center justify-center">
+                    <i id="tts-pp-i" class="fas fa-pause"></i>
+                </button>
+                <div class="w-[1px] h-3 bg-white/20"></div>
+                <button onclick="stopTTS()" class="text-white hover:text-red-400 transition w-6 h-6 flex items-center justify-center">
+                    <i class="fas fa-stop text-[10px]"></i>
+                </button>
+            </div>
+            <button class="nb !bg-transparent" id="tts-btn" onclick="toggleTTS()" title="Listen (TTS)">
+                <i class="fas fa-volume-up"></i>
+            </button>
             <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition hidden sm:flex" id="m-btn" title="Toggle Layout"><i class="fas fa-expand text-xs"></i></button>
         </div>
     </header>
@@ -157,6 +174,11 @@ export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: 
         const FU='${fileUrl}';
         let workbook = null;
         let currentSheet = 0;
+        let syn = window.speechSynthesis;
+        let utter = null;
+        let speaking = false;
+        let ttsPaused = false;
+
 
         async function initSheet() {
             try {
@@ -234,6 +256,81 @@ export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: 
                 '<div class="search-item"><p class="text-xs leading-relaxed opacity-90 break-words" style="border-left:2px solid ${accent};padding-left:8px">' + n.text.replace(/\\n/g,'<br>') + '</p><p class="text-[9px] opacity-40 mt-1 pl-2">' + n.time + '</p></div>'
             ).join('');
             b.scrollTop = b.scrollHeight;
+        };
+
+        window.toggleTTS = () => {
+            if(speaking || ttsPaused) {
+                stopTTS();
+            } else {
+                startTTS();
+            }
+        };
+        window.startTTS = () => {
+            const container = document.getElementById('sheet-c');
+            if(!container) return;
+            
+            const text = container.innerText;
+            if(!text) return;
+
+            utter = new SpeechSynthesisUtterance(text);
+            utter.onend = () => { stopTTS(); };
+            utter.onstart = () => {
+                speaking = true;
+                ttsPaused = false;
+                updateTTSUI();
+            };
+            
+            syn.cancel(); 
+            setTimeout(() => {
+                syn.resume();
+                syn.speak(utter);
+            }, 100);
+            
+            const ctrls = document.getElementById('tts-ctrls');
+            if(ctrls) {
+                ctrls.style.display = 'flex';
+            }
+        };
+        window.togglePlayPauseTTS = () => {
+            if (syn.paused) {
+                syn.resume();
+                ttsPaused = false;
+                speaking = true;
+            } else {
+                syn.pause();
+                ttsPaused = true;
+                speaking = false;
+            }
+            updateTTSUI();
+        };
+        window.stopTTS = () => {
+            syn.cancel();
+            speaking = false;
+            ttsPaused = false;
+            const ctrls = document.getElementById('tts-ctrls');
+            if(ctrls) {
+                ctrls.style.display = 'none';
+            }
+            updateTTSUI();
+        };
+        window.updateTTSUI = () => {
+            const ppIcon = document.getElementById('tts-pp-i');
+            const ttsBtn = document.getElementById('tts-btn');
+            
+            if (ppIcon) {
+                ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
+            }
+            
+            if (ttsBtn) {
+                ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
+                if (speaking || ttsPaused) {
+                    if (ttsPaused) {
+                        ttsBtn.classList.add('tts-paused-state');
+                    } else {
+                        ttsBtn.classList.add('tts-playing', 'tts-active');
+                    }
+                }
+            }
         };
 
         initSheet();
