@@ -214,7 +214,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         /* Mobile Page Indicator */
         #mobile-pi {
             position: absolute;
-            bottom: 12px;
+            bottom: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.5);
@@ -225,11 +225,14 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             font-weight: 600;
             z-index: 100;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, bottom 0.3s;
             pointer-events: none;
             backdrop-filter: blur(4px);
         }
         #mobile-pi.v { opacity: 0.7; }
+        body.full-mode #mobile-pi {
+            bottom: 12px;
+        }
     `;
 
     const extraHtml = `

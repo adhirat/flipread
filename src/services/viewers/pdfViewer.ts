@@ -54,10 +54,34 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px;
         }
         .btn-primary:hover { background: #45a049; }
+        
+        /* Mobile Page Indicator */
+        #mobile-pi {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+        #mobile-pi.v { opacity: 0.7; }
+        body.full-mode #mobile-pi {
+            bottom: 12px;
+        }
     `;
 
     const extraHtml = `
         <div id="flipbook-container"></div>
+        <div id="mobile-pi">Page -- / --</div>
         
         <div class="error-container" id="error-container" style="display: none;">
             <div class="error-icon"><i class="fas fa-book-open"></i></div>
@@ -570,6 +594,17 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 if(mnBtn) {
                     mnBtn.disabled = index >= this.totalPages - 1;
                     mnBtn.style.opacity = index >= this.totalPages - 1 ? '0.3' : '1';
+                }
+                
+                // Mobile single-page indicator
+                const mobilePi = document.getElementById('mobile-pi');
+                if (mobilePi) {
+                    if (window.innerWidth <= 768 && this.totalPages > 0) {
+                        mobilePi.textContent = "Page " + pageNum + " / " + this.totalPages;
+                        mobilePi.classList.add('v');
+                    } else {
+                        mobilePi.classList.remove('v');
+                    }
                 }
             }
             
