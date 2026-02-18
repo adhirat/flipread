@@ -278,8 +278,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 display: flex !important;
                 gap: 8px;
             }
-            .header-icons > button:not(#notes-btn):not(#settings-btn):not(#tts-btn):not(#tts-ctrls) { display: none !important; }
-            .header-icons > a#standard-btn { display: flex !important; }
+            .header-icons > button:not(#tts-btn):not(#tts-ctrls) { display: none !important; }
+            .header-icons > a#standard-btn { display: none !important; }
             #tts-ctrls:not(.hidden) { display: flex !important; align-items: center; }
 
             .header-icons .header-icon {
@@ -401,6 +401,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <button class="header-icon" onclick="window.shareSocial('facebook')" title="Facebook"><i class="fab fa-facebook"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
+            <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>
+            <button class="header-icon" onclick="toggleChat()" title="Notes"><i class="fas fa-pen-fancy"></i></button>
         </div>
     </div>
 

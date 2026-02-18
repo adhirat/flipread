@@ -194,6 +194,9 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         .eb-btn.s { background: white; color: #1a1a1a; border: 1px solid rgba(0,0,0,0.1); }
         .eb-btn.s:hover { background: #f8f9fa; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         
+        .eb-f { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); color: white; padding: 10px 24px; border-radius: 30px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.2); z-index: 100; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        .c-b:hover .eb-f { background: ${accent}; border-color: transparent; }
+        
         /* Search Modal Styles */
         #search-m { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 2500; display: none; align-items: center; justify-content: center; }
         #search-m.o { display: flex; }
@@ -206,6 +209,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             <div id="c-b" class="c-b" onclick="window.openBook()">
                 <div class="c-v" id="c-v-inner">
                     ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:contain;background:transparent;">' : '<div class="flex flex-col gap-2"><span>' + safeTitle + '</span><span class="text-[9px] opacity-40">READ NOW</span></div>'}
+                    <div class="eb-f"><i class="fas fa-book-open"></i> Flip Open</div>
                 </div>
             </div>
             <div id="back-c" class="c-b" style="display: none;" onclick="window.openFromBack()">
