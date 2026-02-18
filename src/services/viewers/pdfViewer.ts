@@ -414,7 +414,11 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
                 this.pageFlip.loadFromHTML(this.container.querySelectorAll('.page'));
 
+                let flipThrottle = false;
                 this.pageFlip.on('flip', (e) => {
+                    if (flipThrottle) return;
+                    flipThrottle = true;
+                    setTimeout(() => { flipThrottle = false; }, 100);
                     this.updateControls();
                     this.updateCenterOffset(e.data);
                     this.queueNearbyPages(e.data);
@@ -463,6 +467,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     if (!this.renderedPages.has(pageNum)) this.renderingQueue.add(pageNum);
                 }
                 this.processRenderQueue();
+                this.cleanupOldPages(currentIndex);
             }
 
             async processRenderQueue() {
@@ -484,7 +489,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
                     try { await this.renderPageContent(pageNum); this.renderedPages.add(pageNum); } 
                     catch (e) { console.error("Render Error Page " + pageNum, e); }
-                    await new Promise(r => setTimeout(r, 10));
+                    await new Promise(r => setTimeout(r, 20));
                 }
                 this.isRendering = false;
             }
@@ -492,14 +497,29 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
             async renderPageContent(pageNum) {
                 const container = document.getElementById('page-content-' + pageNum);
                 if (!container) return;
-                if (container.innerHTML.includes('loader')) container.innerHTML = '';
+                
+                // Clear any existing canvas to prevent accumulation
+                container.innerHTML = '';
+                
                 const page = await this.pdfDoc.getPage(pageNum);
                 const viewport = page.getViewport({ scale: 2.0 });
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = viewport.width; canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
                 container.appendChild(canvas);
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            }
+            
+            cleanupOldPages(currentIndex) {
+                const keepRange = 3;
+                for (let i = 1; i <= this.totalPages; i++) {
+                    if (Math.abs(i - currentIndex) > keepRange) {
+                        const container = document.getElementById('page-content-' + i);
+                        if (container) container.innerHTML = '';
+                        this.renderedPages.delete(i);
+                    }
+                }
             }
 
             updateCenterOffset(targetIndex) {
@@ -596,14 +616,18 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 window.next = () => this.pageFlip.flipNext();
 
                 let resizeTimeout;
+                let isResizing = false;
                 window.addEventListener('resize', () => {
+                    if (isResizing) return;
                     clearTimeout(resizeTimeout);
                     resizeTimeout = setTimeout(() => {
                         if (this.pdfDoc) {
+                            isResizing = true;
                             this.resetZoom();
                             let curr = 0;
                             if (this.pageFlip) { try { curr = this.pageFlip.getCurrentPageIndex(); } catch (e) { } }
                             this.rebuildBook(curr);
+                            setTimeout(() => { isResizing = false; }, 1000);
                         }
                     }, 500);
                 });
@@ -620,6 +644,7 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 if(zo) zo.onclick = () => this.handleZoom(-0.25);
                 
                 this.mainContent.addEventListener('mousedown', (e) => {
+                    if (window.innerWidth <= 768) return;
                     if (this.zoom > 1) { this.startPan(e, e.clientX, e.clientY); return; }
                     const isUI = e.target.closest('.header') || e.target.closest('.controls') || e.target.closest('.index-modal') || e.target.closest('#chat-w');
                     const isBook = e.target.closest('.page') || e.target.closest('.stf__wrapper');
@@ -631,19 +656,30 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                         }
                     }
                 });
-                window.addEventListener('mousemove', (e) => this.movePan(e.clientX, e.clientY));
-                window.addEventListener('mouseup', (e) => this.endPan());
+                window.addEventListener('mousemove', (e) => {
+                    if (window.innerWidth <= 768) return;
+                    this.movePan(e.clientX, e.clientY);
+                });
+                window.addEventListener('mouseup', (e) => {
+                    if (window.innerWidth <= 768) return;
+                    this.endPan();
+                });
                 
                 this.mainContent.addEventListener('touchstart', (e) => {
+                    if (window.innerWidth <= 768) return;
                     if (e.touches.length === 1) this.startPan(e, e.touches[0].clientX, e.touches[0].clientY);
                 }, { passive: false });
                 this.mainContent.addEventListener('touchmove', (e) => {
+                    if (window.innerWidth <= 768) return;
                     if (e.touches.length === 1) {
                         if (this.isDragging) e.preventDefault();
                         this.movePan(e.touches[0].clientX, e.touches[0].clientY);
                     }
                 }, { passive: false });
-                this.mainContent.addEventListener('touchend', (e) => this.endPan());
+                this.mainContent.addEventListener('touchend', (e) => {
+                    if (window.innerWidth <= 768) return;
+                    this.endPan();
+                });
                 
                 this.mainContent.addEventListener('wheel', (e) => {
                     e.preventDefault();
