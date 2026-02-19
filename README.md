@@ -4,7 +4,8 @@ A modern, edge-native platform for selling and reading digital books (PDF/EPUB),
 
 ## 🚀 Features
 
-- **Multi-Format Support**: Upload and read PDF and EPUB books with a premium viewer experience.
+- **Premium Viewers**: High-performance PDF and EPUB viewers with professional streaming support.
+- **Large File Support**: Optimized rendering for GB-sized PDFs with intelligent memory management and Range Requests.
 - **Custom Storefronts**: Personalized branded stores with custom domains, logos, themes, and layouts.
 - **Tiered Subscriptions**: Free, Basic, Pro, and Business plans with tailored limits and features.
 - **Secure Access**: Password protection, private store modes, and secure member access.
@@ -81,64 +82,17 @@ Swagger Documentation is available at **http://localhost:8787/api/swagger**
 
 ## 🌐 Deployment to Cloudflare
 
-### 1. Authenticate with Cloudflare
+FlipRead uses a multi-environment CI/CD pipeline.
 
-```bash
-npx wrangler login
-```
+- **Production**: [https://flipread.adhirat.com](https://flipread.adhirat.com)
+- **Staging**: [https://staging.flipread.adhirat.com](https://staging.flipread.adhirat.com)
 
-### 2. Create Production Resources
+### Branching Model
 
-#### Create D1 Database
+- `main` branch ➡️ **Production**
+- `staging` branch ➡️ **Staging**
 
-```bash
-npx wrangler d1 create flipread-db
-```
-
-Copy the `database_id` from the output and update `wrangler.toml`.
-
-#### Create R2 Bucket
-
-```bash
-npx wrangler r2 bucket create flipread-files
-```
-
-#### Create KV Namespace
-
-```bash
-npx wrangler kv:namespace create KV
-```
-
-Copy the `id` from the output and update `wrangler.toml`.
-
-### 3. Set Production Secrets
-
-```bash
-# JWT secret for authentication
-echo "your-production-jwt-secret" | npx wrangler secret put JWT_SECRET
-
-# Stripe production keys
-echo "sk_live_..." | npx wrangler secret put STRIPE_SECRET_KEY
-echo "whsec_..." | npx wrangler secret put STRIPE_WEBHOOK_SECRET
-```
-
-### 4. Run Production Migrations
-
-```bash
-npm run db:migrate:prod
-```
-
-### 5. Deploy to Cloudflare
-
-```bash
-npm run deploy
-```
-
-## 🔗 Published URL
-
-**Production**: [https://flipread.adhirat.workers.dev](https://flipread.adhirat.workers.dev)
-
-> You can configure a custom domain in the [Cloudflare Dashboard](https://dash.cloudflare.com/) under Workers & Pages → Your Worker → Settings → Domains & Routes
+See the [Detailed Deployment Guide](./DEPLOYMENT_GUIDE.md) for full instructions on setting up resources, secrets, and automated workflows.
 
 ## 📁 Project Structure
 

@@ -1,64 +1,102 @@
-# GitHub Deployment Setup Guide
+# FlipRead Multi-Environment Deployment Guide
 
-This guide explains how to set up automated deployments for FlipRead using GitHub Actions.
+This guide explains how to set up and manage the professional multi-environment deployment pipeline (Staging & Production) for FlipRead using Cloudflare Workers and GitHub Actions.
 
-## Prerequisites
+## 🏗️ Architecture Overview
 
-- A Cloudflare account
-- Access to the GitHub repository settings
+FlipRead uses a dual-environment strategy to ensure stability:
 
-## 1. Get Your Cloudflare Account ID
+| Environment    | Branch    | URL                            | Purpose                              |
+| :------------- | :-------- | :----------------------------- | :----------------------------------- |
+| **Production** | `main`    | `flipread.adhirat.com`         | Live site for customers              |
+| **Staging**    | `staging` | `staging.flipread.adhirat.com` | Testing new features & optimizations |
 
-Your Cloudflare Account ID is:
-`d660af0bb5a3a29ba9ce1266e59b87c5`
+## 1. Cloudflare Resource Setup
 
-_(You can also find this in the Cloudflare Dashboard URL: `dash.cloudflare.com/<ACCOUNT_ID>`) or by running `npx wrangler whoami` locally._
+Each environment requires its own set of Cloudflare resources to maintain isolation.
 
-## 2. Create a Cloudflare API Token
+### 🟢 Production Resources
 
-1. Go to the [Cloudflare API Tokens Dashboard](https://dash.cloudflare.com/profile/api-tokens).
-2. Click **Create Token**.
-3. Use the **Edit Cloudflare Workers** template.
-4. Review the permissions. They should look like this:
-   - **Account** / **Workers Scripts** / **Edit**
-   - **Account** / **Workers KV Storage** / **Edit**
-   - **Account** / **Workers Routes** / **Edit**
-   - **Account** / **D1** / **Edit** (You may need to add this manually if it's missing from the template)
-   - **User** / **User Details** / **Read**
-   - **Zone** / **Workers Routes** / **Edit**
-5. Click **Continue to summary** and then **Create Token**.
-6. **Copy the token immediately**. You won't be able to see it again.
+Resources defined in the top-level of `wrangler.toml`:
 
-## 3. Configure GitHub Secrets
+- **D1**: `flipread-db`
+- **KV**: `KV`
+- **R2**: `flipread-files`
 
-1. Go to your GitHub repository.
-2. Navigate to **Settings** > **Secrets and variables** > **Actions**.
-3. Click **New repository secret**.
-4. Add the following secrets:
+### 🟡 Staging Resources
 
-| Name                    | Value                              |
-| ----------------------- | ---------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID` | `d660af0bb5a3a29ba9ce1266e59b87c5` |
-| `CLOUDFLARE_API_TOKEN`  | _The token you copied in Step 2_   |
+Resources defined under `[env.staging]` in `wrangler.toml`:
 
-## 4. Verify Deployment
+- **D1**: `flipread-db-staging`
+- **KV**: `flipread-kv-staging`
+- **R2**: `flipread-files-staging`
 
-Your repository already has a deployment workflow configured in `.github/workflows/deploy.yml`.
+> [!NOTE]
+> If you need to recreate these, use the standard `npx wrangler` commands including the `--env staging` flag where applicable.
 
-Once you add the secrets:
+## 2. GitHub Actions Configuration
 
-1. Push a change to the `main` branch.
-2. Go to the **Actions** tab in your GitHub repository.
-3. You should see a "Deploy Worker" workflow running.
+The deployment is fully automated via `.github/workflows/deploy.yml`.
 
-## Database Migrations (Optional)
+1. **Secrets**: Ensure your GitHub Repository has these secrets set (**Settings > Secrets > Actions**):
+   - `CLOUDFLARE_ACCOUNT_ID`: `d660af0bb5a3a29ba9ce1266e59b87c5`
+   - `CLOUDFLARE_API_TOKEN`: A token with "Edit Workers" permissions.
 
-The current deployment workflow handles the application code. Database migrations are typically run manually to prevent accidental data changes.
+2. **Triggering**:
+   - `git push origin main` ➡️ Deploys to **Production**.
+   - `git push origin staging` ➡️ Deploys to **Staging**.
 
-To run production migrations manually from your local machine:
+## 3. Secret Management
+
+Cloudflare Secrets (like `JWT_SECRET`) must be set **separately** for each environment.
+
+### Set Staging Secrets
+
+```bash
+npx wrangler secret put JWT_SECRET --env staging
+npx wrangler secret put STRIPE_SECRET_KEY --env staging
+npx wrangler secret put STRIPE_WEBHOOK_SECRET --env staging
+```
+
+### Set Production Secrets (Main branch context)
+
+```bash
+npx wrangler secret put JWT_SECRET
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
+```
+
+## 4. Database Migrations
+
+Always run migrations on staging first to verify schema changes.
+
+### Staging Migrations
+
+```bash
+npx wrangler d1 execute flipread-db-staging --remote --file=./src/db/schema.sql
+```
+
+### Production Migrations
 
 ```bash
 npm run db:migrate:prod
+# or
+npx wrangler d1 execute flipread-db --remote --file=./src/db/schema.sql
 ```
 
-If you want to automate this, you can add a step to your `deploy.yml` file, but use caution.
+## 🚀 Deployment Workflow
+
+1. **Local Development**: Work on your feature or bug fix.
+2. **Staging**: Push to the `staging` branch.
+   ```bash
+   git checkout staging
+   git merge <your-feature-branch>
+   git push origin staging
+   ```
+3. **Verification**: Test the changes at `https://staging.flipread.adhirat.com`.
+4. **Go Live**: Merge to `main` and push.
+   ```bash
+   git checkout main
+   git merge staging
+   git push origin main
+   ```
