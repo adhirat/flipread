@@ -180,15 +180,10 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                         if (entry.isIntersecting) {
                             renderPageOnDemand(pageIdx);
                         }
+                        // Note: We no longer purge on exit here. 
+                        // Purging is handled inside renderPageOnDemand when limit is hit.
                     });
                 }, { rootMargin: '200% 0px 200% 0px', threshold: 0 });
-
-                // Try to get native outline
-                const outline = await pdfDoc.getOutline();
-                if (outline && outline.length > 0) {
-                    tocList.innerHTML = '';
-                    await buildNativeTOC(outline, tocList);
-                }
 
                 for (let i = 1; i <= pdfDoc.numPages; i++) {
                     const section = document.createElement('div');
@@ -271,31 +266,24 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     if (!section) return;
                     const wrapper = section.querySelector('.canvas-wrapper');
                     
-                    const dpr = window.devicePixelRatio || 1;
-                    const vp = page.getViewport({ scale: pdfScale * dpr });
+                    const vp = page.getViewport({ scale: pdfScale });
                     const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
                     canvas.className = 'max-w-full h-auto block';
-                    
-                    // Physical pixels (HiDPI)
                     canvas.width = vp.width;
                     canvas.height = vp.height;
-                    
                     wrapper.appendChild(canvas);
 
                     const textLayer = document.createElement('div');
                     textLayer.className = 'textLayer absolute inset-0';
                     wrapper.appendChild(textLayer);
 
-                    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
                     
-                    // The text layer must be sized relative to the UI scale, not the DPR-scaled physical pixels
-                    const uiVp = page.getViewport({ scale: pdfScale });
                     const textContent = await page.getTextContent();
                     pdfjsLib.renderTextLayer({
                         textContent: textContent,
                         container: textLayer,
-                        viewport: uiVp,
+                        viewport: vp,
                         textDivs: []
                     });
 
@@ -422,41 +410,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 document.getElementById('tts-ctrls').classList.add('hidden');
                 updateTTSUI();
             };
-            async function buildNativeTOC(items, container, depth = 0) {
-                for (const item of items) {
-                    const el = document.createElement('div');
-                    el.className = 'toc-item';
-                    el.style.paddingLeft = (depth * 20 + 20) + 'px';
-                    el.style.fontSize = depth === 0 ? '13px' : '12px';
-                    el.style.fontWeight = depth === 0 ? '700' : '400';
-                    el.innerText = item.title;
-                    
-                    el.onclick = async () => {
-                        try {
-                            let pageIdx = -1;
-                            if (typeof item.dest === 'string') {
-                                const dest = await pdfDoc.getDestination(item.dest);
-                                pageIdx = await pdfDoc.getPageIndex(dest[0]);
-                            } else if (Array.isArray(item.dest)) {
-                                pageIdx = await pdfDoc.getPageIndex(item.dest[0]);
-                            }
-                            
-                            if (pageIdx !== -1) {
-                                document.getElementById('page-' + (pageIdx + 1)).scrollIntoView({ behavior: 'smooth' });
-                                toggleTOC();
-                            }
-                        } catch (e) {
-                            console.error("Link error:", e);
-                        }
-                    };
-                    
-                    container.appendChild(el);
-                    if (item.items && item.items.length > 0) {
-                        await buildNativeTOC(item.items, container, depth + 1);
-                    }
-                }
-            }
-
             window.updateTTSUI = () => {
                 const pp = document.getElementById('tts-pp-i');
                 const btn = document.getElementById('tts-btn');

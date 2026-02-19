@@ -388,10 +388,6 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                     this.totalPages = this.pdfDoc.numPages;
                     const sl = document.getElementById('page-slider');
                     if(sl) sl.max = this.totalPages - 1;
-                    
-                    // Try to get native outline
-                    this.outline = await this.pdfDoc.getOutline();
-                    
                     await this.rebuildBook(0);
                     this.showLoading(false);
                 } catch (error) {
@@ -539,20 +535,11 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 container.innerHTML = '';
                 
                 const page = await this.pdfDoc.getPage(pageNum);
-                const dpr = window.devicePixelRatio || 1;
-                const renderScale = 2.0; // Base quality scale
-                const viewport = page.getViewport({ scale: renderScale * dpr });
+                const viewport = page.getViewport({ scale: 2.0 });
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // Physical pixels (HiDPI)
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
-                
-                // Use CSS to fit the high-res canvas into the fixed-size page container
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                
                 container.appendChild(canvas);
                 
                 await page.render({ canvasContext: ctx, viewport: viewport }).promise;
@@ -643,64 +630,24 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                 }
             }
             
-            async generateIndex() {
+            generateIndex() {
                 const list = document.getElementById('index-list');
                 if(!list) return;
                 list.innerHTML = '';
-                
-                if (this.outline && this.outline.length > 0) {
-                    await this.buildNativeIndex(this.outline, list);
-                } else {
-                    for(let i=1; i<=this.totalPages; i++) {
-                        const item = document.createElement('div');
-                        item.className = 'index-item';
-                        item.innerHTML = '<span>Page ' + i + '</span>';
-                        item.onclick = () => {
-                            this.pageFlip.flip(i-1);
-                            document.getElementById('index-modal').classList.remove('open');
-                        };
-                        list.appendChild(item);
-                    }
+                for(let i=1; i<=this.totalPages; i++) {
+                     const item = document.createElement('div');
+                     item.className = 'index-item';
+                     item.innerHTML = '<span>Page ' + i + '</span>';
+                     item.onclick = () => {
+                         this.pageFlip.flip(i-1);
+                         document.getElementById('index-modal').classList.remove('open');
+                     };
+                     list.appendChild(item);
                 }
-            }
-
-            async buildNativeIndex(items, container, depth = 0) {
-                for (const item of items) {
-                    const el = document.createElement('div');
-                    el.className = 'index-item';
-                    el.style.paddingLeft = (depth * 20 + 20) + 'px';
-                    el.style.fontSize = depth === 0 ? '14px' : '13px';
-                    el.style.fontWeight = depth === 0 ? '700' : '400';
-                    
-                    const title = document.createElement('span');
-                    title.innerText = item.title;
-                    el.appendChild(title);
-                    
-                    el.onclick = async (e) => {
-                        e.stopPropagation();
-                        try {
-                            let pageIdx = -1;
-                            if (typeof item.dest === 'string') {
-                                const dest = await this.pdfDoc.getDestination(item.dest);
-                                pageIdx = await this.pdfDoc.getPageIndex(dest[0]);
-                            } else if (Array.isArray(item.dest)) {
-                                pageIdx = await this.pdfDoc.getPageIndex(item.dest[0]);
-                            }
-                            
-                            if (pageIdx !== -1) {
-                                this.pageFlip.flip(pageIdx);
-                                document.getElementById('index-modal').classList.remove('open');
-                            }
-                        } catch (err) {
-                            console.error("Index link error:", err);
-                        }
-                    };
-                    
-                    container.appendChild(el);
-                    if (item.items && item.items.length > 0) {
-                        await this.buildNativeIndex(item.items, container, depth + 1);
-                    }
-                }
+                const setItem = (selector, action) => {
+                    const el = document.querySelector(selector);
+                    if(el) el.onclick = action;
+                };
             }
             
             updateZoomDisplay() {
