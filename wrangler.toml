@@ -46,3 +46,24 @@ STRIPE_PRICE_BUSINESS_YEARLY = "price_1T0NbbAeXVAKDgLYTyDj7lsW"
 # Static assets
 [site]
 bucket = "./public"
+
+# Staging Environment
+[env.staging]
+name = "flipread-staging"
+vars = { APP_URL = "https://staging.flipread.adhirat.com" }
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "flipread-db-staging"
+database_id = "ca0583af-77c6-4647-9278-f57e14255d6e"
+
+[[env.staging.kv_namespaces]]
+binding = "KV"
+id = "ada4253c67bc46959a5905e5690356cb"
+
+[[env.staging.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "flipread-files-staging"
+
+[env.staging.site]
+bucket = "./public"
