@@ -1,6 +1,6 @@
 
 import { getViewerBase } from './viewerBase';
-import { escapeHtml } from './viewerUtils';
+import { COMMON_READER_SCRIPTS, escapeHtml } from './viewerUtils';
 
 export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     const bg = (settings.background as string) || '#ffffff';
@@ -9,6 +9,12 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
   
     const extraStyles = `
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+
+        :root {
+            --reader-bg: ${bg};
+            --reader-accent: ${accent};
+            --reader-text: #1a1a1a;
+        }
 
         /* Stage and Book Stage */
         #s-c { 
@@ -38,7 +44,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         #b-v { 
             width: 100%; 
             height: 100%; 
-            background: white; 
+            background: var(--reader-bg); 
             box-shadow: none; 
             position: relative; 
             border-left: 6px solid #e0e0e0; 
@@ -350,13 +356,15 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
     const extraScripts = `
         function escapeHtml(unsafe) { return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
         const FU='${fileUrl}'.split('?')[0];
+
+        ${COMMON_READER_SCRIPTS}
+
         let book=null, rend=null, isAnimating=false;
-        let z=100, fz=100, lh=1.6, ff='Georgia, serif';
+        let z=100, fz=parseInt(window.getReaderSetting('fs', '100')), lh=parseFloat(window.getReaderSetting('lh', '1.6')), ff=window.getReaderSetting('ff', 'Georgia, serif');
         let highlights = [];
         try{ highlights = JSON.parse(localStorage.getItem('fr_hi_'+FU)) || []; }catch(e){}
         let syn = window.speechSynthesis, utter, speaking=false, ttsPaused=false;
         let startingIndex = 0;
-        let amb = null;
         let useFullHeight = false;
 
         function injectFitToggle() {
@@ -431,7 +439,13 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                                 d.className = 'index-item';
                                 d.style.paddingLeft = (15 + level*15) + 'px';
                                 d.innerHTML = '<span>'+i.label+'</span>';
-                                d.onclick = () => { rend.display(i.href); document.getElementById('index-modal').style.display='none'; };
+                                d.onclick = () => { 
+                                    rend.display(i.href); 
+                                    setTimeout(() => {
+                                        const modal = document.getElementById('index-modal');
+                                        if(modal) modal.classList.remove('open');
+                                    }, 100);
+                                };
                                 tl.appendChild(d);
                                 if(i.subitems && i.subitems.length) parseToc(i.subitems, level+1);
                             });
@@ -439,9 +453,33 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                         parseToc(toc);
                     }
                     
-                    book.locations.generate(1000).then(() => {
-                        updateFooter();
-                    }); 
+                    const savedLocs = localStorage.getItem('fr_locs_' + FU);
+                    if (savedLocs) {
+                        try {
+                            book.locations.load(savedLocs);
+                            updateFooter();
+                        } catch(e) {
+                            console.error("Error loading locations", e);
+                            generateLocs();
+                        }
+                    } else {
+                        generateLocs();
+                    }
+
+                    function generateLocs() {
+                        book.locations.generate(1600).then(() => {
+                            localStorage.setItem('fr_locs_' + FU, book.locations.save());
+                            updateFooter();
+                            const mobilePi = document.getElementById('mobile-pi');
+                            if (mobilePi && rend.currentLocation()) {
+                                const l = rend.currentLocation();
+                                if (l.start.displayed.total > 0) {
+                                    mobilePi.textContent = "Page " + l.start.displayed.page + " / " + l.start.displayed.total;
+                                    mobilePi.classList.add('v');
+                                }
+                            }
+                        }); 
+                    }
                     
                     // Restore Highlights
                     highlights.forEach(h => {
@@ -709,25 +747,21 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             }
         }
 
-        window.playAmbient = (type) => {
-            if(amb) amb.pause();
-            if(type === 'none') return;
-            const urls = { rain: 'https://cdn.pixabay.com/audio/2022/03/10/audio_51307b0f69.mp3', fire: 'https://cdn.pixabay.com/audio/2021/08/09/audio_65b750170a.mp3', library: 'https://cdn.pixabay.com/audio/2023/10/24/audio_985b8c9d0d.mp3' };
-            amb = new Audio(urls[type]);
-            amb.loop = true;
-            amb.play();
-        };
-
         window.toggleNight = () => {
             const active = document.body.classList.toggle('night-shift');
             const btn = document.getElementById('ns-toggle');
             btn.innerText = active ? 'ON' : 'OFF';
             btn.style.background = active ? '#4CAF50' : '#444';
+            window.setReaderSetting('ns', active);
         };
 
-        window.setFF = (v) => { ff=v; applyStyles(); };
-        window.setLH = (v) => { lh=v; applyStyles(); };
-        window.changeFontSize = (v) => { fz=Math.max(50, Math.min(200, fz+v)); applyStyles(); };
+        window.setFF = (v) => { ff=v; window.setReaderSetting('ff', v); applyStyles(); };
+        window.setLH = (v) => { lh=v; window.setReaderSetting('lh', v); applyStyles(); };
+        window.changeFontSize = (v) => { 
+            fz = Math.max(50, Math.min(200, fz+v)); 
+            window.setReaderSetting('fs', fz);
+            applyStyles(); 
+        };
         function applyStyles() {
             if(rend) {
                 rend.getContents().forEach(c => {
@@ -743,10 +777,10 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             
             const idxModal = document.getElementById('index-modal');
             const idxBtn = document.getElementById('index-btn');
-            if(idxBtn) idxBtn.onclick = () => idxModal.style.display = 'flex';
+            if(idxBtn) idxBtn.onclick = () => idxModal.classList.add('open');
             const idxClose = document.getElementById('index-close-btn');
-            if(idxClose) idxClose.onclick = () => idxModal.style.display = 'none';
-            idxModal.onclick = (e) => { if(e.target === idxModal) idxModal.style.display = 'none'; };
+            if(idxClose) idxClose.onclick = () => idxModal.classList.remove('open');
+            idxModal.onclick = (e) => { if(e.target === idxModal) idxModal.classList.remove('open'); };
 
             const sModal = document.getElementById('settings-modal');
             const setBtn = document.getElementById('bg-settings-btn');
@@ -758,8 +792,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             sModal.onclick = (e) => { if(e.target === sModal) sModal.classList.remove('open'); };
 
             window.setBg = (c) => {
-                 document.body.style.background = c;
-                 localStorage.setItem('fr_bg', c);
+                 document.body.style.setProperty('--reader-bg', c);
+                 window.setReaderSetting('bg', c);
                  document.querySelectorAll('.bg-option').forEach(opt => {
                     if(opt.getAttribute('data-bg') === c) opt.classList.add('active');
                     else opt.classList.remove('active');
@@ -775,7 +809,7 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
                     const active = document.body.classList.toggle('textured');
                     texBtn.innerText = active ? 'ON' : 'OFF';
                     texBtn.style.background = active ? '#4CAF50' : '#444';
-                    localStorage.setItem('fr_tex', active);
+                    window.setReaderSetting('tex', active);
                 };
             }
 
@@ -784,13 +818,21 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             const nBtnMob = document.getElementById('notes-btn-mob');
             if(nBtnMob) nBtnMob.onclick = () => window.toggleChat();
 
-            // Initialize from localstorage
-            const sb = localStorage.getItem('fr_bg');
+            // Initialize from reader settings
+            const sb = window.getReaderSetting('bg');
             if(sb) window.setBg(sb);
-            const st = localStorage.getItem('fr_tex');
+            
+            const st = window.getReaderSetting('tex');
             if(st === 'true') {
                  document.body.classList.add('textured');
                  if(texBtn) { texBtn.innerText = 'ON'; texBtn.style.background = '#4CAF50'; }
+            }
+            
+            const sn = window.getReaderSetting('ns');
+            if(sn === 'true') {
+                document.body.classList.add('night-shift');
+                const nsToggle = document.getElementById('ns-toggle');
+                if(nsToggle) { nsToggle.innerText = 'ON'; nsToggle.style.background = '#4CAF50'; }
             }
 
             init();

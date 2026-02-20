@@ -164,11 +164,11 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             pointer-events: none;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .header.up {
+        .header.visible {
             transform: translateY(0);
             opacity: 1;
         }
-        .header.down {
+        .header.hidden {
             transform: translateY(-100%);
             opacity: 0;
         }
@@ -325,8 +325,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 padding: 0 !important;
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s !important;
             }
-            .controls.down { transform: translate(-50%, 100px) !important; opacity: 0 !important; }
-            .controls.up { transform: translate(-50%, 0) !important; opacity: 1 !important; }
+            .controls.hidden { transform: translate(-50%, 100px) !important; opacity: 0 !important; }
+            .controls.visible { transform: translate(-50%, 0) !important; opacity: 1 !important; }
             .footer-icons-mobile {
                 display: flex !important;
                 width: 100%;
@@ -516,22 +516,34 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              if (diff > 0 && curS > 80) {
                  // Scrolling down - hide
                  if (isNavScroll) return;
-                 document.getElementById('main-header').classList.remove('up');
-                 document.getElementById('main-header').classList.add('down');
-                 document.getElementById('main-footer').classList.remove('up');
-                 document.getElementById('main-footer').classList.add('down');
+                 document.getElementById('main-header').classList.remove('visible');
+                 document.getElementById('main-header').classList.add('hidden');
+                 document.getElementById('main-footer').classList.remove('visible');
+                 document.getElementById('main-footer').classList.add('hidden');
              } else if (diff < -10 || curS < 50) {
                  // Scrolling up or at top - show
-                 document.getElementById('main-header').classList.remove('down');
-                 document.getElementById('main-header').classList.add('up');
-                 document.getElementById('main-footer').classList.remove('down');
-                 document.getElementById('main-footer').classList.add('up');
+                 document.getElementById('main-header').classList.remove('hidden');
+                 document.getElementById('main-header').classList.add('visible');
+                 document.getElementById('main-footer').classList.remove('hidden');
+                 document.getElementById('main-footer').classList.add('visible');
              }
              lastS = curS;
 
              // Scroll Top Button
              if (curS > 200) stBtn.classList.add('v');
              else stBtn.classList.remove('v');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            const h = document.getElementById('main-header');
+            const f = document.getElementById('main-footer');
+            const threshold = 60;
+            if (e.clientY < threshold) {
+                if(h) { h.classList.remove('hidden'); h.classList.add('visible'); }
+            }
+            if (window.innerHeight - e.clientY < threshold) {
+                if(f) { f.classList.remove('hidden'); f.classList.add('visible'); }
+            }
         });
 
         window.prevPage = () => {
