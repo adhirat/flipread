@@ -7,6 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:migrate": "wrangler d1 execute flipread-db --local --file=./src/db/schema.sql",
+    "db:migrate:staging": "wrangler d1 execute flipread-db-staging --remote --file=./src/db/schema.sql",
     "db:migrate:prod": "wrangler d1 execute flipread-db --remote --file=./src/db/schema.sql"
   },
   "dependencies": {
