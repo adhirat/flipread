@@ -30,6 +30,8 @@ export interface User {
   store_name: string;
   store_logo_url: string;
   store_logo_key: string;
+  store_hero_url: string;
+  store_hero_key: string;
   store_settings: string;
   created_at: string;
   updated_at: string;

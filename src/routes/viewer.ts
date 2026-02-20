@@ -229,4 +229,32 @@ viewer.get('/api/logo/:userId', async (c) => {
   });
 });
 
+// GET /api/hero/:userId — serve store hero image from R2
+viewer.get('/api/hero/:userId', async (c) => {
+  const userId = c.req.param('userId');
+
+  const user = await c.env.DB.prepare(
+    'SELECT store_hero_key FROM users WHERE id = ?'
+  ).bind(userId).first<{ store_hero_key: string }>();
+
+  if (!user || !user.store_hero_key) return c.text('Not found', 404);
+
+  const storage = new StorageService(c.env.BUCKET);
+  const obj = await storage.getObject(user.store_hero_key);
+  if (!obj) return c.text('Hero image not found', 404);
+
+  const ext = user.store_hero_key.split('.').pop() || 'jpg';
+  const mimeMap: Record<string, string> = { 
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', 
+    webp: 'image/webp'
+  };
+  return new Response(obj.body, {
+    headers: {
+      'Content-Type': mimeMap[ext] || 'image/jpeg',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+});
+
 export default viewer;

@@ -650,33 +650,43 @@ async function saveStoreSettings() {
   }
 }
 
-// Logo Cropping
+// Image Cropping & Uploads
 let cropper;
+let cropTarget = 'logo'; // 'logo' or 'hero'
 
 async function uploadLogo(e) {
+  cropTarget = 'logo';
+  initCropModal(e, 1);
+}
+
+async function uploadHero(e) {
+  cropTarget = 'hero';
+  initCropModal(e, 16/9); // Standard widescreen hero aspect ratio
+}
+
+function initCropModal(e, aspectRatio) {
   const file = e.target.files[0];
   if(!file) return;
 
-  // 1. Read file to display in cropper
   const reader = new FileReader();
   reader.onload = (ev) => {
     const img = document.getElementById('crop-img');
-    img.src = ev.target.result;
+    const titleText = document.querySelector('#crop-modal h3');
+    if(titleText) titleText.textContent = cropTarget === 'logo' ? 'Crop Logo' : 'Crop Hero Image';
     
-    // Show Modal
+    img.src = ev.target.result;
     document.getElementById('crop-modal').style.display = 'flex';
     img.style.display = 'block';
 
-    // Init Cropper
     if(cropper) cropper.destroy();
     cropper = new Cropper(img, {
-      aspectRatio: 1,
+      aspectRatio: aspectRatio,
       viewMode: 1,
       dragMode: 'move',
       autoCropArea: 1,
       restore: false,
-      guides: false,
-      center: false,
+      guides: true,
+      center: true,
       highlight: false,
       cropBoxMovable: true,
       cropBoxResizable: true,
@@ -695,13 +705,17 @@ function cancelCrop() {
 async function applyCrop() {
   if(!cropper) return;
   
-  // Get cropped blob
-  cropper.getCroppedCanvas({ width: 512, height: 512 }).toBlob(async (blob) => {
+  const width = cropTarget === 'logo' ? 512 : 1600;
+  const height = cropTarget === 'logo' ? 512 : 900;
+  
+  cropper.getCroppedCanvas({ width, height }).toBlob(async (blob) => {
     if(!blob) return;
     
     // Upload logic
     const fd = new FormData();
-    fd.append('logo', blob, 'logo.jpg');
+    const endpoint = cropTarget === 'logo' ? '/api/user/store/logo' : '/api/user/store/hero';
+    const fieldName = cropTarget === 'logo' ? 'logo' : 'hero';
+    fd.append(fieldName, blob, fieldName + '.jpg');
     
     const btn = document.querySelector('#crop-modal .btn');
     const oldText = btn.textContent;
@@ -709,20 +723,25 @@ async function applyCrop() {
     btn.disabled = true;
 
     try {
-      const res = await fetch(API + '/api/user/store/logo', {
+      const res = await fetch(API + endpoint, {
         method: 'POST', credentials: 'include', body: fd
       });
       const data = await res.json();
       
-      if(data.logo_url) {
+      if(cropTarget === 'logo' && data.logo_url) {
         document.getElementById('st-logo-preview').innerHTML = '<img src="'+esc(data.logo_url)+'" style="width:100%;height:100%;object-fit:cover">';
         currentUser.store_logo_url = data.logo_url;
         cancelCrop();
+      } else if(cropTarget === 'hero' && data.hero_url) {
+        document.getElementById('st-h-img').value = data.hero_url;
+        // Trigger preview refresh
+        if(typeof refreshStorePreview === 'function') refreshStorePreview();
+        cancelCrop();
       } else {
-        alert('Upload failed');
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
     } catch(e) {
-      alert('Network error');
+      alert('Network error or server failed');
     }
     
     btn.textContent = oldText;

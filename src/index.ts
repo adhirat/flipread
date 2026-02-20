@@ -313,7 +313,7 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 </div>
 
 <section class="hero">
-<h1>Turn Your Books into <span class="grad">Stunning Flipbooks</span></h1>
+<h1>Turn Your Files into <span class="grad">Stunning Flipbooks</span></h1>
 <p>Upload a PDF, EPUB, DOCX, Spreadsheet, or PPT, get a shareable link instantly. Your readers experience a beautiful interactive book — right in their browser, on any device.</p>
 <div class="hero-btns">
 <a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Start Free</a>

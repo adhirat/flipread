@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   store_name TEXT DEFAULT NULL,
   store_logo_url TEXT DEFAULT '',
   store_logo_key TEXT DEFAULT '',
+  store_hero_url TEXT DEFAULT '',
+  store_hero_key TEXT DEFAULT '',
   store_settings TEXT DEFAULT '{}',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

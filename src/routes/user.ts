@@ -149,6 +149,57 @@ user.post('/store/logo', async (c) => {
 });
 
 /**
+ * POST /api/user/store/hero
+ * Uploads a hero background image for the store.
+ */
+user.post('/store/hero', async (c) => {
+  const currentUser = c.get('user');
+  const formData = await c.req.formData();
+  const file = formData.get('hero') as File | null;
+
+  if (!file) {
+    return c.json({ error: 'No image provided' }, 400);
+  }
+
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    return c.json({ error: 'Hero image must be JPEG, PNG, or WebP' }, 400);
+  }
+
+  // Max 2MB for hero background
+  if (file.size > 2 * 1024 * 1024) {
+    return c.json({ error: 'Hero image must be under 2MB' }, 400);
+  }
+
+  const storage = new StorageService(c.env.BUCKET);
+
+  // Delete old hero if exists
+  const oldHeroKey = currentUser.store_hero_key;
+  if (oldHeroKey) {
+    try {
+      await storage.delete(oldHeroKey);
+    } catch (e) {
+      console.warn('Failed to delete old hero image:', e);
+    }
+  }
+
+  const ext = file.name.split('.').pop() || 'jpg';
+  const heroKey = `heros/${currentUser.id}.${ext}`;
+  await storage.upload(heroKey, await file.arrayBuffer(), file.type);
+
+  const heroUrl = `/read/api/hero/${currentUser.id}`;
+
+  await c.env.DB.prepare(
+    "UPDATE users SET store_hero_url = ?, store_hero_key = ?, updated_at = datetime('now') WHERE id = ?"
+  ).bind(heroUrl, heroKey, currentUser.id).run();
+
+  await logActivity(c, currentUser.id, 'update_store_hero', 'user', currentUser.id);
+
+  return c.json({ success: true, hero_url: heroUrl });
+});
+
+/**
  * GET /api/user/keys
  * Lists all API keys for the user.
  */

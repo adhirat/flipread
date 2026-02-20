@@ -3,13 +3,37 @@ export const storeView = `
     <div id="view-store" class="view-section store-builder">
       <div class="store-builder-header">
         <h2>Store Customization</h2>
-        <div style="display:flex;gap:10px;align-items:center">
-          <button class="btn-outline" onclick="refreshStorePreview()" style="padding:7px 14px;font-size:12px"><i class="fas fa-sync-alt" style="margin-right:5px"></i>Refresh</button>
-          <a id="store-live-link" href="#" target="_blank" class="btn" style="padding:7px 16px;font-size:12px;text-decoration:none"><i class="fas fa-external-link-alt" style="margin-right:5px"></i>View Live</a>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" onclick="saveStoreSettings()" style="padding:7px 14px;font-size:12px"><i class="fas fa-save"></i><span class="btn-text">Save</span></button>
+          <button class="btn-outline" onclick="refreshStorePreview()" style="padding:7px 14px;font-size:12px"><i class="fas fa-sync-alt"></i><span class="btn-text">Refresh</span></button>
+          <a id="store-live-link" href="#" target="_blank" class="btn" style="padding:7px 14px;font-size:12px;text-decoration:none"><i class="fas fa-external-link-alt"></i><span class="btn-text">View Live</span></a>
         </div>
       </div>
       <div class="store-builder-body">
-      <!-- LEFT: settings panel -->
+      <!-- LEFT: live preview panel -->
+      <div class="store-panel-preview">
+        <div class="store-preview-bar">
+          <div class="store-preview-url" id="store-preview-url-bar">
+            <i class="fas fa-lock" style="font-size:10px;opacity:0.5;margin-right:4px"></i>
+            <span id="store-preview-url-text">your-store-url</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div id="preview-unsaved-badge" style="display:none;align-items:center;gap:4px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">
+              <i class="fas fa-pencil-alt" style="font-size:9px"></i> Unsaved changes - Save &amp; Refresh preview
+            </div>
+            <span class="store-preview-badge"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;margin-right:4px"></i>Live Preview</span>
+          </div>
+        </div>
+        <div style="position:relative;flex:1;display:flex;flex-direction:column">
+          <div id="store-preview-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-secondary);z-index:10;gap:12px">
+            <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent-cyan);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+            <span style="font-size:12px;color:var(--text-muted)">Loading preview...</span>
+          </div>
+          <iframe id="store-preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms" style="width:100%;flex:1;border:none;background:#fff" onload="document.getElementById('store-preview-loading').style.display='none'"></iframe>
+        </div>
+      </div>
+
+      <!-- RIGHT: settings panel -->
       <div class="store-panel-settings">
       <div class="store-panel-inner">
         <h3 style="margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px">General Information</h3>
@@ -57,9 +81,13 @@ export const storeView = `
           <input type="text" id="st-h-caption" placeholder="Defaults to Store Description">
         </div>
         <div class="form-group">
-          <label>Hero Image URL</label>
-          <input type="text" id="st-h-img" placeholder="https://example.com/banner.jpg">
-          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Provide a URL for the large banner background. Unsplash URLs work great.</p>
+          <label>Hero Image</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="st-h-img" placeholder="https://images.unsplash.com/..." style="flex:1">
+            <button class="btn-outline" onclick="document.getElementById('hero-input').click()" style="padding:0 12px" title="Upload Hero Image"><i class="fas fa-upload"></i></button>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Provide a URL or upload a high-quality banner (Standard: 16:9 or 21:9 aspect ratio).</p>
+          <input type="file" id="hero-input" accept="image/*" style="display:none" onchange="uploadHero(event)">
         </div>
 
         <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Design & Theme</h3>
@@ -335,29 +363,6 @@ export const storeView = `
         <button onclick="saveStoreSettings()" class="btn" style="width:100%">Save Changes</button>
       </div><!-- /store-panel-inner -->
       </div><!-- /store-panel-settings -->
-
-      <!-- RIGHT: live preview panel -->
-      <div class="store-panel-preview">
-        <div class="store-preview-bar">
-          <div class="store-preview-url" id="store-preview-url-bar">
-            <i class="fas fa-lock" style="font-size:10px;opacity:0.5;margin-right:4px"></i>
-            <span id="store-preview-url-text">your-store-url</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div id="preview-unsaved-badge" style="display:none;align-items:center;gap:4px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">
-              <i class="fas fa-pencil-alt" style="font-size:9px"></i> Unsaved changes - Save &amp; Refresh preview
-            </div>
-            <span class="store-preview-badge"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;margin-right:4px"></i>Live Preview</span>
-          </div>
-        </div>
-        <div style="position:relative;flex:1;display:flex;flex-direction:column">
-          <div id="store-preview-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-secondary);z-index:10;gap:12px">
-            <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent-cyan);border-radius:50%;animation:spin 0.7s linear infinite"></div>
-            <span style="font-size:12px;color:var(--text-muted)">Loading preview...</span>
-          </div>
-          <iframe id="store-preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms" style="width:100%;flex:1;border:none;background:#fff" onload="document.getElementById('store-preview-loading').style.display='none'"></iframe>
-        </div>
-      </div>
       </div><!-- /store-builder-body -->
     </div>
     
