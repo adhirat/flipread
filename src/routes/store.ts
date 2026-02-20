@@ -126,6 +126,29 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const showViewCount = settings.show_view_count !== false;
   const themePreset = settings.theme_preset || 'default';
 
+  // New premium settings
+  const heroSize = settings.hero_size || 'standard';     // compact | standard | tall | fullscreen
+  const bgStyle = settings.bg_style || 'clean';          // clean | dots | grid | lines
+  const cornerRadius = settings.corner_radius || 'standard'; // sharp | standard | rounded
+  const showDate = settings.show_date === true;
+  const sectionHeading = settings.section_heading || '';
+
+  // Social links
+  const socialInstagram = settings.social_instagram || '';
+  const socialX = settings.social_x || '';
+  const socialYoutube = settings.social_youtube || '';
+  const socialWebsite = settings.social_website || '';
+  const hasSocials = socialInstagram || socialX || socialYoutube || socialWebsite;
+
+  // Announcement banner
+  const bannerText = settings.banner_text || '';
+  const bannerColor = settings.banner_color || accentColor;
+  const bannerLink = settings.banner_link || '';
+
+  // Hero CTA
+  const ctaText = settings.cta_text || '';
+  const ctaLink = settings.cta_link || '';
+
   // Font imports
   const fontMap: Record<string, { import: string; family: string; heading: string }> = {
     'dm-sans': { import: 'DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'DM Sans', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
@@ -164,9 +187,35 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     ? `.bk-3d { padding-bottom:120%; } .bk-cover { transform:none; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.08); } .bk-card:hover .bk-cover { transform:none; box-shadow:0 2px 8px rgba(0,0,0,0.12); } .bk-spine { display:none; }`
     : '';
 
+  // Hero size CSS
+  const heroSizeCSS = heroSize === 'compact'
+    ? '.hero { min-height: 220px; padding: 48px 20px; }'
+    : heroSize === 'tall'
+    ? '.hero { min-height: 580px; padding: 120px 20px; }'
+    : heroSize === 'fullscreen'
+    ? '.hero { min-height: 100vh; padding: 120px 20px; }'
+    : '';
+
+  // Background pattern CSS
+  const bgPatternCSS = bgStyle === 'dots'
+    ? `body { background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 24px 24px; }`
+    : bgStyle === 'grid'
+    ? `body { background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 48px 48px; }`
+    : bgStyle === 'lines'
+    ? `body { background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px); }`
+    : '';
+
+  // Corner radius CSS
+  const cornerRadiusCSS = cornerRadius === 'sharp'
+    ? '.bk-cover { border-radius: 0 !important; } .bk-3d { border-radius: 0; }'
+    : cornerRadius === 'rounded'
+    ? '.bk-cover { border-radius: 6px 20px 20px 6px !important; }'
+    : ''; // standard keeps default
+
   const bookCards = books.map((b, i) => {
     const firstLetter = (b.title || 'B').charAt(0).toUpperCase();
     const delay = Math.min(i, 11) * 0.06 + 0.4;
+    const dateStr = showDate && b.created_at ? new Date(b.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : '';
     return `<a href="${appUrl}/read/${esc(b.slug)}" class="bk-card" data-title="${esc(b.title.toLowerCase())}" style="animation-delay:${delay.toFixed(2)}s">
       <div class="bk-3d">
         <div class="bk-spine"></div>
@@ -181,6 +230,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
         <div class="bk-meta">
           ${showViewCount ? `<span class="bk-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${b.view_count.toLocaleString()}</span>` : ''}
           <span class="bk-type">${b.type.toUpperCase()}</span>
+          ${dateStr ? `<span class="bk-date">${dateStr}</span>` : ''}
         </div>
       </div>
     </a>`;
@@ -206,16 +256,76 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 </script>
 <style>
 /* ====== COLOR SYSTEM ====== */
-:root,
-[data-theme="light"] {
-  --bg-primary: ${themePreset === 'magazine' ? '#1a1a2e' : themePreset === 'dark-luxe' ? '#0a0a0a' : themePreset === 'minimal' ? '#ffffff' : '#faf9f7'};
-  --bg-secondary: ${themePreset === 'magazine' ? '#16213e' : themePreset === 'dark-luxe' ? '#111' : themePreset === 'minimal' ? '#f5f5f5' : '#f0eeeb'};
-  --bg-card: ${themePreset === 'magazine' ? '#1f2847' : themePreset === 'dark-luxe' ? '#1a1a1a' : '#ffffff'};
+/* Determine if preset forces a specific mode */
+${themePreset === 'magazine' || themePreset === 'dark-luxe' ? `
+/* Dark preset — force dark palette on BOTH data-theme values and :root */
+:root, [data-theme="light"], [data-theme="dark"] {
+  --bg-primary: ${themePreset === 'magazine' ? '#1a1a2e' : '#0a0a0a'};
+  --bg-secondary: ${themePreset === 'magazine' ? '#16213e' : '#111'};
+  --bg-card: ${themePreset === 'magazine' ? '#1f2847' : '#1a1a1a'};
+  --bg-card-hover: ${themePreset === 'magazine' ? '#263258' : '#222'};
+  --bg-hero: ${themePreset === 'magazine' ? '#0f1629' : '#050505'};
+  --text-primary: #ede9e3;
+  --text-secondary: #a39d94;
+  --text-tertiary: #6b655c;
+  --accent: ${accentColor};
+  --accent-hover: ${accentColor};
+  --accent-subtle: rgba(${accentRgb}, 0.12);
+  --accent-glow: rgba(${accentRgb}, 0.2);
+  --border: rgba(237, 233, 227, 0.08);
+  --border-strong: rgba(237, 233, 227, 0.16);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4), 0 24px 48px rgba(0,0,0,0.5);
+  --shadow-book: 3px 3px 15px rgba(0,0,0,0.4), 6px 6px 30px rgba(0,0,0,0.3);
+  --shadow-book-hover: 6px 6px 20px rgba(0,0,0,0.5), 12px 12px 40px rgba(0,0,0,0.4);
+  --noise-opacity: 0.035;
+  --header-bg: rgba(${themePreset === 'magazine' ? '15,22,41' : '5,5,5'}, 0.85);
+  --search-bg: rgba(237, 233, 227, 0.04);
+  --ph-bg: linear-gradient(145deg, #1f1d19, #262420);
+  --ph-color: rgba(${accentRgb}, 0.3);
+  --spine-color: rgba(237, 233, 227, 0.08);
+  --toggle-bg: rgba(237, 233, 227, 0.08);
+  color-scheme: dark;
+}` : themePreset === 'minimal' ? `
+/* Minimal preset — force clean white on :root and light mode */
+:root, [data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafa;
+  --bg-hero: #fafafa;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #999999;
+  --accent: ${accentColor};
+  --accent-hover: ${accentColor};
+  --accent-subtle: rgba(${accentRgb}, 0.06);
+  --accent-glow: rgba(${accentRgb}, 0.1);
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 20px 40px rgba(0,0,0,0.1);
+  --shadow-book: 2px 2px 10px rgba(0,0,0,0.08), 4px 4px 24px rgba(0,0,0,0.06);
+  --shadow-book-hover: 4px 4px 16px rgba(0,0,0,0.1), 8px 8px 32px rgba(0,0,0,0.08);
+  --noise-opacity: 0;
+  --header-bg: rgba(255,255,255,0.9);
+  --search-bg: rgba(0,0,0,0.03);
+  --ph-bg: linear-gradient(145deg, #f8f8f8, #efefef);
+  --ph-color: rgba(0,0,0,0.1);
+  --spine-color: rgba(0,0,0,0.06);
+  --toggle-bg: rgba(0,0,0,0.04);
+  color-scheme: light;
+}` : `
+/* Default preset */
+:root, [data-theme="light"] {
+  --bg-primary: #faf9f7;
+  --bg-secondary: #f0eeeb;
+  --bg-card: #ffffff;
   --bg-card-hover: #fefefe;
-  --bg-hero: ${themePreset === 'magazine' ? '#0f1629' : themePreset === 'dark-luxe' ? '#050505' : themePreset === 'minimal' ? '#fafafa' : '#f5f3f0'};
-  --text-primary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#ede9e3' : '#1a1613'};
-  --text-secondary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#a39d94' : '#5c554d'};
-  --text-tertiary: ${themePreset === 'magazine' || themePreset === 'dark-luxe' ? '#6b655c' : '#9c9489'};
+  --bg-hero: #f5f3f0;
+  --text-primary: #1a1613;
+  --text-secondary: #5c554d;
+  --text-tertiary: #9c9489;
   --accent: ${accentColor};
   --accent-hover: ${accentColor};
   --accent-subtle: rgba(${accentRgb}, 0.06);
@@ -235,6 +345,64 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   --toggle-bg: rgba(26, 22, 19, 0.06);
   color-scheme: light;
 }
+[data-theme="dark"] {
+  --bg-primary: #0e0d0b;
+  --bg-secondary: #1a1815;
+  --bg-card: #1f1d19;
+  --bg-card-hover: #262420;
+  --bg-hero: #141210;
+  --text-primary: #ede9e3;
+  --text-secondary: #a39d94;
+  --text-tertiary: #6b655c;
+  --accent: ${accentColor};
+  --accent-hover: ${accentColor};
+  --accent-subtle: rgba(${accentRgb}, 0.08);
+  --accent-glow: rgba(${accentRgb}, 0.15);
+  --border: rgba(237, 233, 227, 0.06);
+  --border-strong: rgba(237, 233, 227, 0.12);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.3), 0 24px 48px rgba(0,0,0,0.4);
+  --shadow-book: 3px 3px 15px rgba(0,0,0,0.3), 6px 6px 30px rgba(0,0,0,0.2);
+  --shadow-book-hover: 6px 6px 20px rgba(0,0,0,0.4), 12px 12px 40px rgba(0,0,0,0.3);
+  --noise-opacity: 0.035;
+  --header-bg: rgba(14, 13, 11, 0.82);
+  --search-bg: rgba(237, 233, 227, 0.04);
+  --ph-bg: linear-gradient(145deg, #1f1d19, #262420);
+  --ph-color: rgba(${accentRgb}, 0.25);
+  --spine-color: rgba(237, 233, 227, 0.06);
+  --toggle-bg: rgba(237, 233, 227, 0.08);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0e0d0b;
+    --bg-secondary: #1a1815;
+    --bg-card: #1f1d19;
+    --bg-card-hover: #262420;
+    --bg-hero: #141210;
+    --text-primary: #ede9e3;
+    --text-secondary: #a39d94;
+    --text-tertiary: #6b655c;
+    --accent: ${accentColor};
+    --accent-hover: ${accentColor};
+    --accent-subtle: rgba(${accentRgb}, 0.08);
+    --accent-glow: rgba(${accentRgb}, 0.15);
+    --border: rgba(237, 233, 227, 0.06);
+    --border-strong: rgba(237, 233, 227, 0.12);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.3), 0 24px 48px rgba(0,0,0,0.4);
+    --shadow-book: 3px 3px 15px rgba(0,0,0,0.3), 6px 6px 30px rgba(0,0,0,0.2);
+    --shadow-book-hover: 6px 6px 20px rgba(0,0,0,0.4), 12px 12px 40px rgba(0,0,0,0.3);
+    --noise-opacity: 0.035;
+    --header-bg: rgba(14, 13, 11, 0.82);
+    --search-bg: rgba(237, 233, 227, 0.04);
+    --ph-bg: linear-gradient(145deg, #1f1d19, #262420);
+    --ph-color: rgba(${accentRgb}, 0.25);
+    --spine-color: rgba(237, 233, 227, 0.06);
+    --toggle-bg: rgba(237, 233, 227, 0.08);
+    color-scheme: dark;
+  }
+}`}
 
 [data-theme="dark"] {
   --bg-primary: #0e0d0b;
@@ -635,6 +803,113 @@ body::before {
 }
 .empty-state p { font-size: 15px; color: var(--text-tertiary); }
 
+/* ====== ANNOUNCEMENT BANNER ====== */
+.ann-banner {
+  position: relative;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 48px 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  background: ${bannerColor};
+  color: #fff;
+  line-height: 1.5;
+}
+.ann-banner a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+.ann-close {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.ann-close:hover { color: #fff; }
+
+/* ====== HERO CTA BUTTON ====== */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 14px 32px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 100px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s;
+  box-shadow: 0 4px 20px rgba(${accentRgb}, 0.4);
+}
+.hero-cta:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 32px rgba(${accentRgb}, 0.55);
+}
+.hero-cta svg { width: 16px; height: 16px; }
+
+/* ====== SOCIAL LINKS ====== */
+.social-links {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--toggle-bg);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: 1px solid var(--border);
+}
+.social-link:hover {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.social-link svg { width: 18px; height: 18px; }
+
+/* ====== SECTION HEADING ====== */
+.section-heading {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.section-heading h2 {
+  font-family: ${font.heading};
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.section-heading-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+  margin: 12px auto 0;
+  border-radius: 2px;
+}
+
+/* ====== BOOK DATE ====== */
+.bk-date { font-size: 11px; color: var(--text-tertiary); }
+
 /* ====== FOOTER ====== */
 .site-footer {
   border-top: 1px solid var(--border);
@@ -687,6 +962,7 @@ body::before {
 /* ====== ANIMATIONS ====== */
 @keyframes revealUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideBanner { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
@@ -697,20 +973,32 @@ body::before {
   .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .bk-3d { perspective: 600px; }
   .site-header { padding: 0 16px; }
+  .ann-banner { font-size: 13px; }
 }
 /* ====== LAYOUT & CARD OVERRIDES ====== */
 ${gridCSS}
 ${cardCSS}
+/* ====== HERO SIZE OVERRIDE ====== */
+${heroSizeCSS}
+/* ====== BACKGROUND PATTERN ====== */
+${bgPatternCSS}
+/* ====== CORNER RADIUS OVERRIDE ====== */
+${cornerRadiusCSS}
 </style>
 </head>
 <body>
+
+${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBanner 0.4s ease both">
+  ${bannerLink ? `<a href="${esc(bannerLink)}" target="_blank" rel="noopener">${esc(bannerText)}</a>` : esc(bannerText)}
+  <button class="ann-close" onclick="document.getElementById('ann-banner').remove()" aria-label="Dismiss">&#x2715;</button>
+</div>` : ''}
 
 <header class="site-header">
   <div class="site-brand">
     ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
     <span class="site-title">${safeName}</span>
   </div>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme" ${themePreset === 'magazine' || themePreset === 'dark-luxe' || themePreset === 'minimal' ? 'style="display:none"' : ''}>
     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
@@ -721,6 +1009,7 @@ ${cardCSS}
   <div class="hero-content">
     <h1 class="hero-title">${esc(heroTitle)}</h1>
     <p class="hero-caption">${esc(heroCaption)}</p>
+    ${ctaText && ctaLink ? `<a href="${esc(ctaLink)}" class="hero-cta" target="_blank" rel="noopener">${esc(ctaText)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>` : ''}
   </div>
 </section>
 
@@ -733,7 +1022,7 @@ ${cardCSS}
   </div>` : ''}
 
   ${bookCount > 0
-    ? `<div class="grid-section"><div class="grid" id="book-grid">${bookCards}</div></div>`
+    ? `<div class="grid-section">${sectionHeading ? `<div class="section-heading"><h2>${esc(sectionHeading)}</h2><div class="section-heading-divider"></div></div>` : ''}<div class="grid" id="book-grid">${bookCards}</div></div>`
     : `<div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         <h2>Nothing here yet</h2>
@@ -747,6 +1036,12 @@ ${cardCSS}
       ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo" alt="">` : ''}
       <span>${safeName}</span>
     </div>
+    ${hasSocials ? `<div class="social-links">
+      ${socialInstagram ? `<a href="${esc(socialInstagram)}" class="social-link" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>` : ''}
+      ${socialX ? `<a href="${esc(socialX)}" class="social-link" target="_blank" rel="noopener" aria-label="X / Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>` : ''}
+      ${socialYoutube ? `<a href="${esc(socialYoutube)}" class="social-link" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>` : ''}
+      ${socialWebsite ? `<a href="${esc(socialWebsite)}" class="social-link" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>` : ''}
+    </div>` : ''}
     <div class="footer-links">
       ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/p/privacy' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/privacy'}">Privacy Policy</a>` : ''}
       ${settings.terms_content ? `<a href="${isCustomDomain ? '/p/terms' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/terms'}">Terms & Conditions</a>` : ''}
@@ -777,7 +1072,17 @@ ${showSearch ? `(function(){var input=document.getElementById('book-search');var
 
 export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false): string {
   const storeName = user.store_name || user.name;
+  const settings = JSON.parse(user.store_settings || '{}');
+  const accentColor = settings.accent_color || '#c45d3e';
   const backUrl = isCustomDomain ? '/' : `/store/${user.store_handle || user.name.toLowerCase().replace(/ /g,'-')}`;
+  const htmlContent = mdToHtml(content);
+
+  // Social links for footer
+  const socialInstagram = settings.social_instagram || '';
+  const socialX = settings.social_x || '';
+  const socialYoutube = settings.social_youtube || '';
+  const socialWebsite = settings.social_website || '';
+  const hasSocials = socialInstagram || socialX || socialYoutube || socialWebsite;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -791,35 +1096,141 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 (function(){var t=localStorage.getItem('flipread-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
 </script>
 <style>
-/* Simplified CSS based on main page */
-:root, [data-theme="light"] { --bg: #faf9f7; --text: #1a1613; --accent: #c45d3e; color-scheme: light; }
-[data-theme="dark"] { --bg: #0e0d0b; --text: #ede9e3; --accent: #e07a5c; color-scheme: dark; }
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 40px 20px;
+:root, [data-theme="light"] {
+  --bg: #faf9f7; --bg2: #f0eeeb; --text: #1a1613; --text2: #5c554d; --border: rgba(26,22,19,0.08);
+  --accent: ${accentColor}; --header-bg: rgba(250,249,247,0.88); color-scheme: light;
 }
-header { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(128,128,128,0.2); }
-h1 { font-family: 'Instrument Serif', serif; font-size: 36px; margin-bottom: 8px; }
-.meta { color: gray; font-size: 14px; }
-.content { white-space: pre-wrap; font-size: 16px; }
-.back-link { display: inline-block; margin-top: 40px; color: var(--accent); text-decoration: none; font-weight: 500; }
+[data-theme="dark"] {
+  --bg: #0e0d0b; --bg2: #1a1815; --text: #ede9e3; --text2: #a39d94; --border: rgba(237,233,227,0.06);
+  --accent: ${accentColor}; --header-bg: rgba(14,13,11,0.88); color-scheme: dark;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0d0b;--bg2:#1a1815;--text:#ede9e3;--text2:#a39d94;--border:rgba(237,233,227,0.06);--accent:${accentColor};--header-bg:rgba(14,13,11,0.88);color-scheme:dark}}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh;}
+.page-header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:60px;
+  background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.page-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+.page-logo{width:28px;height:28px;border-radius:8px;object-fit:cover}
+.page-store-name{font-family:'Instrument Serif',serif;font-size:18px;font-weight:400}
+.theme-toggle-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s}
+.theme-toggle-btn:hover{background:var(--border);color:var(--text)}
+.icon-sun{display:none}.icon-moon{display:block}[data-theme="dark"] .icon-sun{display:block}[data-theme="dark"] .icon-moon{display:none}
+.page-wrap{max-width:720px;margin:0 auto;padding:60px 24px 100px}
+.back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:40px;color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
+.back-link:hover{color:var(--accent)}
+.page-title{font-family:'Instrument Serif',serif;font-size:clamp(32px,5vw,48px);font-weight:400;line-height:1.15;margin-bottom:8px;letter-spacing:-0.02em}
+.page-meta{font-size:14px;color:var(--text2);margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.md-content h1,.md-content h2,.md-content h3,.md-content h4{font-family:'Instrument Serif',serif;font-weight:400;line-height:1.3;margin:1.8em 0 0.6em;color:var(--text)}
+.md-content h1{font-size:2em}.md-content h2{font-size:1.5em}.md-content h3{font-size:1.2em}.md-content h4{font-size:1.05em}
+.md-content p{margin:0 0 1.2em;color:var(--text)}
+.md-content strong{font-weight:700}
+.md-content em{font-style:italic}
+.md-content a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.md-content hr{border:none;border-top:1px solid var(--border);margin:2em 0}
+.md-content ul,.md-content ol{padding-left:1.5em;margin:0 0 1.2em}
+.md-content li{margin-bottom:0.4em}
+.md-content blockquote{border-left:3px solid var(--accent);padding:0.5em 1em;margin:1.2em 0;color:var(--text2);font-style:italic}
+.md-content code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em}
+.page-footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;background:var(--bg2)}
+.footer-brand-sm{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px}
+.footer-logo-sm{width:20px;height:20px;border-radius:5px;object-fit:cover}
+.footer-socials{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.footer-social-link{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:all 0.2s}
+.footer-social-link:hover{border-color:var(--accent);color:var(--accent)}
+.footer-social-link svg{width:16px;height:16px}
+.footer-copy-sm{font-size:12px;color:var(--text2)}
 </style>
 </head>
 <body>
-  <header>
-    <h1>${esc(title)}</h1>
-    <div class="meta">${esc(storeName)}</div>
-  </header>
-  <div class="content">${esc(content)}</div>
-  <a href="${backUrl}" class="back-link">&larr; Back to Store</a>
+<header class="page-header">
+  <a href="${backUrl}" class="page-brand">
+    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="page-logo" alt="">` : ''}
+    <span class="page-store-name">${esc(storeName)}</span>
+  </a>
+  <button class="theme-toggle-btn" id="tt" aria-label="Toggle theme">
+    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+<div class="page-wrap">
+  <a href="${backUrl}" class="back-link">&larr; Back to ${esc(storeName)}</a>
+  <h1 class="page-title">${esc(title)}</h1>
+  <div class="page-meta">${esc(storeName)}</div>
+  <div class="md-content">${htmlContent}</div>
+</div>
+<footer class="page-footer">
+  <div class="footer-brand-sm">
+    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo-sm" alt="">` : ''}
+    <span>${esc(storeName)}</span>
+  </div>
+  ${hasSocials ? `<div class="footer-socials">
+    ${socialInstagram ? `<a href="${esc(socialInstagram)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>` : ''}
+    ${socialX ? `<a href="${esc(socialX)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>` : ''}
+    ${socialYoutube ? `<a href="${esc(socialYoutube)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>` : ''}
+    ${socialWebsite ? `<a href="${esc(socialWebsite)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>` : ''}
+  </div>` : ''}
+  <div class="footer-copy-sm">&copy; ${new Date().getFullYear()} ${esc(storeName)}. All rights reserved.</div>
+</footer>
+<script>
+document.getElementById('tt').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('flipread-theme',d?'light':'dark')};
+</script>
 </body>
 </html>`;
+}
+
+/** Lightweight server-side Markdown to HTML converter */
+function mdToHtml(md: string): string {
+  if (!md) return '';
+  const lines = md.split('\n');
+  const out: string[] = [];
+  let inUl = false, inOl = false;
+
+  const flushList = () => {
+    if (inUl) { out.push('</ul>'); inUl = false; }
+    if (inOl) { out.push('</ol>'); inOl = false; }
+  };
+
+  const inline = (s: string) =>
+    s
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (/^#{4}\s/.test(line)) { flushList(); out.push(`<h4>${inline(line.slice(5))}</h4>`); continue; }
+    if (/^#{3}\s/.test(line)) { flushList(); out.push(`<h3>${inline(line.slice(4))}</h3>`); continue; }
+    if (/^#{2}\s/.test(line)) { flushList(); out.push(`<h2>${inline(line.slice(3))}</h2>`); continue; }
+    if (/^#\s/.test(line))   { flushList(); out.push(`<h1>${inline(line.slice(2))}</h1>`); continue; }
+    if (/^\*\*\*[- ]*$/.test(line) || /^---+$/.test(line) || /^===+$/.test(line)) { flushList(); out.push('<hr>'); continue; }
+    if (/^>\s?/.test(line)) { flushList(); out.push(`<blockquote><p>${inline(line.replace(/^>\s?/,''))}</p></blockquote>`); continue; }
+    if (/^[*-]\s/.test(line)) {
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      out.push(`<li>${inline(line.slice(2))}</li>`);
+      continue;
+    }
+    if (/^\d+\.\s/.test(line)) {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push(`<li>${inline(line.replace(/^\d+\.\s/,''))}</li>`);
+      continue;
+    }
+    flushList();
+    if (line === '') { out.push('<br>'); continue; }
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  flushList();
+  return out.join('\n');
 }
 
 function notFoundPage(msg = 'Store not found'): string {
@@ -831,3 +1242,4 @@ function esc(s: string): string {
 }
 
 export default store;
+

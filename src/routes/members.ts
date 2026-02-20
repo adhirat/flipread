@@ -3,18 +3,21 @@ import { Hono, Context } from 'hono';
 import type { Env, StoreMember } from '../lib/types';
 import { getCookie, setCookie } from 'hono/cookie';
 import { getPlanLimits } from '../lib/plans';
+import { authMiddleware } from '../middleware/auth';
 
 const members = new Hono<{ Bindings: Env; Variables: { user: any } }>();
 
-// Middleware to ensure user is authenticated (dashboard access)
-const ensureAuth = async (c: Context, next: any) => {
-  const user = c.get('user');
-  if (!user) return c.json({ error: 'Unauthorized' }, 401);
-  await next();
-};
+// Apply auth middleware to all routes except /verify
+members.use('/*', async (c, next) => {
+  // Skip auth for the public verify endpoint
+  if (c.req.path.endsWith('/verify') && c.req.method === 'POST') {
+    return next();
+  }
+  return authMiddleware()(c, next);
+});
 
 // GET /api/members — List members for current user's store
-members.get('/', ensureAuth, async (c) => {
+members.get('/', async (c) => {
   const user = c.get('user');
   
   const results = await c.env.DB.prepare(
@@ -25,7 +28,7 @@ members.get('/', ensureAuth, async (c) => {
 });
 
 // POST /api/members — Add a new member
-members.post('/', ensureAuth, async (c) => {
+members.post('/', async (c) => {
   const user = c.get('user');
   const { email, name } = await c.req.json();
 
@@ -67,7 +70,7 @@ members.post('/', ensureAuth, async (c) => {
 });
 
 // PATCH /api/members/:id — Update member
-members.patch('/:id', ensureAuth, async (c) => {
+members.patch('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const { name, is_active } = await c.req.json();
@@ -91,7 +94,7 @@ members.patch('/:id', ensureAuth, async (c) => {
 });
 
 // DELETE /api/members/:id — Remove member
-members.delete('/:id', ensureAuth, async (c) => {
+members.delete('/:id', async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
 

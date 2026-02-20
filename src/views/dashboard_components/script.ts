@@ -83,13 +83,30 @@ function updateUI() {
   document.getElementById('st-terms').value = s.terms_content || '';
   document.getElementById('st-contact').value = s.contact_info_content || '';
 
+  // New premium settings
+  selectHeroSize(s.hero_size || 'standard', true);
+  selectBgStyle(s.bg_style || 'clean', true);
+  selectCorner(s.corner_radius || 'standard', true);
+  const showDateToggle = document.getElementById('st-show-date-toggle');
+  if(showDateToggle) showDateToggle.classList.toggle('active', !!s.show_date);
+  document.getElementById('st-section-heading').value = s.section_heading || '';
+  document.getElementById('st-banner-text').value = s.banner_text || '';
+  document.getElementById('st-banner-link').value = s.banner_link || '';
+  if(s.banner_color) document.getElementById('st-banner-color').value = s.banner_color;
+  document.getElementById('st-cta-text').value = s.cta_text || '';
+  document.getElementById('st-cta-link').value = s.cta_link || '';
+  document.getElementById('st-social-instagram').value = s.social_instagram || '';
+  document.getElementById('st-social-x').value = s.social_x || '';
+  document.getElementById('st-social-youtube').value = s.social_youtube || '';
+  document.getElementById('st-social-website').value = s.social_website || '';
+
   if(currentUser.store_logo_url) {
     document.getElementById('st-logo-preview').innerHTML = '<img src="'+esc(currentUser.store_logo_url)+'" style="width:100%;height:100%;object-fit:cover">';
   }
   document.getElementById('set-email').value = currentUser.email;
   document.getElementById('set-name-input').value = currentUser.name || '';
   
-  const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
+  const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
   document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(handle);
   
   const limits = { free: '5 MB', basic: '10 MB', pro: '50 MB', business: '200 MB' };
@@ -142,6 +159,7 @@ function updateUI() {
   }
 
   fetchActivity();
+  initStorePreview();
 }
 
 async function saveProfile() {
@@ -389,7 +407,7 @@ async function handleFileUpload(file) {
 
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('title', file.name.replace(/\.[^.]+$/, ''));
+  fd.append('title', file.name.replace(/\\.[^.]+$/, ''));
 
   try {
     // Attempt to extract cover for supported types
@@ -524,6 +542,57 @@ async function saveBook() {
 }
 
 // Store & Settings
+var _storePreviewTimer = null;
+function initStorePreview() {
+  if(!currentUser) return;
+  var handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/[^a-z0-9-]+/g,'-');
+  var storeUrl = '/store/' + encodeURIComponent(handle);
+
+  // Update URL bar
+  var urlText = document.getElementById('store-preview-url-text');
+  if(urlText) urlText.textContent = window.location.origin + storeUrl;
+
+  // Update live link
+  var liveLink = document.getElementById('store-live-link');
+  if(liveLink) liveLink.href = storeUrl;
+
+  // Load preview initially
+  refreshStorePreview();
+
+  // Watch all form inputs in the settings panel for changes and debounce reload
+  var panel = document.getElementById('view-store');
+  if(!panel) return;
+  panel.querySelectorAll('input,textarea,select').forEach(function(el) {
+    el.addEventListener('input', function() {
+      clearTimeout(_storePreviewTimer);
+      _storePreviewTimer = setTimeout(function() {
+        // Only refresh after user saves - just show a nudge instead
+        var badge = document.getElementById('preview-unsaved-badge');
+        if(badge) badge.style.display = 'flex';
+      }, 400);
+    });
+    el.addEventListener('change', function() {
+      clearTimeout(_storePreviewTimer);
+      _storePreviewTimer = setTimeout(function() {
+        var badge = document.getElementById('preview-unsaved-badge');
+        if(badge) badge.style.display = 'flex';
+      }, 400);
+    });
+  });
+}
+
+function refreshStorePreview() {
+  if(!currentUser) return;
+  var handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/[^a-z0-9-]+/g,'-');
+  var iframe = document.getElementById('store-preview-iframe');
+  if(!iframe) return;
+  var newSrc = '/store/' + encodeURIComponent(handle) + '?_t=' + Date.now();
+  iframe.src = newSrc;
+  // Hide unsaved badge
+  var badge = document.getElementById('preview-unsaved-badge');
+  if(badge) badge.style.display = 'none';
+}
+
 async function saveStoreSettings() {
   const store_name = document.getElementById('st-name').value;
   const store_handle = document.getElementById('st-handle').value;
@@ -541,6 +610,22 @@ async function saveStoreSettings() {
     card_style: document.querySelector('.card-opt.active')?.id.replace('co-','') || '3d-book',
     show_view_count: document.getElementById('st-show-views-toggle')?.classList.contains('active') ?? true,
     is_private: document.getElementById('st-private-toggle')?.classList.contains('active') ?? false,
+    branding_enabled: document.getElementById('branding-toggle')?.classList.contains('active') ?? true,
+    // New premium settings
+    show_date: document.getElementById('st-show-date-toggle')?.classList.contains('active') ?? false,
+    hero_size: document.querySelector('.hero-size-opt.active')?.id.replace('hs-','') || 'standard',
+    bg_style: document.querySelector('.bg-style-opt.active')?.id.replace('bgs-','') || 'clean',
+    corner_radius: document.querySelector('.corner-opt.active')?.id.replace('cr-','') || 'standard',
+    section_heading: document.getElementById('st-section-heading')?.value || '',
+    banner_text: document.getElementById('st-banner-text')?.value || '',
+    banner_link: document.getElementById('st-banner-link')?.value || '',
+    banner_color: document.getElementById('st-banner-color')?.value || '',
+    cta_text: document.getElementById('st-cta-text')?.value || '',
+    cta_link: document.getElementById('st-cta-link')?.value || '',
+    social_instagram: document.getElementById('st-social-instagram')?.value || '',
+    social_x: document.getElementById('st-social-x')?.value || '',
+    social_youtube: document.getElementById('st-social-youtube')?.value || '',
+    social_website: document.getElementById('st-social-website')?.value || '',
     privacy_policy_content: document.getElementById('st-privacy').value,
     terms_content: document.getElementById('st-terms').value,
     contact_info_content: document.getElementById('st-contact').value
@@ -558,6 +643,10 @@ async function saveStoreSettings() {
     currentUser.store_name = store_name;
     currentUser.store_handle = store_handle;
     currentUser.store_settings = JSON.stringify(store_settings);
+    // Refresh UI so the header store-link reflects the new handle immediately
+    updateUI();
+    // Refresh the live preview iframe
+    setTimeout(refreshStorePreview, 300);
   }
 }
 
@@ -781,11 +870,117 @@ document.addEventListener('change', function(e) {
 function toggleStoreOption(opt) {
   if(opt === 'show-views') {
     document.getElementById('st-show-views-toggle').classList.toggle('active');
+  } else if(opt === 'show-date') {
+    document.getElementById('st-show-date-toggle').classList.toggle('active');
   } else if(opt === 'private') {
     const t = document.getElementById('st-private-toggle');
     t.classList.toggle('active');
     document.getElementById('st-private-info').style.display = t.classList.contains('active') ? 'block' : 'none';
   }
+}
+function toggleBranding() {
+  const t = document.getElementById('branding-toggle');
+  if(t) t.classList.toggle('active');
+}
+function selectHeroSize(size, silent) {
+  document.querySelectorAll('.hero-size-opt').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('hs-' + size);
+  if(el) el.classList.add('active');
+}
+function selectBgStyle(style, silent) {
+  document.querySelectorAll('.bg-style-opt').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('bgs-' + style);
+  if(el) el.classList.add('active');
+}
+function selectCorner(radius, silent) {
+  document.querySelectorAll('.corner-opt').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('cr-' + radius);
+  if(el) el.classList.add('active');
+}
+
+// ====== MARKDOWN EDITOR HELPERS ======
+function mdCmd(id, cmd) {
+  var ta = document.getElementById(id);
+  if(!ta) return;
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  var sel = ta.value.slice(start, end);
+  var before = ta.value.slice(0, start), after = ta.value.slice(end);
+  var insert = '';
+  if(cmd === 'bold')   insert = '**' + (sel || 'bold text') + '**';
+  if(cmd === 'italic') insert = '*' + (sel || 'italic text') + '*';
+  if(cmd === 'h2')     insert = '\\n## ' + (sel || 'Heading');
+  if(cmd === 'h3')     insert = '\\n### ' + (sel || 'Heading');
+  if(cmd === 'ul')     insert = '\\n- ' + (sel || 'List item');
+  if(cmd === 'ol')     insert = '\\n1. ' + (sel || 'List item');
+  if(cmd === 'hr')     insert = '\\n\\n---\\n';
+  if(cmd === 'link') {
+    var url = prompt('Enter URL:', 'https://');
+    if(!url) return;
+    insert = '[' + (sel || 'link text') + '](' + url + ')';
+  }
+  ta.value = before + insert + after;
+  var pos = before.length + insert.length;
+  ta.setSelectionRange(pos, pos);
+  ta.focus();
+}
+
+function mdSwitch(id, mode) {
+  const ta = document.getElementById(id);
+  const pv = document.getElementById(id + '-pv');
+  const wb = document.getElementById(id + '-wb');
+  const pb = document.getElementById(id + '-pb');
+  if(!ta || !pv) return;
+  if(mode === 'preview') {
+    pv.innerHTML = mdRender(ta.value);
+    ta.style.display = 'none'; pv.style.display = 'block';
+    if(wb) wb.classList.remove('active');
+    if(pb) pb.classList.add('active');
+  } else {
+    ta.style.display = ''; pv.style.display = 'none';
+    if(wb) wb.classList.add('active');
+    if(pb) pb.classList.remove('active');
+  }
+}
+
+function mdRender(md) {
+  if(!md) return '<p style="color:var(--text-muted);font-style:italic">Nothing to preview yet.</p>';
+  var lines = md.split('\\n');
+  var out = [];
+  var inUl = false, inOl = false;
+  function flush() { if(inUl){out.push('</ul>');inUl=false;} if(inOl){out.push('</ol>');inOl=false;} }
+  function inl(s) {
+    return s
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\\*\\*\\*(.+?)\\*\\*\\*/g,'<strong><em>$1</em></strong>')
+      .replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')
+      .replace(/\\*(.+?)\\*/g,'<em>$1</em>')
+      .replace(/\\x60([^\\x60]+)\\x60/g,'<code>$1</code>')
+      .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g,'<a href="$2" target="_blank">$1</a>');
+  }
+  for(var ri=0;ri<lines.length;ri++) {
+    var l = lines[ri].replace(/\\s+$/,'');
+    if(/^#### /.test(l)){flush();out.push('<h4>'+inl(l.slice(5))+'</h4>');continue;}
+    if(/^### /.test(l)) {flush();out.push('<h3>'+inl(l.slice(4))+'</h3>');continue;}
+    if(/^## /.test(l))  {flush();out.push('<h2>'+inl(l.slice(3))+'</h2>');continue;}
+    if(/^# /.test(l))   {flush();out.push('<h1>'+inl(l.slice(2))+'</h1>');continue;}
+    if(/^---+$/.test(l)||/^\\*\\*\\*[ -]*$/.test(l)){flush();out.push('<hr>');continue;}
+    if(/^> /.test(l))   {flush();out.push('<blockquote><p>'+inl(l.slice(2))+'</p></blockquote>');continue;}
+    if(/^[*-] /.test(l)) {
+      if(inOl){out.push('</ol>');inOl=false;}
+      if(!inUl){out.push('<ul>');inUl=true;}
+      out.push('<li>'+inl(l.slice(2))+'</li>'); continue;
+    }
+    if(/^\\d+\\. /.test(l)) {
+      if(inUl){out.push('</ul>');inUl=false;}
+      if(!inOl){out.push('<ol>');inOl=true;}
+      out.push('<li>'+inl(l.replace(/^\\d+\\. /,''))+'</li>'); continue;
+    }
+    flush();
+    if(l === ''){out.push('<br>');continue;}
+    out.push('<p>'+inl(l)+'</p>');
+  }
+  flush();
+  return out.join('\\n');
 }
 
 // Members Management
@@ -1094,7 +1289,7 @@ if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.inner
 
 function viewMyStore() {
   if (currentUser) {
-    const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
+    const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
     window.open('/store/' + encodeURIComponent(handle), '_blank');
   } else {
     alert('Please log in.');
