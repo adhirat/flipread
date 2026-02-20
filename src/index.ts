@@ -14,6 +14,7 @@ import viewerRoutes, { viewerPage } from './routes/viewer';
 import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
 import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
+import { privacyPage, termsPage, contactPage, docsPage } from './views/pages';
 import swagger from './routes/swagger';
 import type { Book, Variables } from './lib/types';
 
@@ -80,6 +81,12 @@ app.get('/dashboard', (c) => {
   return c.html(dashboardPage(c.env.APP_URL));
 });
 
+// Static pages
+app.get('/privacy', (c) => c.html(privacyPage(c.env.APP_URL)));
+app.get('/terms', (c) => c.html(termsPage(c.env.APP_URL)));
+app.get('/contact', (c) => c.html(contactPage(c.env.APP_URL)));
+app.get('/docs', (c) => c.html(docsPage(c.env.APP_URL)));
+
 // Landing page, Custom Store Root, or Custom Book Root
 app.get('/', async (c) => {
   const book = c.get('book');
@@ -144,7 +151,7 @@ function landingPage(appUrl: string): string {
 <meta property="og:url" content="${appUrl}">
 <meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
   --bg-primary:#ffffff;
@@ -183,23 +190,23 @@ function landingPage(appUrl: string): string {
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Work Sans',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;transition:background 0.3s,color 0.3s}
 body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;z-index:0}
-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;position:fixed;top:0;width:100%;z-index:100;background:var(--bg-secondary);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 4px 30px var(--shadow)}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.logo img{height:32px;width:auto}
-.logo span{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
+nav{display:flex;justify-content:space-between;align-items:center;padding:10px 40px;position:fixed;top:0;width:100%;z-index:100;background:var(--bg-secondary);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 4px 30px var(--shadow)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo img{height:26px;width:auto}
+.logo span{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
 .nav-links{display:flex;gap:28px;align-items:center}
 .nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:600;transition:all .3s;position:relative;letter-spacing:0.5px}
 .nav-links a:hover{color:var(--accent-cyan);text-shadow:0 0 20px var(--glow-cyan)}
-.theme-toggle{background:var(--bg-elevated);border:1px solid var(--border);border-radius:50px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:18px;color:var(--text-secondary)}
+.theme-toggle{background:var(--bg-elevated);border:1px solid var(--border);border-radius:50px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:15px;color:var(--text-secondary)}
 .theme-toggle:hover{border-color:var(--accent-cyan);box-shadow:0 0 20px var(--glow-cyan);transform:rotate(180deg)}
-.btn{padding:12px 28px;border-radius:50px;font-weight:700;font-size:14px;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:10px;border:none;text-transform:uppercase;letter-spacing:1px;position:relative;overflow:hidden}
+.btn{padding:9px 22px;border-radius:50px;font-weight:700;font-size:13px;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none;text-transform:uppercase;letter-spacing:1px;position:relative;overflow:hidden}
 .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);transition:left .5s}
 .btn:hover::before{left:100%}
 .btn-primary{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;box-shadow:0 8px 30px var(--glow-magenta)}
 .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 40px var(--glow-cyan)}
 .btn-outline{background:transparent;color:var(--text-primary);border:2px solid var(--accent-purple)}
 .btn-outline:hover{border-color:var(--accent-cyan);background:var(--bg-elevated);box-shadow:0 0 30px var(--glow-cyan)}
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 20px 100px;position:relative;overflow:hidden}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 20px 100px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;width:800px;height:800px;background:radial-gradient(circle,var(--glow-cyan),transparent 70%);top:15%;left:20%;pointer-events:none;animation:pulse 8s infinite}
 .hero::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,var(--glow-magenta),transparent 70%);bottom:10%;right:20%;pointer-events:none;animation:pulse 10s infinite reverse}
 @keyframes pulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.2);opacity:0.8}}
@@ -238,9 +245,19 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:20px 4
 .p-list{list-style:none;margin:28px 0}
 .p-list li{padding:10px 0;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:12px}
 .p-list li::before{content:'✓';color:var(--accent-cyan);font-weight:bold;font-size:18px}
-footer{text-align:center;padding:50px;color:var(--text-muted);font-size:14px;border-top:1px solid var(--border);position:relative;z-index:1;background:var(--bg-secondary)}
-footer a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
-footer a:hover{color:var(--accent-magenta)}
+footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;z-index:1;background:var(--bg-secondary)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto;padding-bottom:50px}
+.footer-brand p{color:var(--text-secondary);font-size:14px;line-height:1.8;margin-top:16px;max-width:280px}
+.footer-col h4{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin-bottom:18px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-primary)}
+.footer-col a{display:block;color:var(--text-muted);text-decoration:none;font-size:14px;padding:5px 0;transition:color .3s}
+.footer-col a:hover{color:var(--accent-cyan)}
+.footer-social{display:flex;gap:14px;margin-top:20px}
+.footer-social a{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);font-size:15px;transition:all .3s;padding:0}
+.footer-social a:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);box-shadow:0 0 15px var(--glow-cyan);transform:translateY(-2px)}
+.footer-bottom{max-width:1200px;margin:0 auto;padding:24px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted)}
+.footer-bottom a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
+.footer-bottom a:hover{color:var(--accent-magenta)}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:30px}.footer-bottom{flex-direction:column;gap:10px;text-align:center}}
 .nav-right{display:flex;align-items:center;gap:20px}
 .menu-btn{display:none;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
 .mobile-menu{position:fixed;top:0;right:-100%;width:280px;height:100%;background:var(--bg-secondary);z-index:200;transition:right 0.3s cubic-bezier(0.16, 1, 0.3, 1);padding:30px;box-shadow:-10px 0 40px var(--shadow);border-left:1px solid var(--border);backdrop-filter:blur(30px)}
@@ -251,7 +268,7 @@ footer a:hover{color:var(--accent-magenta)}
 .mobile-links a{padding:15px;color:var(--text-secondary);text-decoration:none;font-size:16px;font-weight:600;border-radius:12px;transition:all 0.2s}
 .mobile-links a:hover{background:var(--bg-elevated);color:var(--text-primary)}
 @media(max-width:768px){
-  nav{padding:16px 24px}
+  nav{padding:8px 20px}
   .nav-links{display:none}
   .menu-btn{display:block}
   .hero{padding:120px 20px 80px}
@@ -409,7 +426,46 @@ document.querySelectorAll('.price-yearly-note').forEach(function(el){el.style.di
 toggleBilling(); // Initialize on load
 </script>
 
-<footer>© 2026 <a href="/">FlipRead</a>. Publish beautiful flipbooks from your PDFs and EPUBs.</footer>
+<footer>
+<div class="footer-grid">
+<div class="footer-brand">
+<a href="/" class="logo">
+  <img src="/logo.png" alt="FlipRead Logo">
+  <span>FlipRead</span>
+</a>
+<p>Transform your PDFs and EPUBs into beautiful, interactive flipbooks. Share your content with the world — instantly.</p>
+<div class="footer-social">
+<a href="https://x.com/adhirattech" target="_blank" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+<a href="https://www.linkedin.com/company/aadhirat" target="_blank" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+<a href="https://www.youtube.com/@adhirattech" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+<a href="https://github.com/adhirat" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+</div>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="#features">Features</a>
+<a href="#pricing">Pricing</a>
+<a href="/dashboard">Dashboard</a>
+<a href="/docs">Documentation</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/dashboard?mode=register">Get Started</a>
+<a href="#pricing">Compare Plans</a>
+<a href="/api/swagger">API Reference</a>
+</div>
+<div class="footer-col">
+<h4>Legal</h4>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms & Conditions</a>
+<a href="/contact">Contact</a>
+</div>
+</div>
+<div class="footer-bottom">
+<span>© 2026 <a href="/">FlipRead</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
+<span>Made with <span style="color:var(--accent-magenta)">♥</span> on Cloudflare Workers</span>
+</div>
+</footer>
 </body></html>`;
 }
 
