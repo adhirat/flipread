@@ -463,7 +463,7 @@ toggleBilling(); // Initialize on load
 </div>
 <div class="footer-bottom">
 <span>© 2026 <a href="/">FlipRead</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
-<span>Made with <span style="color:var(--accent-magenta)">♥</span> on Cloudflare Workers</span>
+<span>Made with <span style="color:var(--accent-magenta)">♥</span> </span>
 </div>
 </footer>
 </body></html>`;
