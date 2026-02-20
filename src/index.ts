@@ -314,7 +314,7 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 
 <section class="hero">
 <h1>Turn Your Books into <span class="grad">Stunning Flipbooks</span></h1>
-<p>Upload a PDF or EPUB, get a shareable link instantly. Your readers experience a beautiful page-flipping book — right in their browser, on any device.</p>
+<p>Upload a PDF, EPUB, DOCX, Spreadsheet, or PPT, get a shareable link instantly. Your readers experience a beautiful interactive book — right in their browser, on any device.</p>
 <div class="hero-btns">
 <a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Start Free</a>
 <a href="#features" class="btn btn-outline"><i class="fas fa-play-circle"></i> See How It Works</a>
@@ -324,7 +324,7 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <section class="features" id="features">
 <h2>Everything You Need</h2>
 <div class="f-grid">
-<div class="f-card"><div class="f-icon"><i class="fas fa-upload"></i></div><h3>Upload & Publish</h3><p>Drag and drop your PDF or EPUB. Get a shareable link in seconds — no technical skills needed.</p></div>
+<div class="f-card"><div class="f-icon"><i class="fas fa-upload"></i></div><h3>Upload & Publish</h3><p>Drag and drop your PDF, EPUB, DOCX, Spreadsheet, or Presentation. Get a shareable link in seconds — no technical skills needed.</p></div>
 <div class="f-card"><div class="f-icon"><i class="fas fa-book-open"></i></div><h3>Realistic Flipbook</h3><p>Readers experience smooth page-turning animations with zoom, swipe, and keyboard navigation.</p></div>
 <div class="f-card"><div class="f-icon"><i class="fas fa-store"></i></div><h3>Personal Bookstore</h3><p>Display all your books in a beautiful public collection page, share your library with anyone.</p></div>
 <div class="f-card"><div class="f-icon"><i class="fas fa-chart-line"></i></div><h3>View Analytics</h3><p>Track how many people read your books, where they come from, and which books are most popular.</p></div>

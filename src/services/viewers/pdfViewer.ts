@@ -830,6 +830,8 @@ export function pdfViewerHTML(title: string, fileUrl: string, coverUrl: string, 
         ],
         showZoom: true,
         showWebViewLink: true,
-        showHighlights: false
+        showHighlights: false,
+        showFullMode: false,
+        showNightShift: true
     });
 }

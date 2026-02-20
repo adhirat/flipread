@@ -367,42 +367,17 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         let startingIndex = 0;
         let useFullHeight = false;
 
-        function injectFitToggle() {
-            const headerIcons = document.getElementById('header-icons');
-            if(!headerIcons) return;
-            const btn = document.createElement('button');
-            btn.className = 'header-icon';
-            btn.id = 'fit-toggle-btn';
-            btn.title = 'Toggle Fit Mode';
-            btn.innerHTML = '<i class="fas fa-expand"></i>';
-            
-            const zoomCtrl = document.getElementById('zoom-controls');
-            if(zoomCtrl && headerIcons.contains(zoomCtrl)) {
-                headerIcons.insertBefore(btn, zoomCtrl);
-            } else {
-                headerIcons.appendChild(btn);
-            }
-            
-            btn.onclick = () => {
-                useFullHeight = !useFullHeight;
-                document.body.classList.toggle('full-mode', useFullHeight);
-                const icon = btn.querySelector('i');
-                if (useFullHeight) {
-                    icon.classList.remove('fa-expand');
-                    icon.classList.add('fa-compress');
-                } else {
-                    icon.classList.remove('fa-compress');
-                    icon.classList.add('fa-expand');
-                }
-                if(rend) {
-                    rend.resize();
-                    setTimeout(() => {
+        document.addEventListener('DOMContentLoaded', () => {
+            const fb = document.getElementById('full-mode-btn');
+            if(fb) {
+                fb.addEventListener('click', () => {
+                   if(rend) {
                         rend.resize();
-                        updateFooter();
-                    }, 350);
-                }
-            };
-        }
+                        setTimeout(() => rend.resize(), 100);
+                   }
+                });
+            }
+        });
 
         // Personal Desk handled by viewerBase
 
@@ -771,70 +746,25 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
             document.getElementById('fs-v').textContent = fz + "%";
         }
 
-        // Bridge listeners for viewerBase buttons
+        // Initialize from reader settings
+        const sb = window.getReaderSetting('bg');
+        if(sb) window.setBg(sb);
+        
+        const st = window.getReaderSetting('tex');
+        if(st === 'true') {
+             document.body.classList.add('textured');
+             const texBtn = document.getElementById('tex-toggle');
+             if(texBtn) { texBtn.innerText = 'ON'; texBtn.style.background = '#4CAF50'; }
+        }
+        
+        const sn = window.getReaderSetting('ns');
+        if(sn === 'true') {
+            document.body.classList.add('night-shift');
+            const nsToggle = document.getElementById('ns-toggle');
+            if(nsToggle) { nsToggle.innerText = 'ON'; nsToggle.style.background = '#4CAF50'; }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            injectFitToggle();
-            
-            const idxModal = document.getElementById('index-modal');
-            const idxBtn = document.getElementById('index-btn');
-            if(idxBtn) idxBtn.onclick = () => idxModal.classList.add('open');
-            const idxClose = document.getElementById('index-close-btn');
-            if(idxClose) idxClose.onclick = () => idxModal.classList.remove('open');
-            idxModal.onclick = (e) => { if(e.target === idxModal) idxModal.classList.remove('open'); };
-
-            const sModal = document.getElementById('settings-modal');
-            const setBtn = document.getElementById('bg-settings-btn');
-            if(setBtn) setBtn.onclick = () => sModal.classList.add('open');
-            const setBtnMob = document.getElementById('bg-settings-btn-mob');
-            if(setBtnMob) setBtnMob.onclick = () => sModal.classList.add('open');
-            const setClose = document.getElementById('settings-close-btn');
-            if(setClose) setClose.onclick = () => sModal.classList.remove('open');
-            sModal.onclick = (e) => { if(e.target === sModal) sModal.classList.remove('open'); };
-
-            window.setBg = (c) => {
-                 document.body.style.setProperty('--reader-bg', c);
-                 window.setReaderSetting('bg', c);
-                 document.querySelectorAll('.bg-option').forEach(opt => {
-                    if(opt.getAttribute('data-bg') === c) opt.classList.add('active');
-                    else opt.classList.remove('active');
-                 });
-            };
-            document.querySelectorAll('.bg-option').forEach(opt => {
-                opt.onclick = () => window.setBg(opt.getAttribute('data-bg'));
-            });
-
-            const texBtn = document.getElementById('tex-toggle');
-            if(texBtn) {
-                texBtn.onclick = () => {
-                    const active = document.body.classList.toggle('textured');
-                    texBtn.innerText = active ? 'ON' : 'OFF';
-                    texBtn.style.background = active ? '#4CAF50' : '#444';
-                    window.setReaderSetting('tex', active);
-                };
-            }
-
-            const nBtn = document.getElementById('notes-btn');
-            if(nBtn) nBtn.onclick = () => window.toggleChat();
-            const nBtnMob = document.getElementById('notes-btn-mob');
-            if(nBtnMob) nBtnMob.onclick = () => window.toggleChat();
-
-            // Initialize from reader settings
-            const sb = window.getReaderSetting('bg');
-            if(sb) window.setBg(sb);
-            
-            const st = window.getReaderSetting('tex');
-            if(st === 'true') {
-                 document.body.classList.add('textured');
-                 if(texBtn) { texBtn.innerText = 'ON'; texBtn.style.background = '#4CAF50'; }
-            }
-            
-            const sn = window.getReaderSetting('ns');
-            if(sn === 'true') {
-                document.body.classList.add('night-shift');
-                const nsToggle = document.getElementById('ns-toggle');
-                if(nsToggle) { nsToggle.innerText = 'ON'; nsToggle.style.background = '#4CAF50'; }
-            }
-
             init();
         });
     `;
@@ -859,6 +789,8 @@ export function epubViewerHTML(title: string, fileUrl: string, coverUrl: string,
         ],
         showZoom: false,
         showWebViewLink: true,
-        showTTS: true
+        showTTS: true,
+        showFullMode: true,
+        showNightShift: true
     });
 }

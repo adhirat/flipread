@@ -146,48 +146,6 @@ export function imageViewerHTML(title: string, fileUrl: string, coverUrl: string
              const a = document.createElement('a');
              a.href = FILE_URL; a.download = TITLE; a.click();
         };
-
-        // UI Hooks
-        const setupUI = () => {
-            const sBtn = document.getElementById('bg-settings-btn');
-            const sModal = document.getElementById('settings-modal');
-            const sClose = document.getElementById('settings-close-btn');
-            if(sBtn) sBtn.onclick = () => sModal.classList.add('open');
-            if(sClose) sClose.onclick = () => sModal.classList.remove('open');
-            
-            const nBtn = document.getElementById('notes-btn');
-            const nSidebar = document.getElementById('chat-w');
-            if(nBtn) nBtn.onclick = () => nSidebar.classList.toggle('open');
-            document.getElementById('close-notes-btn').onclick = () => nSidebar.classList.remove('open');
-            
-            // Full Mode Toggle (Injecting into header)
-            const hdr = document.getElementById('header-icons');
-            const fitBtn = document.createElement('button');
-            fitBtn.className = 'header-icon';
-            fitBtn.id = 'fit-toggle-btn';
-            fitBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            hdr.appendChild(fitBtn);
-            
-            fitBtn.onclick = () => {
-                document.body.classList.toggle('full-mode');
-                const on = document.body.classList.contains('full-mode');
-                fitBtn.innerHTML = on ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
-            };
-        };
-        
-        setupUI();
-        
-        // Settings / Bg Unification
-        window.setBg = (c) => {
-             document.body.style.background = c;
-             localStorage.setItem('fr_bg_img', c);
-        };
-        const savedBg = localStorage.getItem('fr_bg_img');
-        if(savedBg) window.setBg(savedBg);
-
-        document.querySelectorAll('.bg-option').forEach(opt => {
-            opt.onclick = () => window.setBg(opt.getAttribute('data-bg'));
-        });
     `;
 
     return getViewerBase({
@@ -207,6 +165,8 @@ export function imageViewerHTML(title: string, fileUrl: string, coverUrl: string
             'https://cdn.tailwindcss.com'
         ],
         showZoom: true,
-        showWebViewLink: true
+        showWebViewLink: true,
+        showFullMode: true,
+        showNightShift: true
     });
 }

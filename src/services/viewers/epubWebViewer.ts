@@ -14,6 +14,8 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         logoUrl,
         storeUrl, storeName,
         showTTS: true,
+        showFullMode: true,
+        showNightShift: true,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js',
             'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js'
@@ -176,8 +178,19 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
 
             async function init() {
                 try {
-                    injectFullscreen();
                     document.getElementById('settings-btn').style.display = 'flex';
+                    
+                    // Sync Full Mode Resize
+                    const fb = document.getElementById('full-mode-btn');
+                    if(fb) {
+                        fb.addEventListener('click', () => {
+                            if(bookRender) {
+                                bookRender.resize();
+                                setTimeout(() => bookRender.resize(), 100);
+                            }
+                        });
+                    }
+
                     const res = await fetch(FU);
                     if(!res.ok) throw new Error("Failed to fetch book: " + res.statusText);
                     const blob = await res.blob();
@@ -514,7 +527,8 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 const m = document.getElementById('set-m');
                 const isOpen = m.classList.toggle('o');
                 const fs = localStorage.getItem('fr_web_fs') || '100';
-                document.getElementById('wfz-v').textContent = fs + '%';
+                const el = document.getElementById('wfz-v');
+                if(el) el.textContent = fs + '%';
                 document.body.style.overflow = isOpen ? 'hidden' : '';
                 const hdr = document.getElementById('main-header');
                 const ftr = document.getElementById('main-footer');
@@ -522,19 +536,6 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 if(ftr) { ftr.classList.remove('hidden'); ftr.classList.add('visible'); }
                 setTimeout(() => { if(ftr) ftr.style.display = 'flex'; }, 100);
             };
-
-            function injectFullscreen() {
-                const hdr = document.getElementById('header-icons');
-                const btn = document.createElement('button');
-                btn.className = 'header-icon'; btn.title = 'Toggle Fullscreen'; btn.innerHTML = '<i class="fas fa-expand"></i>';
-                const notesBtn = document.getElementById('notes-btn');
-                if(notesBtn && hdr.contains(notesBtn)) hdr.insertBefore(btn, notesBtn.nextSibling);
-                else hdr.appendChild(btn);
-                btn.onclick = () => {
-                    if(!document.fullscreenElement) { document.documentElement.requestFullscreen(); btn.innerHTML = '<i class="fas fa-compress"></i>'; }
-                    else { document.exitFullscreen(); btn.innerHTML = '<i class="fas fa-expand"></i>'; }
-                };
-            }
 
             window.toggleTTS = () => { if(speaking || ttsPaused) stopTTS(); else startTTS(); };
             window.startTTS = () => {

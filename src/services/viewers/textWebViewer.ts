@@ -11,6 +11,7 @@ export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         logoUrl,
         storeUrl, storeName,
         showTTS: false,
+        showNightShift: true,
         dependencies: [
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js'
         ],

@@ -18,10 +18,33 @@ export interface WebViewerOptions {
     storeName?: string;
     showHighlights?: boolean;
     showZoom?: boolean;
+    showNightShift?: boolean;
+    showTexture?: boolean;
+    showFullMode?: boolean;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead', showHighlights = true, showZoom = false } = options;
+    const { 
+        title, 
+        fileUrl, 
+        coverUrl, 
+        settings, 
+        showBranding, 
+        logoUrl = '', 
+        storeUrl = '/', 
+        extraStyles = '', 
+        extraHtml = '', 
+        extraScripts = '', 
+        settingsHtml = '', 
+        dependencies = [], 
+        showTTS = false, 
+        storeName = 'FlipRead', 
+        showHighlights = true, 
+        showZoom = false,
+        showNightShift = false,
+        showTexture = false,
+        showFullMode = false
+    } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -63,8 +86,15 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1em; color: #111; }
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
         
+        /* Night Shift Overlay */
+        body.night-shift::after {
+            content: ""; position: fixed; inset: 0; background: rgba(255, 140, 0, 0.1); 
+            pointer-events: none; z-index: 10000; mix-blend-mode: multiply;
+        }
+        
         /* Main Content */
-        #content-wrapper { width: 100%; margin: 0 auto; padding: 40px 0 200px 0; min-height: calc(100vh - 60px); }
+        #content-wrapper { width: 100%; margin: 0 auto; padding: 40px 0 200px 0; min-height: calc(100vh - 60px); transition: max-width 0.3s ease; }
+        body.full-mode #content-wrapper { max-width: 100% !important; }
         
         /* Dynamic Sections */
         .page-content { margin: 0; padding: 0; }
@@ -425,6 +455,18 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
+            ${showNightShift ? `
+            <button class="header-icon" id="night-shift-btn" title="Night Shift">
+                <i class="fas fa-moon"></i>
+            </button>
+            ` : ''}
+
+            ${showFullMode ? `
+            <button class="header-icon" id="full-mode-btn" title="Toggle Full Mode">
+                <i class="fas fa-expand"></i>
+            </button>
+            ` : ''}
+
             <a href="?mode=standard" class="header-icon" id="standard-btn" title="Standard View">
                 <i class="fas fa-book-open"></i>
             </a>
@@ -588,6 +630,29 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
         };
+
+        // Night Shift
+        const nsBtn = document.getElementById('night-shift-btn');
+        if(nsBtn) {
+            const isNS = localStorage.getItem('fr_web_ns') === 'true';
+            if(isNS) document.body.classList.add('night-shift');
+            nsBtn.classList.toggle('text-yellow-400', isNS);
+            
+            nsBtn.onclick = () => {
+                const active = document.body.classList.toggle('night-shift');
+                localStorage.setItem('fr_web_ns', active);
+                nsBtn.classList.toggle('text-yellow-400', active);
+            };
+        }
+
+        // Full Mode
+        const fullBtn = document.getElementById('full-mode-btn');
+        if(fullBtn) {
+            fullBtn.onclick = () => {
+                const isFull = document.body.classList.toggle('full-mode');
+                fullBtn.innerHTML = isFull ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+            };
+        }
 
         ${getSidebarScripts(fileUrl, showHighlights)}
 

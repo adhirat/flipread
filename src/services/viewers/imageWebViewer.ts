@@ -10,6 +10,8 @@ export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: str
         showBranding,
         logoUrl,
         storeUrl, storeName,
+        showFullMode: true,
+        showNightShift: true,
         settingsHtml: `
             <div id="set-m">
                 <div class="flex justify-between items-center mb-4">

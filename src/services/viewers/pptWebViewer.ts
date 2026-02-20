@@ -1,4 +1,3 @@
-
 import { getWebViewerBase } from './webViewerBase';
 
 export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
@@ -10,24 +9,26 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         showBranding,
         logoUrl,
         storeUrl, storeName,
-        showTTS: false,
+        showTTS: true,
         dependencies: [
             'https://code.jquery.com/jquery-3.6.0.min.js',
             'https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.js'
         ],
         settingsHtml: `
-            <div id="set-m">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">PPT Options</h3>
-                    <button onclick="toggleSettings()" class="md:hidden text-lg">✕</button>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Slide Scale</label>
-                        <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
-                            <button onclick="changeScale(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
-                            <span id="scale-v" class="flex-1 text-center font-bold text-sm">100%</span>
-                            <button onclick="changeScale(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+            <div id="set-m" class="modal" onclick="toggleSettings()">
+                <div id="set-m-c" class="modal-c" onclick="event.stopPropagation()">
+                    <div class="set-m-h">
+                        <h3 class="font-bold text-xs uppercase tracking-widest opacity-60">PPT Options</h3>
+                        <button onclick="toggleSettings()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">✕</button>
+                    </div>
+                    <div class="set-m-b">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase opacity-40 mb-2 block">Slide Scale</label>
+                            <div class="flex items-center gap-4 bg-gray-50 p-2 rounded-lg">
+                                <button onclick="changeScale(-10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">-</button>
+                                <span id="scale-v" class="flex-1 text-center font-bold text-sm">100%</span>
+                                <button onclick="changeScale(10)" class="w-8 h-8 bg-white border rounded shadow-sm hover:bg-gray-50">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -35,23 +36,25 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         `,
         extraStyles: `
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pptxjs@1.21.1/dist/pptxjs.css">
+            #content-wrapper { padding-top: 80px; }
+            .pptx-div { margin: 0 auto !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
         `,
         extraScripts: `
             let pptScale = 100;
-            let syn = window.speechSynthesis;
-            let utter = null;
-            let speaking = false;
-            let ttsPaused = false;
 
             async function init() {
                 try {
                     document.getElementById('settings-btn').style.display = 'flex';
                     await renderPPTX(FU);
-                    document.getElementById('ld').style.opacity = '0';
-                    setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
+                    const ld = document.getElementById('ld');
+                    if(ld) {
+                        ld.style.opacity = '0';
+                        setTimeout(() => ld.style.display = 'none', 500);
+                    }
                 } catch(e) {
                     console.error(e);
-                    document.getElementById('ld').innerHTML = '<p class="text-red-500">Error loading content.</p>';
+                    const ld = document.getElementById('ld');
+                    if(ld) ld.innerHTML = '<p class="text-red-500">Error loading content.</p>';
                 }
             }
 
@@ -64,13 +67,13 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                      keyBoardShortCut: false
                  });
                  setTimeout(() => {
-                     const slides = container.querySelectorAll('.slide');
+                     const slides = container.querySelectorAll('.pptx-div');
                      const tocList = document.getElementById('toc-list');
                      if(tocList) tocList.innerHTML = '';
                      slides.forEach((s, i) => {
                          let title = "Slide " + (i+1);
-                         const t = s.innerText.substring(0, 20).trim();
-                         if(t.length > 2) title = t + "...";
+                         const t = s.innerText.substring(0, 30).trim();
+                         if(t.length > 5) title = t + "...";
                          s.id = 'slide-' + i;
                          const item = document.createElement('div');
                          item.className = 'toc-item';
@@ -83,89 +86,29 @@ export function pptWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
 
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
-                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+                m.classList.toggle('o');
             };
 
             window.changeScale = (d) => {
                 pptScale = Math.max(50, Math.min(200, pptScale + d));
                 document.getElementById('scale-v').textContent = pptScale + '%';
+                const container = document.getElementById('content-wrapper');
+                container.innerHTML = '';
                 renderPPTX(FU);
             };
 
+            // Enhanced TTS for PPT Web
+            const baseToggleTTS = window.toggleTTS;
             window.toggleTTS = () => {
-                if(speaking || ttsPaused) {
-                    stopTTS();
-                } else {
-                    startTTS();
-                }
-            };
-            window.startTTS = () => {
                 const container = document.getElementById('content-wrapper');
                 if(!container) return;
-                
                 const text = container.innerText;
                 if(!text) return;
-
-                utter = new SpeechSynthesisUtterance(text);
-                utter.onend = () => { stopTTS(); };
-                utter.onstart = () => {
-                    speaking = true;
-                    ttsPaused = false;
-                    updateTTSUI();
-                };
                 
-                syn.cancel(); 
-                setTimeout(() => {
-                    syn.resume();
-                    syn.speak(utter);
-                }, 100);
-                
-                const ctrls = document.getElementById('tts-ctrls');
-                if(ctrls) {
-                    ctrls.classList.add('flex');
-                    ctrls.classList.remove('hidden');
-                }
-            };
-            window.togglePlayPauseTTS = () => {
-                if (syn.paused) {
-                    syn.resume();
-                    ttsPaused = false;
-                    speaking = true;
+                if(window.speaking || window.ttsPaused) {
+                    window.stopTTS();
                 } else {
-                    syn.pause();
-                    ttsPaused = true;
-                    speaking = false;
-                }
-                updateTTSUI();
-            };
-            window.stopTTS = () => {
-                syn.cancel();
-                speaking = false;
-                ttsPaused = false;
-                const ctrls = document.getElementById('tts-ctrls');
-                if(ctrls) {
-                    ctrls.classList.remove('flex');
-                    ctrls.classList.add('hidden');
-                }
-                updateTTSUI();
-            };
-            window.updateTTSUI = () => {
-                const ppIcon = document.getElementById('tts-pp-i');
-                const ttsBtn = document.getElementById('tts-btn');
-                
-                if (ppIcon) {
-                    ppIcon.className = ttsPaused ? 'fas fa-play ml-0.5' : 'fas fa-pause';
-                }
-                
-                if (ttsBtn) {
-                    ttsBtn.classList.remove('tts-playing', 'tts-paused-state', 'tts-active');
-                    if (speaking || ttsPaused) {
-                        if (ttsPaused) {
-                            ttsBtn.classList.add('tts-paused-state');
-                        } else {
-                            ttsBtn.classList.add('tts-playing', 'tts-active');
-                        }
-                    }
+                    window.startTTS(text);
                 }
             };
         `
