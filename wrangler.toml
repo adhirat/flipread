@@ -77,6 +77,3 @@ id = "ada4253c67bc46959a5905e5690356cb"
 binding = "BUCKET"
 bucket_name = "flipread-files-staging"
 
-# Static assets for staging
-[env.staging.site]
-bucket = "./public"
