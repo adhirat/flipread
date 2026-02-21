@@ -15,7 +15,7 @@ import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from '
 import { memberAccessPage, memberRegisterPage, memberForgotPage } from './services/viewerTemplates';
 import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
-import { privacyPage, termsPage, contactPage, docsPage } from './views/pages';
+import { privacyPage, termsPage, contactPage, docsPage, notFoundPage, errorPage } from './views/pages';
 import swagger from './routes/swagger';
 import categoriesRoutes from './routes/categories';
 import productsRoutes from './routes/products';
@@ -503,5 +503,13 @@ toggleBilling(); // Initialize on load
 </body></html>`;
 }
 
+app.notFound((c) => {
+  return c.html(notFoundPage(c.env.APP_URL), 404);
+});
+
+app.onError((err, c) => {
+  console.error('Unhandled Server Error: ', err);
+  return c.html(errorPage(c.env.APP_URL), 500);
+});
 
 export default app;

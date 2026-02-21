@@ -17,6 +17,7 @@ import { productsView } from './dashboard_components/products';
 import { ordersView } from './dashboard_components/orders';
 import { promotionsView } from './dashboard_components/promotions';
 import { categoriesView } from './dashboard_components/categories';
+import { integrationsView } from './dashboard_components/integrations';
 
 export function dashboardPage(appUrl: string): string {
   return `<!DOCTYPE html>
@@ -66,10 +67,7 @@ export function dashboardPage(appUrl: string): string {
       ${subscriptionView}
       ${knowledgeView}
       ${settingsView}
-      ${categoriesView}
-      ${productsView}
-      ${promotionsView}
-      ${ordersView}
+      ${integrationsView}
     </main>
   </div>
 

@@ -50,6 +50,9 @@ export const sidebar = `
       <div onclick="switchView('promotions');closeSidebar()" class="nav-item" id="nav-promotions" title="Promotions">
         <i class="fas fa-bullhorn"></i> <span>Promotions</span>
       </div>
+      <div onclick="switchView('integrations');closeSidebar()" class="nav-item" id="nav-integrations" title="Integrations">
+        <i class="fas fa-plug"></i> <span>Integrations</span>
+      </div>
       <div onclick="switchView('store');closeSidebar()" class="nav-item" id="nav-store" title="Store">
         <i class="fas fa-store"></i> <span>Store</span>
       </div>

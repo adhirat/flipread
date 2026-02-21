@@ -644,3 +644,35 @@ export function docsPage(appUrl: string): string {
 </div>`
   );
 }
+
+export function notFoundPage(appUrl: string): string {
+  const content = `
+    <div style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem;">
+      <h1 style="font-size: 8rem; font-family: Rajdhani, sans-serif; margin: 0; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">404</h1>
+      <h2 style="font-size: 2rem; margin-top: -1rem; margin-bottom: 1rem;">Page Not Found</h2>
+      <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem; font-size: 1.1rem;">
+        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+      </p>
+      <a href="/" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; font-weight: 500; font-family: Rajdhani, sans-serif; text-decoration: none; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <i class="fas fa-home"></i> Back to Home
+      </a>
+    </div>
+  `;
+  return pageShell('404 Not Found', 'Page not found.', appUrl, content);
+}
+
+export function errorPage(appUrl: string): string {
+  const content = `
+    <div style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem;">
+      <h1 style="font-size: 8rem; font-family: Rajdhani, sans-serif; margin: 0; background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">500</h1>
+      <h2 style="font-size: 2rem; margin-top: -1rem; margin-bottom: 1rem;">Server Error Crash</h2>
+      <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem; font-size: 1.1rem;">
+        Oh no! Something went terribly wrong on our end. We are looking into this crash right now.
+      </p>
+      <a href="/" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; font-weight: 500; font-family: Rajdhani, sans-serif; text-decoration: none; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <i class="fas fa-home"></i> Back to Home
+      </a>
+    </div>
+  `;
+  return pageShell('Server Error', 'An unexpected error occurred.', appUrl, content);
+}
