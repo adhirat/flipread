@@ -251,6 +251,8 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
   const copyrightUrl = isCustomDomain ? '/copyright' : `/store/${storeHandle}/copyright`;
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
+  const privacyUrl = isCustomDomain ? '/privacy' : `/store/${storeHandle}/privacy`;
+  const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
 
   // Announcement banner
   const bannerText = settings.banner_text || '';
@@ -1269,10 +1271,9 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home</a>
-    <a href="${galleryUrl}" class="nav-link">Gallery</a>
+    <a href="${homeUrl}" class="nav-link">Home/Gallery</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
-    <a href="${contactUrl}" class="nav-link">Contact</a>
+    <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
@@ -1308,11 +1309,9 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home</a>
-    <a href="${galleryUrl}" class="drawer-link">Gallery</a>
+    <a href="${homeUrl}" class="drawer-link">Home/Gallery</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
-    <a href="${copyrightUrl}" class="drawer-link">Copyrights</a>
-    <a href="${contactUrl}" class="drawer-link">Contact</a>
+    <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
 </div>
 
@@ -1345,8 +1344,10 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo" alt="">` : ''}
-      <span>${safeName}</span>
+      <a href="${homeUrl}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+        ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo" alt="">` : ''}
+        <span>${safeName}</span>
+      </a>
     </div>
     ${hasSocials ? `<div class="social-links">
       ${socialInstagram ? `<a href="${esc(socialInstagram)}" class="social-link" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>` : ''}
@@ -1355,11 +1356,9 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       ${socialWebsite ? `<a href="${esc(socialWebsite)}" class="social-link" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>` : ''}
     </div>` : ''}
     <div class="footer-links">
-      ${settings.about_us_content ? `<a href="${aboutUrl}">About Us</a>` : ''}
       ${(settings.copyright_content || settings.contact_info_content) ? `<a href="${copyrightUrl}">Copyrights</a>` : ''}
-      <a href="${contactUrl}">Contact Us</a>
-      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/privacy' : galleryUrl + '/privacy'}">Privacy Policy</a>` : ''}
-      ${settings.terms_content ? `<a href="${isCustomDomain ? '/terms' : galleryUrl + '/terms'}">Terms & Conditions</a>` : ''}
+      ${settings.privacy_policy_content ? `<a href="${privacyUrl}">Privacy Policy</a>` : ''}
+      ${settings.terms_content ? `<a href="${termsUrl}">Terms & Conditions</a>` : ''}
     </div>
     <div class="footer-copy">
       &copy; ${new Date().getFullYear()} ${safeName}. All rights reserved.
@@ -1423,6 +1422,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
   const copyrightUrl = isCustomDomain ? '/copyright' : `/store/${storeHandle}/copyright`;
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
+  const privacyUrl = isCustomDomain ? '/privacy' : `/store/${storeHandle}/privacy`;
+  const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
   const backUrl = homeUrl;
 
   let extraHtml = '';
@@ -1602,11 +1603,9 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home</a>
-    <a href="${galleryUrl}" class="nav-link">Gallery</a>
+    <a href="${homeUrl}" class="nav-link">Home/Gallery</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
-    <a href="${copyrightUrl}" class="nav-link">Copyrights</a>
-    <a href="${contactUrl}" class="nav-link">Contact</a>
+    <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
@@ -1642,15 +1641,12 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home</a>
-    <a href="${galleryUrl}" class="drawer-link">Gallery</a>
+    <a href="${homeUrl}" class="drawer-link">Home/Gallery</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
-    <a href="${copyrightUrl}" class="drawer-link">Copyrights</a>
-    <a href="${contactUrl}" class="drawer-link">Contact</a>
+    <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
 </div>
 <div class="page-wrap">
-  <a href="${backUrl}" class="back-link">&larr; Back to ${esc(storeName)}</a>
   <h1 class="page-title">${esc(title)}</h1>
   <div class="page-meta">${esc(storeName)}</div>
   <div class="md-content">${htmlContent}</div>
@@ -1658,8 +1654,10 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 </div>
 <footer class="page-footer">
   <div class="footer-brand-sm">
-    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo-sm" alt="">` : ''}
-    <span>${esc(storeName)}</span>
+    <a href="${homeUrl}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="footer-logo-sm" alt="">` : ''}
+      <span>${esc(storeName)}</span>
+    </a>
   </div>
   ${hasSocials ? `<div class="footer-socials">
     ${socialInstagram ? `<a href="${esc(socialInstagram)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>` : ''}
@@ -1667,6 +1665,11 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     ${socialYoutube ? `<a href="${esc(socialYoutube)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>` : ''}
     ${socialWebsite ? `<a href="${esc(socialWebsite)}" class="footer-social-link" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>` : ''}
   </div>` : ''}
+  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:16px;font-size:13px;">
+    ${(settings.copyright_content || settings.contact_info_content) ? `<a href="${copyrightUrl}" style="color:var(--text2);text-decoration:none;">Copyrights</a>` : ''}
+    ${settings.privacy_policy_content ? `<a href="${privacyUrl}" style="color:var(--text2);text-decoration:none;">Privacy Policy</a>` : ''}
+    ${settings.terms_content ? `<a href="${termsUrl}" style="color:var(--text2);text-decoration:none;">Terms & Conditions</a>` : ''}
+  </div>
   <div class="footer-copy-sm">&copy; ${new Date().getFullYear()} ${esc(storeName)}. All rights reserved.</div>
 </footer>
 <script>
