@@ -687,7 +687,7 @@ async function saveBook() {
   
   const catBoxes = document.querySelectorAll('.edit-cat-cb:checked');
   if (catBoxes) {
-    settings.categories = Array.from(catBoxes).map(cb => cb.value);
+    settings.categories = Array.from(catBoxes).map((cb: any) => cb.value);
   }
 
   await fetch(API + '/api/docs/' + id, {

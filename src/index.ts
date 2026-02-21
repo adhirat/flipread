@@ -17,6 +17,10 @@ import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
 import { privacyPage, termsPage, contactPage, docsPage } from './views/pages';
 import swagger from './routes/swagger';
+import categoriesRoutes from './routes/categories';
+import productsRoutes from './routes/products';
+import promotionsRoutes from './routes/promotions';
+import ordersRoutes from './routes/orders';
 import type { Book, Variables } from './lib/types';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -72,6 +76,10 @@ app.route('/api/billing', billingRoutes);
 app.route('/api/user', userRoutes);
 app.route('/api/members', memberRoutes);
 app.route('/api/swagger', swagger);
+app.route('/api/categories', categoriesRoutes);
+app.route('/api/products', productsRoutes);
+app.route('/api/promotions', promotionsRoutes);
+app.route('/api/orders', ordersRoutes);
 
 // Public Routes
 app.route('/read', viewerRoutes);

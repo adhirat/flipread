@@ -99,6 +99,12 @@ export const docsView = `
       <label>Published Date (Optional)</label>
       <input type="date" id="edit-published-date" style="width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-family:'Work Sans',sans-serif;">
     </div>
+    <div class="form-group">
+      <label>Categories</label>
+      <div id="edit-doc-categories" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+        <span class="text-muted" style="font-size:13px">Loading categories...</span>
+      </div>
+    </div>
 
     <div id="edit-album-container" style="display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">

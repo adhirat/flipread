@@ -44,6 +44,9 @@ export const sidebar = `
       <div onclick="switchView('orders');closeSidebar()" class="nav-item" id="nav-orders" title="Orders">
         <i class="fas fa-shopping-cart"></i> <span>Orders</span>
       </div>
+      <div onclick="switchView('categories');closeSidebar()" class="nav-item" id="nav-categories" title="Categories">
+        <i class="fas fa-tags"></i> <span>Categories</span>
+      </div>
       <div onclick="switchView('promotions');closeSidebar()" class="nav-item" id="nav-promotions" title="Promotions">
         <i class="fas fa-bullhorn"></i> <span>Promotions</span>
       </div>
