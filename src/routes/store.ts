@@ -101,7 +101,8 @@ store.get('/:username/login', async (c) => {
   const username = c.req.param('username');
   const user = await getUserByUsername(c.env.DB, username);
   if (!user) return c.html(notFoundPage(), 404);
-  let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+  const homeUrl = `/store/${username}`;
+  let html = memberAccessPage(user.store_name || user.name, user.store_logo_url, homeUrl);
   html = html.replace(/__OWNER_ID__/g, user.id);
   return c.html(html);
 });
@@ -111,7 +112,8 @@ store.get('/:username/register', async (c) => {
   const username = c.req.param('username');
   const user = await getUserByUsername(c.env.DB, username);
   if (!user) return c.html(notFoundPage(), 404);
-  let html = memberRegisterPage(user.store_name || user.name, user.store_logo_url);
+  const homeUrl = `/store/${username}`;
+  let html = memberRegisterPage(user.store_name || user.name, user.store_logo_url, homeUrl);
   html = html.replace(/__OWNER_ID__/g, user.id);
   return c.html(html);
 });
@@ -121,7 +123,8 @@ store.get('/:username/forgot-password', async (c) => {
   const username = c.req.param('username');
   const user = await getUserByUsername(c.env.DB, username);
   if (!user) return c.html(notFoundPage(), 404);
-  let html = memberForgotPage(user.store_name || user.name, user.store_logo_url);
+  const homeUrl = `/store/${username}`;
+  let html = memberForgotPage(user.store_name || user.name, user.store_logo_url, homeUrl);
   html = html.replace(/__OWNER_ID__/g, user.id);
   return c.html(html);
 });
@@ -169,9 +172,42 @@ store.get('/:username/contact', async (c) => {
   if (!user) return c.html(notFoundPage(), 404);
   
   const settings = JSON.parse(user.store_settings || '{}');
-  if (!settings.contact_info_content) return c.html(notFoundPage('Contact Info not found'), 404);
+  // We use a fallback to empty string if not defined, allowing the form to show anyway
+  const content = settings.contact_page_content || ''; 
 
-  return c.html(contentPage(user, 'Contact Information', settings.contact_info_content, c.env.APP_URL));
+  return c.html(contentPage(user, 'Contact Us', content, c.env.APP_URL));
+});
+
+// GET /store/:username/copyright
+store.get('/:username/copyright', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+  
+  const settings = JSON.parse(user.store_settings || '{}');
+  const content = settings.copyright_content || settings.contact_info_content || '';
+  if (!content) return c.html(notFoundPage('Copyright Information not found'), 404);
+
+  return c.html(contentPage(user, 'Copyright Information', content, c.env.APP_URL));
+});
+
+// POST /store/:username/inquiry
+store.post('/:username/inquiry', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.json({ error: 'Store not found' }, 404);
+
+  const { name, email, mobile, message } = await c.req.json<{ name: string; email: string; mobile?: string; message: string }>();
+  if (!name || !email || !message) {
+    return c.json({ error: 'Name, email and message are required' }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  await c.env.DB.prepare(
+    'INSERT INTO store_inquiries (id, store_owner_id, name, email, mobile, message) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, user.id, name, email, mobile || null, message).run();
+
+  return c.json({ success: true, message: 'Your inquiry has been submitted. We will get back to you soon.' });
 });
 
 export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false): string {
@@ -213,6 +249,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const galleryUrl = isCustomDomain ? '/gallery' : `/store/${storeHandle}/gallery`;
   const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
+  const copyrightUrl = isCustomDomain ? '/copyright' : `/store/${storeHandle}/copyright`;
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
 
   // Announcement banner
@@ -1274,6 +1311,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     <a href="${homeUrl}" class="drawer-link">Home</a>
     <a href="${galleryUrl}" class="drawer-link">Gallery</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${copyrightUrl}" class="drawer-link">Copyrights</a>
     <a href="${contactUrl}" class="drawer-link">Contact</a>
   </nav>
 </div>
@@ -1318,9 +1356,10 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     </div>` : ''}
     <div class="footer-links">
       ${settings.about_us_content ? `<a href="${aboutUrl}">About Us</a>` : ''}
+      ${(settings.copyright_content || settings.contact_info_content) ? `<a href="${copyrightUrl}">Copyrights</a>` : ''}
+      <a href="${contactUrl}">Contact Us</a>
       ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/privacy' : galleryUrl + '/privacy'}">Privacy Policy</a>` : ''}
       ${settings.terms_content ? `<a href="${isCustomDomain ? '/terms' : galleryUrl + '/terms'}">Terms & Conditions</a>` : ''}
-      ${settings.contact_info_content ? `<a href="${contactUrl}">Contact Us</a>` : ''}
     </div>
     <div class="footer-copy">
       &copy; ${new Date().getFullYear()} ${safeName}. All rights reserved.
@@ -1382,8 +1421,59 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const galleryUrl = isCustomDomain ? '/gallery' : `/store/${storeHandle}/gallery`;
   const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
+  const copyrightUrl = isCustomDomain ? '/copyright' : `/store/${storeHandle}/copyright`;
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
   const backUrl = homeUrl;
+
+  let extraHtml = '';
+  if (title === 'Contact Us') {
+    extraHtml = `
+      <div class="contact-form-container">
+        <form id="contact-form" class="contact-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="c-name">Name</label>
+              <input type="text" id="c-name" name="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+              <label for="c-email">Email</label>
+              <input type="email" id="c-email" name="email" placeholder="Email Address" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="c-mobile">Mobile (Optional)</label>
+            <input type="tel" id="c-mobile" name="mobile" placeholder="Mobile Number">
+          </div>
+          <div class="form-group">
+            <label for="c-message">Message</label>
+            <textarea id="c-message" name="message" rows="5" placeholder="How can we help?" required></textarea>
+          </div>
+          <div id="form-msg" class="form-msg"></div>
+          <button type="submit" class="submit-btn" id="sbtn">Send Message</button>
+        </form>
+      </div>
+      <style>
+        .contact-form-container { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--border); }
+        .contact-form { display: grid; gap: 20px; max-width: 600px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text2); }
+        .form-group input, .form-group textarea {
+          width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--border);
+          background: var(--bg2); color: var(--text); font-family: inherit; transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+        .submit-btn {
+          background: var(--accent); color: white; border: none; padding: 14px 28px; border-radius: 14px;
+          font-weight: 700; cursor: pointer; transition: transform 0.2s, opacity 0.2s; width: fit-content;
+        }
+        .submit-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .form-msg { font-size: 14px; padding: 12px; border-radius: 10px; display: none; margin-bottom: 10px; }
+        .form-msg.success { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .form-msg.error { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+      </style>
+    `;
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1515,6 +1605,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     <a href="${homeUrl}" class="nav-link">Home</a>
     <a href="${galleryUrl}" class="nav-link">Gallery</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
+    <a href="${copyrightUrl}" class="nav-link">Copyrights</a>
     <a href="${contactUrl}" class="nav-link">Contact</a>
   </nav>
 
@@ -1554,6 +1645,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     <a href="${homeUrl}" class="drawer-link">Home</a>
     <a href="${galleryUrl}" class="drawer-link">Gallery</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${copyrightUrl}" class="drawer-link">Copyrights</a>
     <a href="${contactUrl}" class="drawer-link">Contact</a>
   </nav>
 </div>
@@ -1562,6 +1654,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   <h1 class="page-title">${esc(title)}</h1>
   <div class="page-meta">${esc(storeName)}</div>
   <div class="md-content">${htmlContent}</div>
+  ${extraHtml}
 </div>
 <footer class="page-footer">
   <div class="footer-brand-sm">
@@ -1596,6 +1689,51 @@ document.getElementById('tt').onclick=function(){var h=document.documentElement;
   if(close) close.onclick = function() { toggle(false); };
   if(overlay) overlay.onclick = function() { toggle(false); };
 })();
+
+if (document.getElementById('contact-form')) {
+  document.getElementById('contact-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('sbtn');
+    const msg = document.getElementById('form-msg');
+    const oldText = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    msg.style.display = 'none';
+
+    const data = {
+      name: document.getElementById('c-name').value,
+      email: document.getElementById('c-email').value,
+      mobile: document.getElementById('c-mobile').value,
+      message: document.getElementById('c-message').value
+    };
+
+    try {
+      const res = await fetch(\`\${location.pathname.replace(/\\/$/, '')}/inquiry\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const resData = await res.json();
+      if (res.ok) {
+        msg.textContent = resData.message;
+        msg.className = 'form-msg success';
+        msg.style.display = 'block';
+        e.target.reset();
+      } else {
+        msg.textContent = resData.error || 'Something went wrong';
+        msg.className = 'form-msg error';
+        msg.style.display = 'block';
+      }
+    } catch (err) {
+      msg.textContent = 'Network error. Please try again.';
+      msg.className = 'form-msg error';
+      msg.style.display = 'block';
+    } finally {
+      btn.textContent = oldText;
+      btn.disabled = false;
+    }
+  };
+}
 </script>
 </body>
 </html>`;

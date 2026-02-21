@@ -284,7 +284,7 @@ export const storeView = `
           </p>
         </div>
 
-        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Legal &amp; Contact</h3>
+        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Legal &amp; Copyright</h3>
         <p style="font-size:13px;color:var(--text-muted);margin:-8px 0 20px">Write using <strong>Markdown</strong> &mdash; headings, bold, bullets and links are rendered on your store pages.</p>
 
         <div class="form-group">
@@ -360,25 +360,25 @@ export const storeView = `
         </div>
 
         <div class="form-group">
-          <label>Contact Information</label>
+          <label>Copyrights Information</label>
           <div class="md-editor">
             <div class="md-toolbar">
-              <button type="button" onclick="mdCmd('st-contact','bold')" title="Bold"><b>B</b></button>
-              <button type="button" onclick="mdCmd('st-contact','italic')" title="Italic"><i>I</i></button>
-              <button type="button" onclick="mdCmd('st-contact','h2')" title="Heading 2">H2</button>
-              <button type="button" onclick="mdCmd('st-contact','h3')" title="Heading 3">H3</button>
+              <button type="button" onclick="mdCmd('st-copyright','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-copyright','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-copyright','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-copyright','h3')" title="Heading 3">H3</button>
               <span class="md-sep"></span>
-              <button type="button" onclick="mdCmd('st-contact','ul')" title="Bullet list">&#8226; List</button>
-              <button type="button" onclick="mdCmd('st-contact','ol')" title="Ordered list">1. List</button>
-              <button type="button" onclick="mdCmd('st-contact','hr')" title="Divider">&mdash;</button>
-              <button type="button" onclick="mdCmd('st-contact','link')" title="Link">&#128279;</button>
+              <button type="button" onclick="mdCmd('st-copyright','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-copyright','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-copyright','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-copyright','link')" title="Link">&#128279;</button>
               <span class="md-sep"></span>
-              <button type="button" class="md-tab active" id="st-contact-wb" onclick="mdSwitch('st-contact','write')">Write</button>
-              <button type="button" class="md-tab" id="st-contact-pb" onclick="mdSwitch('st-contact','preview')">Preview</button>
+              <button type="button" class="md-tab active" id="st-copyright-wb" onclick="mdSwitch('st-copyright','write')">Write</button>
+              <button type="button" class="md-tab" id="st-copyright-pb" onclick="mdSwitch('st-copyright','preview')">Preview</button>
             </div>
             <div class="md-body">
-              <textarea id="st-contact" class="md-textarea" rows="6" placeholder="Write your Contact details in Markdown..."></textarea>
-              <div id="st-contact-pv" class="md-preview" style="display:none"></div>
+              <textarea id="st-copyright" class="md-textarea" rows="6" placeholder="Write your Copyright or Footer details in Markdown..."></textarea>
+              <div id="st-copyright-pv" class="md-preview" style="display:none"></div>
             </div>
           </div>
         </div>

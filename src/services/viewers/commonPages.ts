@@ -31,7 +31,7 @@ export function errorPage(title: string, message: string, logoUrl: string = ''):
 </head><body><div class="c"><div style="font-size:48px;margin-bottom:20px">📖</div><h2>${safeTitle}</h2><p>${safeMsg}</p><a href="/">← Back to FlipRead</a></div></body></html>`;
 }
 
-export function memberAccessPage(storeName: string, logoUrl: string = ''): string {
+export function memberAccessPage(storeName: string, logoUrl: string = '', homeUrl: string = '/'): string {
   const safeName = escapeHtml(storeName || 'Member Access');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -60,7 +60,7 @@ export function memberAccessPage(storeName: string, logoUrl: string = ''): strin
   <div class="c">
   ${logoUrl ? `<img src="${logoUrl}" style="height:40px;margin-bottom:20px;border-radius:4px">` : '<div style="font-size:48px;margin-bottom:20px">🔒</div>'}
   <h2>Member Access</h2>
-  <p>This content is private. Please enter your email and access key to view.</p>
+  <p>This content is private. Please enter your email and access key to view. Verification links are valid for 30 minutes.</p>
   <form id="loginForm" onsubmit="handleLogin(event)">
     <input type="email" id="email" placeholder="Email Address" required>
     <input type="text" id="key" placeholder="Access Key" required>
@@ -70,7 +70,7 @@ export function memberAccessPage(storeName: string, logoUrl: string = ''): strin
   <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
     <a href="./register" style="color: #64748b; text-decoration: none; font-size: 13px;">Don't have access? Join here</a>
     <a href="./forgot-password" style="color: #64748b; text-decoration: none; font-size: 13px;">Forgot your access key?</a>
-    <a href="/" style="color: #64748b; text-decoration: none; font-size: 13px;">← Back to Store</a>
+    <a href="${homeUrl}" style="color: #64748b; text-decoration: none; font-size: 13px;">← Back to Store</a>
   </div>
 </div>
 <script>
@@ -99,7 +99,11 @@ async function handleLogin(e) {
     if(data.success) {
       location.reload();
     } else {
-      msg.textContent = data.error || 'Invalid credentials';
+      if(data.unverified) {
+        msg.innerHTML = data.error + ' <a href="#" onclick="resendVerification(event)" style="color:#93c5fd;text-decoration:underline">Resend verification link</a>';
+      } else {
+        msg.textContent = data.error || 'Invalid credentials';
+      }
       msg.className = 'msg error';
       msg.style.display = 'block';
       btn.textContent = 'Unlock Access';
@@ -113,12 +117,37 @@ async function handleLogin(e) {
     btn.disabled = false;
   }
 }
+
+async function resendVerification(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const msg = document.getElementById('msg');
+  if(!email) return alert('Please enter your email address first.');
+
+  try {
+    const res = await fetch('/api/members/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, owner_id: "__OWNER_ID__" })
+    });
+    const data = await res.json();
+    msg.textContent = data.message || 'A new verification link has been sent (valid for 30m).';
+    msg.className = 'msg info'; // Note: styled in JS below
+    msg.style.background = 'rgba(59,130,246,0.2)';
+    msg.style.color = '#93c5fd';
+    msg.style.display = 'block';
+  } catch {
+    msg.textContent = 'Failed to resend link.';
+    msg.className = 'msg error';
+    msg.style.display = 'block';
+  }
+}
 </script>
 </body>
 </html>`;
 }
 
-export function memberRegisterPage(storeName: string, logoUrl: string = ''): string {
+export function memberRegisterPage(storeName: string, logoUrl: string = '', homeUrl: string = '/'): string {
   const safeName = escapeHtml(storeName || 'Member Registration');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -147,16 +176,17 @@ export function memberRegisterPage(storeName: string, logoUrl: string = ''): str
 <div class="c">
   ${logoUrl ? `<img src="${logoUrl}" style="height:40px;margin-bottom:20px;border-radius:4px">` : '<div style="font-size:48px;margin-bottom:20px">✨</div>'}
   <h2>Join ${safeName}</h2>
-  <p>Create an account to access private content and receive updates.</p>
+  <p>Create an account to access private content and receive updates. Verification links are valid for 30 minutes.</p>
   <form id="regForm" onsubmit="handleRegistration(event)">
     <input type="text" id="name" placeholder="Full Name" required>
     <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="key" placeholder="Create Access Key (Min 6 chars)" required minlength="6">
     <button type="submit" id="btn">Create Account</button>
   </form>
   <div id="msg" class="msg"></div>
   <div class="links">
     <a href="./login" class="link">Already a member? Login</a>
-    <a href="/" class="link">← Back to Store</a>
+    <a href="${homeUrl}" class="link">← Back to Store</a>
   </div>
 </div>
 <script>
@@ -164,10 +194,11 @@ async function handleRegistration(e) {
   e.preventDefault();
   const name = document.getElementById('name').value;
   const email = document.getElementById('email').value;
+  const access_key = document.getElementById('key').value;
   const btn = document.getElementById('btn');
   const msg = document.getElementById('msg');
   
-  if(!name || !email) return;
+  if(!name || !email || !access_key) return;
 
   btn.textContent = 'Joining...';
   btn.disabled = true;
@@ -177,16 +208,19 @@ async function handleRegistration(e) {
     const res = await fetch('/api/members/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, owner_id: "__OWNER_ID__" })
+      body: JSON.stringify({ name, email, access_key, owner_id: "__OWNER_ID__" })
     });
     const data = await res.json();
     if(data.success) {
-      msg.textContent = 'Success! Please check your email for access instructions.';
+      document.getElementById('regForm').style.display = 'none';
+      msg.textContent = 'Success! Please check your email to verify your account. The link is valid for 30 minutes.';
       msg.className = 'msg success';
       msg.style.display = 'block';
-      document.getElementById('regForm').style.display = 'none';
     } else {
       msg.textContent = data.error || 'Registration failed';
+      if (data.error === 'Email already registered. Please verify your account or resend verification link.') {
+        msg.innerHTML += '<br><a href="#" onclick="resendVerification(event)" style="color:#93c5fd;text-decoration:underline;">Resend verification link</a>';
+      }
       msg.className = 'msg error';
       msg.style.display = 'block';
       btn.textContent = 'Create Account';
@@ -200,12 +234,35 @@ async function handleRegistration(e) {
     btn.disabled = false;
   }
 }
+
+async function resendVerification(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const msg = document.getElementById('msg');
+  if(!email) return alert('Please enter your email address first.');
+
+  try {
+    const res = await fetch('/api/members/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, owner_id: "__OWNER_ID__" })
+    });
+    const data = await res.json();
+    msg.textContent = data.message || 'A new verification link has been sent (valid for 30m).';
+    msg.className = 'msg success';
+    msg.style.display = 'block';
+  } catch {
+    msg.textContent = 'Failed to resend link.';
+    msg.className = 'msg error';
+    msg.style.display = 'block';
+  }
+}
 </script>
 </body>
 </html>`;
 }
 
-export function memberForgotPage(storeName: string, logoUrl: string = ''): string {
+export function memberForgotPage(storeName: string, logoUrl: string = '', homeUrl: string = '/'): string {
   const safeName = escapeHtml(storeName || 'Member Access');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -240,6 +297,7 @@ export function memberForgotPage(storeName: string, logoUrl: string = ''): strin
   </form>
   <div id="msg" class="msg"></div>
   <a href="./login" class="back">← Back to Login</a>
+  <a href="${homeUrl}" class="back" style="display:block;margin-top:10px">← Back to Store</a>
 </div>
 <script>
 async function handleForgot(e) {
@@ -279,6 +337,36 @@ async function handleForgot(e) {
   }
 }
 </script>
+</body>
+</html>`;
+}
+export function verificationSuccessPage(storeName: string, logoUrl: string = '', homeUrl: string = '/'): string {
+  const safeName = escapeHtml(storeName || 'Member Verification');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Account Verified — ${safeName}</title>
+<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
+  .c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}
+  h2{margin-bottom:15px;font-size:24px;color:#10b981}
+  p{margin-bottom:25px;color:#94a3b8;font-size:15px;line-height:1.6}
+  .btn{display:inline-block;padding:12px 24px;border-radius:8px;background:#3b82f6;color:#fff;font-weight:600;text-decoration:none;transition:background .2s}
+  .btn:hover{background:#2563eb}
+</style>
+</head>
+<body>
+<div class="c">
+  <div style="font-size:64px;margin-bottom:20px">✅</div>
+  <h2>Account Verified!</h2>
+  <p>Your email has been successfully verified. In private stores, the owner may need to activate your account before you gain full access.</p>
+  <div style="display:flex;flex-direction:column;gap:15px">
+    <a href="./login" class="btn">Proceed to Login</a>
+    <a href="${homeUrl}" style="color:#64748b;font-size:14px;text-decoration:none">Back to Store</a>
+  </div>
+</div>
 </body>
 </html>`;
 }

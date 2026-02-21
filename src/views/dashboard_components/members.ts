@@ -22,14 +22,44 @@ export const membersView = `
         <div id="member-msg" class="msg" style="margin-top:16px"></div>
       </div>
 
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h3>Member List</h3>
-          <div class="books-search-wrap" style="max-width:260px">
-            <i class="fas fa-search"></i>
-            <input type="text" class="books-search" id="members-search" placeholder="Search members..." oninput="renderMembers()">
+      <div class="card" style="margin-bottom:24px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;gap:4px;background:var(--bg-elevated);padding:4px;border-radius:10px;border:1px solid var(--border)">
+            <button class="member-tab active" id="member-tab-all" onclick="setMemberFilter('all')" style="padding:6px 12px;font-size:12px;border:none;background:none;cursor:pointer;border-radius:6px;transition:0.2s">All</button>
+            <button class="member-tab" id="member-tab-active" onclick="setMemberFilter('active')" style="padding:6px 12px;font-size:12px;border:none;background:none;cursor:pointer;border-radius:6px;transition:0.2s">Active</button>
+            <button class="member-tab" id="member-tab-unverified" onclick="setMemberFilter('unverified')" style="padding:6px 12px;font-size:12px;border:none;background:none;cursor:pointer;border-radius:6px;transition:0.2s">Unverified</button>
+            <button class="member-tab" id="member-tab-archived" onclick="setMemberFilter('archived')" style="padding:6px 12px;font-size:12px;border:none;background:none;cursor:pointer;border-radius:6px;transition:0.2s">Archived</button>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <select id="member-sort" onchange="renderMembers()" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--text-primary);cursor:pointer">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Name (A-Z)</option>
+              <option value="email">Email (A-Z)</option>
+            </select>
+            <div class="books-search-wrap" style="max-width:200px;margin-bottom:0">
+              <i class="fas fa-search"></i>
+              <input type="text" class="books-search" id="members-search" placeholder="Search..." oninput="renderMembers()" style="height:32px;font-size:13px">
+            </div>
           </div>
         </div>
+      </div>
+
+      <div class="card">
+        <div id="bulk-actions-bar" style="display:none;align-items:center;gap:12px;padding:10px 16px;background:var(--accent-cyan);color:white;border-radius:8px;margin-bottom:16px;animation:slideIn 0.3s ease">
+          <span id="selection-count" style="font-size:13px;font-weight:600">0 selected</span>
+          <div style="flex:1"></div>
+          <select id="bulk-action-select" style="padding:4px 8px;border-radius:4px;border:none;font-size:12px;cursor:pointer">
+            <option value="">Bulk Actions...</option>
+            <option value="activate">Activate</option>
+            <option value="deactivate">Deactivate</option>
+            <option value="archive">Archive</option>
+            <option value="restore" id="bulk-restore-opt" style="display:none">Restore</option>
+            <option value="delete">Delete Permanently</option>
+          </select>
+          <button onclick="applyBulkAction()" class="btn" style="padding:4px 12px;font-size:12px;background:white;color:var(--accent-cyan);border:none;height:auto">Apply</button>
+        </div>
+
         <div id="members-list"></div>
       </div>
     </div>

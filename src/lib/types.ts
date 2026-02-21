@@ -9,6 +9,7 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET: string;
   JWT_SECRET: string;
   RESEND_API_KEY: string;
+  EMAIL: SendEmail;
   __STATIC_CONTENT?: KVNamespace;
   __STATIC_CONTENT_MANIFEST?: string;
 }
@@ -74,7 +75,11 @@ export interface StoreMember {
   email: string;
   name: string;
   access_key: string;
+  is_verified: number;
+  verification_token: string | null;
+  verification_expires_at: string | null;
   is_active: number;
+  is_archived: number;
   created_at: string;
   updated_at: string;
 }

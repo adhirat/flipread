@@ -12,6 +12,7 @@ import billingRoutes from './routes/billing';
 import userRoutes from './routes/user';
 import viewerRoutes, { viewerPage } from './routes/viewer';
 import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
+import { memberAccessPage, memberRegisterPage, memberForgotPage } from './services/viewerTemplates';
 import memberRoutes from './routes/members';
 import { dashboardPage } from './views/dashboard';
 import { privacyPage, termsPage, contactPage, docsPage } from './views/pages';
@@ -132,6 +133,31 @@ app.get('/p/:page(privacy|terms|contact)', async (c) => {
 
   if (!content) return c.notFound();
   return c.html(contentPage(storeUser, title, content, c.env.APP_URL, true));
+});
+
+// Custom Domain Member Routes
+app.get('/login', async (c) => {
+  const storeUser = c.get('storeUser');
+  if (!storeUser) return c.redirect('/dashboard');
+  let html = memberAccessPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+  html = html.replace(/__OWNER_ID__/g, storeUser.id);
+  return c.html(html);
+});
+
+app.get('/register', async (c) => {
+  const storeUser = c.get('storeUser');
+  if (!storeUser) return c.redirect('/dashboard');
+  let html = memberRegisterPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+  html = html.replace(/__OWNER_ID__/g, storeUser.id);
+  return c.html(html);
+});
+
+app.get('/forgot-password', async (c) => {
+  const storeUser = c.get('storeUser');
+  if (!storeUser) return c.redirect('/dashboard');
+  let html = memberForgotPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+  html = html.replace(/__OWNER_ID__/g, storeUser.id);
+  return c.html(html);
 });
 
 

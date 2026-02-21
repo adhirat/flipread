@@ -32,6 +32,7 @@ function showDashboard() {
   updateUI();
   loadBooks();
   loadMembers();
+  loadInquiries();
   setBilling('yearly');
   // Init book view mode
   setBookView(bookViewMode);
@@ -82,7 +83,7 @@ function updateUI() {
   document.getElementById('st-about').value = s.about_us_content || '';
   document.getElementById('st-privacy').value = s.privacy_policy_content || '';
   document.getElementById('st-terms').value = s.terms_content || '';
-  document.getElementById('st-contact').value = s.contact_info_content || '';
+  document.getElementById('st-copyright').value = s.copyright_content || s.contact_info_content || '';
 
   // New premium settings
   selectHeroSize(s.hero_size || 'standard', true);
@@ -630,7 +631,7 @@ async function saveStoreSettings() {
     about_us_content: document.getElementById('st-about').value,
     privacy_policy_content: document.getElementById('st-privacy').value,
     terms_content: document.getElementById('st-terms').value,
-    contact_info_content: document.getElementById('st-contact').value
+    copyright_content: document.getElementById('st-copyright').value
   };
 
   const res = await fetch(API + '/api/user/store', {
@@ -899,10 +900,7 @@ function toggleStoreOption(opt) {
     document.getElementById('st-private-info').style.display = t.classList.contains('active') ? 'block' : 'none';
   }
 }
-function toggleBranding() {
-  const t = document.getElementById('branding-toggle');
-  if(t) t.classList.toggle('active');
-}
+
 function selectHeroSize(size, silent) {
   document.querySelectorAll('.hero-size-opt').forEach(c => c.classList.remove('active'));
   const el = document.getElementById('hs-' + size);
@@ -1006,34 +1004,176 @@ function mdRender(md) {
 
 // Members Management
 let currentMembers = [];
+let memberFilter = 'all';
+let selectedMembers = new Set();
 
 async function loadMembers() {
   try {
-    const res = await fetch(API + '/api/members', { credentials: 'include' });
+    const isArchived = memberFilter === 'archived';
+    const res = await fetch(API + '/api/members?archived=' + isArchived, { credentials: 'include' });
     const data = await res.json();
     currentMembers = data.members || [];
+    selectedMembers.clear();
     renderMembers();
-    // Update stats
+    updateMembersStats();
+  } catch(e) { console.error(e); }
+}
+
+function updateMembersStats() {
     const total = currentMembers.length;
-    const active = currentMembers.filter(m => m.is_active).length;
+    const active = currentMembers.filter(m => m.is_active && !m.is_archived).length;
     const el = document.getElementById('members-stats');
     if(el) el.innerHTML = '<span style="color:var(--text-secondary)">Total: <b>'+total+'</b></span> &middot; <span style="color:#10b981">Active: <b>'+active+'</b></span> &middot; <span style="color:#ef4444">Inactive: <b>'+(total-active)+'</b></span>';
-  } catch(e) { console.error(e); }
+}
+
+function setMemberFilter(filter) {
+    memberFilter = filter;
+    document.querySelectorAll('.member-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('member-tab-' + filter)?.classList.add('active');
+    
+    // Toggle bulk restore option
+    const restoreOpt = document.getElementById('bulk-restore-opt');
+    if (restoreOpt) restoreOpt.style.display = filter === 'archived' ? 'block' : 'none';
+    
+    loadMembers();
 }
 
 function renderMembers() {
   const container = document.getElementById('members-list');
   if(!container) return;
+  
   const search = (document.getElementById('members-search')?.value || '').toLowerCase();
-  const filtered = currentMembers.filter(m => !search || m.email.toLowerCase().includes(search) || m.name.toLowerCase().includes(search));
+  const sort = document.getElementById('member-sort')?.value || 'newest';
+  
+  let filtered = currentMembers.filter(m => {
+    const matchesSearch = !search || m.email.toLowerCase().includes(search) || m.name.toLowerCase().includes(search);
+    if (!matchesSearch) return false;
+    
+    if (memberFilter === 'active') return m.is_active && !m.is_archived;
+    if (memberFilter === 'unverified') return !m.is_verified;
+    // memberFilter 'all' and 'archived' are handled by the API call in loadMembers
+    return true;
+  });
+
+  // Sort
+  if (sort === 'name') filtered.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  else if (sort === 'email') filtered.sort((a,b) => a.email.localeCompare(b.email));
+  else if (sort === 'oldest') filtered.sort((a,b) => a.created_at.localeCompare(b.created_at));
+  else filtered.sort((a,b) => b.created_at.localeCompare(a.created_at));
+
+  updateBulkBar();
 
   if(filtered.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">' + (currentMembers.length === 0 ? 'No members yet. Add your first member above.' : 'No matching members.') + '</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">' + (currentMembers.length === 0 ? 'No members in this view.' : 'No matching members.') + '</div>';
     return;
   }
-  container.innerHTML = '<table class="members-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Access Key</th><th>Actions</th></tr></thead><tbody>' + filtered.map(m => {
-    return '<tr><td><b>'+esc(m.name || '-')+'</b></td><td>'+esc(m.email)+'</td><td><span class="member-status '+(m.is_active?'active':'inactive')+'" onclick="toggleMemberStatus(\\''+m.id+'\\')"><i class="fas fa-circle" style="font-size:6px"></i> '+(m.is_active?'Active':'Inactive')+'</span></td><td><span class="access-key-text" title="'+esc(m.access_key)+'">'+esc(m.access_key.substring(0,8))+'...</span> <button onclick="copyText(\\''+esc(m.access_key)+'\\',this)" style="border:none;background:none;cursor:pointer;color:var(--text-muted);padding:4px"><i class="fas fa-copy"></i></button></td><td style="white-space:nowrap"><button onclick="editMember(\\''+m.id+'\\')"><i class="fas fa-edit"></i></button> <button onclick="deleteMember(\\''+m.id+'\\')"><i class="fas fa-trash" style="color:var(--accent-magenta)"></i></button></td></tr>';
+  
+  const allSelected = filtered.length > 0 && filtered.every(m => selectedMembers.has(m.id));
+
+  container.innerHTML = \`<table class="members-table">
+    <thead>
+      <tr>
+        <th style="width:40px"><input type="checkbox" onclick="toggleSelectAllMembers(event)" \${allSelected ? 'checked' : ''}></th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Access Key</th>
+        <th style="text-align:right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>\` + filtered.map(m => {
+    const v = m.is_verified ? '<span style="color:#10b981;font-size:10px;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-check-circle"></i> Verified</span>' : 
+                               '<span style="color:#f59e0b;font-size:10px;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-clock"></i> Unverified <button onclick="resendVerificationAdmin(\\''+m.id+'\\')" title="Resend Link" style="border:none;background:none;padding:0;cursor:pointer;color:var(--accent-cyan);margin-left:4px;text-decoration:underline"><i class="fas fa-paper-plane"></i> Resend</button></span>';
+    
+    const statusText = m.is_archived ? 'Archived' : (m.is_active ? 'Active' : 'Inactive');
+    const statusClass = m.is_archived ? 'inactive' : (m.is_active ? 'active' : 'inactive');
+
+    return \`<tr>
+      <td><input type="checkbox" onclick="toggleSelectMember('\${m.id}')" \${selectedMembers.has(m.id) ? 'checked' : ''}></td>
+      <td><b>\${esc(m.name || '-')}</b></td>
+      <td>\${esc(m.email)}\${v}</td>
+      <td><span class="member-status \${statusClass}" onclick="toggleMemberStatus('\${m.id}')"><i class="fas fa-circle" style="font-size:6px"></i> \${statusText}</span></td>
+      <td><span class="access-key-text" title="\${esc(m.access_key)}">\${esc(m.access_key.substring(0,8))}...</span> <button onclick="copyText('\${esc(m.access_key)}',this)" style="border:none;background:none;cursor:pointer;color:var(--text-muted);padding:4px"><i class="fas fa-copy"></i></button></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button onclick="editMember('\${m.id}')" class="btn-icon"><i class="fas fa-edit"></i></button> 
+        \${m.is_archived ? 
+            \`<button onclick="archiveMember('\${m.id}', false)" class="btn-icon" title="Restore"><i class="fas fa-undo"></i></button>\` : 
+            \`<button onclick="archiveMember('\${m.id}', true)" class="btn-icon" title="Archive"><i class="fas fa-archive"></i></button>\`
+        }
+        <button onclick="deleteMember('\${m.id}')" class="btn-icon"><i class="fas fa-trash" style="color:var(--accent-magenta)"></i></button>
+      </td>
+    </tr>\`;
   }).join('') + '</tbody></table>';
+}
+
+function toggleSelectMember(id) {
+    if (selectedMembers.has(id)) selectedMembers.delete(id);
+    else selectedMembers.add(id);
+    renderMembers();
+}
+
+function toggleSelectAllMembers(e) {
+    const checked = e.target.checked;
+    if (checked) {
+        currentMembers.forEach(m => selectedMembers.add(m.id));
+    } else {
+        selectedMembers.clear();
+    }
+    renderMembers();
+}
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulk-actions-bar');
+    const count = document.getElementById('selection-count');
+    if (!bar || !count) return;
+    
+    if (selectedMembers.size > 0) {
+        bar.style.display = 'flex';
+        count.textContent = selectedMembers.size + ' selected';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+async function applyBulkAction() {
+    const action = document.getElementById('bulk-action-select').value;
+    if (!action) return;
+    if (!confirm('Apply "' + action + '" to ' + selectedMembers.size + ' members?')) return;
+    
+    try {
+        const res = await fetch(API + '/api/members/bulk', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: Array.from(selectedMembers), action })
+        });
+        if (res.ok) {
+            selectedMembers.clear();
+            loadMembers();
+        } else {
+            alert('Action failed');
+        }
+    } catch { alert('Network error'); }
+}
+
+async function resendVerificationAdmin(id) {
+    try {
+        const res = await fetch(API + '/api/members/' + id + '/resend-verification', {
+            method: 'POST', credentials: 'include'
+        });
+        if (res.ok) alert('Verification link sent!');
+        else alert('Failed to send link');
+    } catch { alert('Network error'); }
+}
+
+async function archiveMember(id, archive = true) {
+    try {
+        await fetch(API + '/api/members/' + id, {
+            method: 'PATCH', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_archived: archive })
+        });
+        loadMembers();
+    } catch { alert('Network error'); }
 }
 
 async function addMember() {
@@ -1444,5 +1584,203 @@ async function scrollToKb(id) {
            else a.classList.remove('active');
         });
     }
+}
+
+// Inquiries Management
+let currentInquiries = [];
+let inquiryFilter = 'pending';
+let activeInquiry = null;
+
+function setInquiryFilter(f) {
+  inquiryFilter = f;
+  document.querySelectorAll('.inquiry-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('inquiry-tab-' + f).classList.add('active');
+  loadInquiries();
+}
+
+async function loadInquiries() {
+  const container = document.getElementById('inquiries-list');
+  if(!container) return;
+  try {
+    const res = await fetch(API + '/api/user/inquiries?status=' + inquiryFilter, { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+    currentInquiries = data.inquiries || [];
+    renderInquiries();
+  } catch(e) { console.error(e); }
+}
+
+function renderInquiries() {
+  const container = document.getElementById('inquiries-list');
+  const searchInput = document.getElementById('inquiries-search');
+  const search = searchInput ? searchInput.value.toLowerCase() : '';
+  if(!container) return;
+
+  let filtered = currentInquiries.filter(i => {
+    return !search || i.name.toLowerCase().includes(search) || i.email.toLowerCase().includes(search) || i.message.toLowerCase().includes(search);
+  });
+
+  if(filtered.length === 0) {
+    container.innerHTML = \`<div style="text-align:center;padding:40px;color:var(--text-muted)">
+        <i class="fas fa-envelope-open-text" style="font-size:48px;margin-bottom:16px;opacity:0.2"></i>
+        <p>\${currentInquiries.length === 0 ? 'No inquiries in this view.' : 'No matching inquiries.'}</p>
+    </div>\`;
+    return;
+  }
+
+  const statEl = document.getElementById('d-inquiries');
+  if(statEl) statEl.textContent = filtered.length;
+
+  container.innerHTML = \`<div class="table-responsive"><table class="members-table">
+    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>\${filtered.map(i => {
+      const statusIcon = i.status === 'done' ? 'fa-check-circle' : (i.status === 'archived' ? 'fa-archive' : 'fa-clock');
+      const statusColor = i.status === 'done' ? '#10b981' : (i.status === 'archived' ? '#64748b' : '#f59e0b');
+      
+      return \`<tr style="\${i.status === 'archived' ? 'opacity:0.6' : ''}">
+        <td><b>\${esc(i.name)}</b></td>
+        <td>\${esc(i.email)}</td>
+        <td><span style="color:\${statusColor};font-size:12px;display:inline-flex;align-items:center;gap:6px"><i class="fas \${statusIcon}"></i> \${i.status}</span></td>
+        <td>\${new Date(i.created_at).toLocaleDateString()}</td>
+        <td style="text-align:right">
+          <button class="btn-outline" style="padding:4px 10px;font-size:12px" onclick="viewInquiryDetail('\${i.id}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+        </td>
+      </tr>\`;
+    }).join('')}
+    </tbody></table></div>\`;
+}
+
+function viewInquiryDetail(id) {
+  const i = currentInquiries.find(x => x.id === id);
+  if(!i) return;
+  activeInquiry = i;
+  
+  document.getElementById('inquiry-detail-content').innerHTML = \`
+    <div style="display:grid;gap:16px;background:var(--bg-elevated);padding:20px;border-radius:12px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+          <div>
+              <label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">From</label>
+              <div style="font-size:16px"><b>\${esc(i.name)}</b></div>
+              <div style="color:var(--text-secondary)">\${esc(i.email)}</div>
+          </div>
+          \${i.mobile ? \`<div><label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Mobile</label><div>\${esc(i.mobile)}</div></div>\` : ''}
+      </div>
+      <div>
+          <label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Message</label>
+          <div style="white-space:pre-wrap;background:var(--bg-card);padding:14px;border-radius:10px;border:1px solid var(--border);line-height:1.6;font-size:14px">\${esc(i.message)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center">
+          <span>Received on \${new Date(i.created_at).toLocaleString()}</span>
+          <span style="text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-tertiary)">ID: \${i.id.substring(0,8)}</span>
+      </div>
+    </div>\`;
+
+  // Update status button and archive visibility
+  const markBtn = document.getElementById('btn-mark-status');
+  if (i.status === 'pending') {
+    markBtn.innerHTML = '<i class="fas fa-check"></i> Mark Resolved';
+    markBtn.onclick = () => updateInquiryStatus(id, 'done');
+    markBtn.style.display = 'block';
+  } else if (i.status === 'done') {
+    markBtn.innerHTML = '<i class="fas fa-undo"></i> Mark Pending';
+    markBtn.onclick = () => updateInquiryStatus(id, 'pending');
+    markBtn.style.display = 'block';
+  } else {
+    markBtn.style.display = 'none';
+  }
+
+  toggleResponse(false);
+  showModal('inquiry-modal');
+}
+
+function toggleResponse(show) {
+    const section = document.getElementById('inquiry-response-section');
+    const replyBtn = document.getElementById('btn-open-reply');
+    section.style.display = show ? 'block' : 'none';
+    replyBtn.style.display = show ? 'none' : 'block';
+    
+    if (show && activeInquiry) {
+        document.getElementById('inquiry-resp-subject').value = 'Re: inquiry from ' + activeInquiry.name;
+        document.getElementById('inquiry-resp-message').value = '';
+        document.getElementById('inquiry-resp-message').focus();
+    }
+}
+
+async function sendInquiryResponse() {
+  if (!activeInquiry) return;
+  const subject = document.getElementById('inquiry-resp-subject').value;
+  const message = document.getElementById('inquiry-resp-message').value;
+  const markDone = document.getElementById('inquiry-resp-mark-done').checked;
+
+  if (!message) {
+    showMsg('inquiry-modal', 'Please enter a message', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-send-response');
+  const oldHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API + '/api/user/inquiries/' + activeInquiry.id + '/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, message, mark_done: markDone }),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Response sent successfully');
+      hideModal('inquiry-modal');
+      loadInquiries();
+    } else {
+      showMsg('inquiry-modal', data.error || 'Failed to send response', 'error');
+    }
+  } catch(e) {
+    console.error(e);
+    showMsg('inquiry-modal', 'Network error', 'error');
+  } finally {
+    btn.innerHTML = oldHtml;
+    btn.disabled = false;
+  }
+}
+
+async function updateInquiryStatus(id, status) {
+  try {
+    const res = await fetch(API + '/api/user/inquiries/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+      credentials: 'include'
+    });
+    if (res.ok) {
+      showToast('Status updated');
+      hideModal('inquiry-modal');
+      loadInquiries();
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function archiveInquiry() {
+  if (!activeInquiry) return;
+  if (!confirm('Are you sure you want to archive this inquiry? It will be hidden from the default view.')) return;
+  updateInquiryStatus(activeInquiry.id, 'archived');
+}
+
+function convertInquiryToMember() {
+  if (!activeInquiry) return;
+  hideModal('inquiry-modal');
+  switchView('members');
+  
+  // Pre-fill the add member form
+  const emailInput = document.getElementById('add-member-email');
+  const nameInput = document.getElementById('add-member-name');
+  if (emailInput) emailInput.value = activeInquiry.email;
+  if (nameInput) nameInput.value = activeInquiry.name;
+  
+  showToast('Member info pre-filled. Review and click Add.');
 }
 `;

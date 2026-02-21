@@ -6,6 +6,7 @@ import { dashboardOverview } from './dashboard_components/dashboard_overview';
 import { docsView } from './dashboard_components/docs';
 import { storeView } from './dashboard_components/store';
 import { membersView } from './dashboard_components/members';
+import { inquiriesView } from './dashboard_components/inquiries';
 import { subscriptionView } from './dashboard_components/subscription';
 import { settingsView } from './dashboard_components/settings';
 import { knowledgeView } from './dashboard_components/knowledge_base';
@@ -49,6 +50,7 @@ export function dashboardPage(appUrl: string): string {
       ${docsView}
       ${storeView}
       ${membersView}
+      ${inquiriesView}
       ${subscriptionView}
       ${knowledgeView}
       ${settingsView}

@@ -24,17 +24,14 @@ id = "fbea1b597d2f4ebd8f6ab8d2ee6da2dc"
 [vars]
 APP_URL = "https://flipread.adhirat.com"
 
-# Cloudflare Email Routing Binding
-# 1. Go to Cloudflare Dashboard > Email > Email Workers
-# 2. Enable Email Routing
-# 3. Add a binding named "EMAIL" to use the `send_email` capability
-# [[send_email]]
-# name = "EMAIL"
-
 MAX_UPLOAD_SIZE_FREE = "5242880"
 MAX_UPLOAD_SIZE_BASIC = "10485760"
 MAX_UPLOAD_SIZE_PRO = "52428800"
 MAX_UPLOAD_SIZE_BUSINESS = "209715200"
+
+# Cloudflare Email Routing Binding
+[[send_email]]
+name = "EMAIL"
 # Stripe price IDs (not sensitive — safe to store here)
 STRIPE_PRICE_BASIC_MONTHLY = "price_1T1PzhAeXVAKDgLYmvCApHZ5"
 STRIPE_PRICE_BASIC_YEARLY = "price_1T0fl6AeXVAKDgLYAzbkM0cE"
@@ -76,4 +73,7 @@ id = "ada4253c67bc46959a5905e5690356cb"
 [[env.staging.r2_buckets]]
 binding = "BUCKET"
 bucket_name = "flipread-files-staging"
+
+[[env.staging.send_email]]
+name = "EMAIL"
 

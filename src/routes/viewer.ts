@@ -89,7 +89,7 @@ viewer.get('/:slug', async (c) => {
       // Validate key lightly (or deeply)
       // Deep validation:
       const member = await c.env.DB.prepare(
-        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1 AND is_verified = 1'
       ).bind(book.user_id, accessKey).first();
       if (member) isValid = true;
     }

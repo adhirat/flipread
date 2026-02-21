@@ -14,18 +14,15 @@ export async function sendEmail(env: Env, options: EmailOptions): Promise<boolea
 
   // 1. Try Cloudflare Email Routing (send_email binding) if available
   // Note: This requires the binding to be set in wrangler.toml and the domain verified
-  // @ts-ignore - The binding might not be typed in Env yet
   if (env.EMAIL && typeof env.EMAIL.send === 'function') {
     try {
-      // @ts-ignore
+      const textContent = text || html.replace(/<[^>]*>/g, '');
       await env.EMAIL.send({
         to,
         from,
         subject,
-        content: [
-          { type: 'text/plain', value: text || html.replace(/<[^>]*>/g, '') },
-          { type: 'text/html', value: html }
-        ]
+        text: textContent,
+        html: html
       });
       return true;
     } catch (e) {

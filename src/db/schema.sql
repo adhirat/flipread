@@ -68,8 +68,12 @@ CREATE TABLE IF NOT EXISTS store_members (
   store_owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   name TEXT NOT NULL DEFAULT '',
-  access_key TEXT UNIQUE NOT NULL,
+  access_key TEXT NOT NULL,
+  is_verified INTEGER NOT NULL DEFAULT 0,
+  verification_token TEXT UNIQUE DEFAULT NULL,
+  verification_expires_at TEXT DEFAULT NULL,
   is_active INTEGER NOT NULL DEFAULT 1,
+  is_archived INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -85,6 +89,18 @@ CREATE TABLE IF NOT EXISTS shared_books (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Store inquiries table (Contact Us form submissions)
+CREATE TABLE IF NOT EXISTS store_inquiries (
+  id TEXT PRIMARY KEY,
+  store_owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  mobile TEXT,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'done', 'archived')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);
 CREATE INDEX IF NOT EXISTS idx_books_slug ON books(slug);
@@ -96,3 +112,4 @@ CREATE INDEX IF NOT EXISTS idx_store_members_access_key ON store_members(access_
 CREATE INDEX IF NOT EXISTS idx_shared_books_book ON shared_books(book_id);
 CREATE INDEX IF NOT EXISTS idx_shared_books_recipient ON shared_books(shared_with_email);
 CREATE INDEX IF NOT EXISTS idx_shared_books_user ON shared_books(shared_with_user_id);
+CREATE INDEX IF NOT EXISTS idx_store_inquiries_owner ON store_inquiries(store_owner_id);

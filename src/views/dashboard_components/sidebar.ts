@@ -38,6 +38,9 @@ export const sidebar = `
       <div onclick="switchView('members');closeSidebar()" class="nav-item" id="nav-members" title="Members">
         <i class="fas fa-users"></i> <span>Members</span>
       </div>
+      <div onclick="switchView('inquiries');closeSidebar()" class="nav-item" id="nav-inquiries" title="Inquiries">
+        <i class="fas fa-envelope"></i> <span>Inquiries</span>
+      </div>
       <div onclick="switchView('subscription');closeSidebar()" class="nav-item" id="nav-subscription" title="Subscription">
         <i class="fas fa-credit-card"></i> <span>Subscription</span>
       </div>
