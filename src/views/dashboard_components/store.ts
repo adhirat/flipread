@@ -288,6 +288,30 @@ export const storeView = `
         <p style="font-size:13px;color:var(--text-muted);margin:-8px 0 20px">Write using <strong>Markdown</strong> &mdash; headings, bold, bullets and links are rendered on your store pages.</p>
 
         <div class="form-group">
+          <label>About Us</label>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" onclick="mdCmd('st-about','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-about','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-about','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-about','h3')" title="Heading 3">H3</button>
+              <span class="md-sep"></span>
+              <button type="button" onclick="mdCmd('st-about','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-about','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-about','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-about','link')" title="Link">&#128279;</button>
+              <span class="md-sep"></span>
+              <button type="button" class="md-tab active" id="st-about-wb" onclick="mdSwitch('st-about','write')">Write</button>
+              <button type="button" class="md-tab" id="st-about-pb" onclick="mdSwitch('st-about','preview')">Preview</button>
+            </div>
+            <div class="md-body">
+              <textarea id="st-about" class="md-textarea" rows="8" placeholder="Tell your readers more about yourself or your collection..."></textarea>
+              <div id="st-about-pv" class="md-preview" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label>Privacy Policy</label>
           <div class="md-editor">
             <div class="md-toolbar">

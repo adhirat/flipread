@@ -71,6 +71,18 @@ store.get('/:username', async (c) => {
   return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
 });
 
+// GET /store/:username/about
+store.get('/:username/about', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+  
+  const settings = JSON.parse(user.store_settings || '{}');
+  if (!settings.about_us_content) return c.html(notFoundPage('About Us section not found'), 404);
+
+  return c.html(contentPage(user, 'About Us', settings.about_us_content, c.env.APP_URL));
+});
+
 // GET /store/:username/privacy
 store.get('/:username/privacy', async (c) => {
   const username = c.req.param('username');
@@ -139,6 +151,14 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const socialYoutube = settings.social_youtube || '';
   const socialWebsite = settings.social_website || '';
   const hasSocials = socialInstagram || socialX || socialYoutube || socialWebsite;
+
+  // Navigation Links
+  const storeHandle = user.store_handle || user.name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const homeUrl = appUrl;
+  const galleryUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
+  const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
+  const loginUrl = `${appUrl}/dashboard`;
 
   // Announcement banner
   const bannerText = settings.banner_text || '';
@@ -516,21 +536,20 @@ body::before {
   background-repeat: repeat;
 }
 
-/* ====== STICKY HEADER ====== */
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 100;
-  display: flex;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 0 24px;
   height: 64px;
   background: var(--header-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border);
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .site-brand {
@@ -539,6 +558,7 @@ body::before {
   gap: 12px;
   text-decoration: none;
   color: var(--text-primary);
+  justify-self: start;
 }
 .site-logo {
   width: 32px;
@@ -552,7 +572,47 @@ body::before {
   font-size: 20px;
   font-weight: 400;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
+
+/* Center Menu */
+.nav-menu {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.nav-link {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--accent); }
+
+/* Right Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: end;
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.login-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.login-btn svg { width: 14px; height: 14px; }
 
 .theme-toggle {
   display: flex;
@@ -574,6 +634,96 @@ body::before {
 }
 .theme-toggle svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
 .theme-toggle:hover svg { transform: rotate(15deg); }
+
+.menu-trigger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Mobile Drawer */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 280px;
+  height: 100%;
+  background: var(--bg-primary);
+  z-index: 2000;
+  box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.mobile-drawer.active { right: 0; }
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.drawer-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.drawer-link {
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+@media (max-width: 768px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+    padding: 0 16px;
+  }
+  .nav-menu { display: none; }
+  .login-btn { display: none; }
+  .login-icon-sm { display: flex !important; }
+  .menu-trigger { display: flex; }
+}
+
+.login-icon-sm {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  text-decoration: none;
+}
 
 .icon-sun { display: none; }
 .icon-moon { display: block; }
@@ -1025,11 +1175,48 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
     <span class="site-title">${safeName}</span>
   </div>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
+
+  <nav class="nav-menu">
+    <a href="${homeUrl}" class="nav-link">Home</a>
+    <a href="${galleryUrl}" class="nav-link">Gallery</a>
+    <a href="${aboutUrl}" class="nav-link">About Us</a>
+    <a href="${contactUrl}" class="nav-link">Contact</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="${loginUrl}" class="login-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Login
+    </a>
+    <a href="${loginUrl}" class="login-icon-sm" title="Login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </a>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
 </header>
+
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="drawer-header">
+    <div class="site-brand">
+      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+      <span class="site-title">${safeName}</span>
+    </div>
+    <button class="drawer-close" id="drawer-close">&times;</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="${homeUrl}" class="drawer-link">Home</a>
+    <a href="${galleryUrl}" class="drawer-link">Gallery</a>
+    <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${contactUrl}" class="drawer-link">Contact</a>
+  </nav>
+</div>
 
 <section class="hero ${!heroImage ? 'hero-no-img' : ''}">
   ${heroImage ? `<div class="hero-bg" style="background-image: url('${esc(heroImage)}')"></div>` : ''}
@@ -1070,9 +1257,10 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       ${socialWebsite ? `<a href="${esc(socialWebsite)}" class="social-link" target="_blank" rel="noopener" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>` : ''}
     </div>` : ''}
     <div class="footer-links">
-      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/p/privacy' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/privacy'}">Privacy Policy</a>` : ''}
-      ${settings.terms_content ? `<a href="${isCustomDomain ? '/p/terms' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/terms'}">Terms & Conditions</a>` : ''}
-      ${settings.contact_info_content ? `<a href="${isCustomDomain ? '/p/contact' : '/store/'+(user.store_handle || user.name.toLowerCase().replace(/ /g,'-'))+'/contact'}">Contact Us</a>` : ''}
+      ${settings.about_us_content ? `<a href="${aboutUrl}">About Us</a>` : ''}
+      ${settings.privacy_policy_content ? `<a href="${isCustomDomain ? '/privacy' : galleryUrl + '/privacy'}">Privacy Policy</a>` : ''}
+      ${settings.terms_content ? `<a href="${isCustomDomain ? '/terms' : galleryUrl + '/terms'}">Terms & Conditions</a>` : ''}
+      ${settings.contact_info_content ? `<a href="${contactUrl}">Contact Us</a>` : ''}
     </div>
     <div class="footer-copy">
       &copy; ${new Date().getFullYear()} ${safeName}. All rights reserved.
@@ -1082,6 +1270,24 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 
 <script>
 document.getElementById('theme-toggle').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('flipread-theme',d?'light':'dark')};
+
+// Mobile drawer toggle
+(function(){
+  var trigger = document.getElementById('menu-trigger');
+  var drawer = document.getElementById('mobile-drawer');
+  var overlay = document.getElementById('drawer-overlay');
+  var close = document.getElementById('drawer-close');
+
+  function toggle(open) {
+    drawer.classList.toggle('active', open);
+    overlay.classList.toggle('active', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  if(trigger) trigger.onclick = function() { toggle(true); };
+  if(close) close.onclick = function() { toggle(false); };
+  if(overlay) overlay.onclick = function() { toggle(false); };
+})();
 
 // Simple parallax
 window.addEventListener('scroll', function() {
@@ -1111,6 +1317,14 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const socialWebsite = settings.social_website || '';
   const hasSocials = socialInstagram || socialX || socialYoutube || socialWebsite;
 
+  // Navigation Links
+  const storeHandle = user.store_handle || user.name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const homeUrl = appUrl;
+  const galleryUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
+  const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
+  const loginUrl = `${appUrl}/dashboard`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1132,59 +1346,152 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   --accent: ${accentColor}; --header-bg: rgba(14,13,11,0.88); color-scheme: dark;
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0d0b;--bg2:#1a1815;--text:#ede9e3;--text2:#a39d94;--border:rgba(237,233,227,0.06);--accent:${accentColor};--header-bg:rgba(14,13,11,0.88);color-scheme:dark}}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh;}
-.page-header{
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;height:60px;
-  background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-}
-.page-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
-.page-logo{width:28px;height:28px;border-radius:8px;object-fit:cover}
-.page-store-name{font-family:'Instrument Serif',serif;font-size:18px;font-weight:400}
-.theme-toggle-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s}
-.theme-toggle-btn:hover{background:var(--border);color:var(--text)}
-.icon-sun{display:none}.icon-moon{display:block}[data-theme="dark"] .icon-sun{display:block}[data-theme="dark"] .icon-moon{display:none}
-.page-wrap{max-width:720px;margin:0 auto;padding:60px 24px 100px}
-.back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:40px;color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
-.back-link:hover{color:var(--accent)}
-.page-title{font-family:'Instrument Serif',serif;font-size:clamp(32px,5vw,48px);font-weight:400;line-height:1.15;margin-bottom:8px;letter-spacing:-0.02em}
-.page-meta{font-size:14px;color:var(--text2);margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--border)}
-.md-content h1,.md-content h2,.md-content h3,.md-content h4{font-family:'Instrument Serif',serif;font-weight:400;line-height:1.3;margin:1.8em 0 0.6em;color:var(--text)}
-.md-content h1{font-size:2em}.md-content h2{font-size:1.5em}.md-content h3{font-size:1.2em}.md-content h4{font-size:1.05em}
-.md-content p{margin:0 0 1.2em;color:var(--text)}
-.md-content strong{font-weight:700}
-.md-content em{font-style:italic}
-.md-content a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
-.md-content hr{border:none;border-top:1px solid var(--border);margin:2em 0}
-.md-content ul,.md-content ol{padding-left:1.5em;margin:0 0 1.2em}
-.md-content li{margin-bottom:0.4em}
-.md-content blockquote{border-left:3px solid var(--accent);padding:0.5em 1em;margin:1.2em 0;color:var(--text2);font-style:italic}
-.md-content code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em}
-.page-footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;background:var(--bg2)}
-.footer-brand-sm{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px}
-.footer-logo-sm{width:20px;height:20px;border-radius:5px;object-fit:cover}
-.footer-socials{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
-.footer-social-link{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:all 0.2s}
-.footer-social-link:hover{border-color:var(--accent);color:var(--accent)}
-.footer-social-link svg{width:16px;height:16px}
-.footer-copy-sm{font-size:12px;color:var(--text2)}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh;}
+
+  .site-header {
+    position: sticky; top: 0; z-index: 1000;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; padding: 0 24px; height: 60px;
+    background: var(--header-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .site-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); justify-self: start; }
+  .site-logo { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
+  .site-title { font-family: 'Instrument Serif', serif; font-size: 18px; font-weight: 400; }
+
+  .nav-menu { display: flex; gap: 24px; align-items: center; }
+  .nav-link { text-decoration: none; color: var(--text2); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-link:hover { color: var(--accent); }
+
+  .header-actions { display: flex; align-items: center; gap: 12px; justify-self: end; }
+  .login-btn {
+    display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+    border-radius: 8px; background: var(--accent); color: #fff;
+    text-decoration: none; font-size: 13px; font-weight: 600;
+  }
+  .login-btn svg { width: 14px; height: 14px; }
+  .theme-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text2); cursor: pointer; transition: all 0.2s;
+  }
+  .theme-toggle:hover { background: var(--border); color: var(--text); }
+  .icon-sun { display: none; } .icon-moon { display: block; }
+  [data-theme="dark"] .icon-sun { display: block; } [data-theme="dark"] .icon-moon { display: none; }
+
+  .menu-trigger {
+    display: none; align-items: center; justify-content: center;
+    width: 36px; height: 36px; background: none; border: none;
+    color: var(--text); cursor: pointer;
+  }
+
+  .mobile-drawer {
+    position: fixed; top: 0; right: -100%; width: 280px; height: 100%;
+    background: var(--bg); z-index: 2000; box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); padding: 24px;
+    display: flex; flex-direction: column; gap: 32px;
+  }
+  .mobile-drawer.active { right: 0; }
+  .drawer-header { display: flex; justify-content: space-between; align-items: center; }
+  .drawer-close { background: none; border: none; font-size: 24px; color: var(--text2); cursor: pointer; }
+  .drawer-nav { display: flex; flex-direction: column; gap: 16px; }
+  .drawer-link { text-decoration: none; color: var(--text); font-size: 18px; font-weight: 600; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 768px) {
+    .site-header { grid-template-columns: 1fr auto; padding: 0 16px; }
+    .nav-menu, .login-btn { display: none; }
+    .login-icon-sm { display: flex !important; }
+    .menu-trigger { display: flex; }
+  }
+
+  .login-icon-sm {
+    display: none; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); color: var(--accent); text-decoration: none;
+  }
+
+  .page-wrap{max-width:720px;margin:0 auto;padding:60px 24px 100px}
+  .back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:40px;color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
+  .back-link:hover{color:var(--accent)}
+  .page-title{font-family:'Instrument Serif',serif;font-size:clamp(32px,5vw,48px);font-weight:400;line-height:1.15;margin-bottom:8px;letter-spacing:-0.02em}
+  .page-meta{font-size:14px;color:var(--text2);margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+  .md-content h1,.md-content h2,.md-content h3,.md-content h4{font-family:'Instrument Serif',serif;font-weight:400;line-height:1.3;margin:1.8em 0 0.6em;color:var(--text)}
+  .md-content h1{font-size:2em}.md-content h2{font-size:1.5em}.md-content h3{font-size:1.2em}.md-content h4{font-size:1.05em}
+  .md-content p{margin:0 0 1.2em;color:var(--text)}
+  .md-content strong{font-weight:700}
+  .md-content em{font-style:italic}
+  .md-content a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .md-content hr{border:none;border-top:1px solid var(--border);margin:2em 0}
+  .md-content ul,.md-content ol{padding-left:1.5em;margin:0 0 1.2em}
+  .md-content li{margin-bottom:0.4em}
+  .md-content blockquote{border-left:3px solid var(--accent);padding:0.5em 1em;margin:1.2em 0;color:var(--text2);font-style:italic}
+  .md-content code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em}
+  .page-footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;background:var(--bg2)}
+  .footer-brand-sm{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px}
+  .footer-logo-sm{width:20px;height:20px;border-radius:5px;object-fit:cover}
+  .footer-socials{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+  .footer-social-link{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);color:var(--text2);text-decoration:none;transition:all 0.2s}
+  .footer-social-link:hover{border-color:var(--accent);color:var(--accent)}
+  .footer-social-link svg{width:16px;height:16px}
+  .footer-copy-sm{font-size:12px;color:var(--text2)}
 </style>
 </head>
 <body>
-<header class="page-header">
-  <a href="${backUrl}" class="page-brand">
-    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="page-logo" alt="">` : ''}
-    <span class="page-store-name">${esc(storeName)}</span>
-  </a>
-  <button class="theme-toggle-btn" id="tt" aria-label="Toggle theme">
-    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
+<header class="site-header">
+  <div class="site-brand">
+    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+    <span class="site-title">${esc(storeName)}</span>
+  </div>
+
+  <nav class="nav-menu">
+    <a href="${homeUrl}" class="nav-link">Home</a>
+    <a href="${galleryUrl}" class="nav-link">Gallery</a>
+    <a href="${aboutUrl}" class="nav-link">About Us</a>
+    <a href="${contactUrl}" class="nav-link">Contact</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="${loginUrl}" class="login-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Login
+    </a>
+    <a href="${loginUrl}" class="login-icon-sm" title="Login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </a>
+    <button class="theme-toggle" id="tt" aria-label="Toggle theme" title="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
 </header>
+
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="drawer-header">
+    <div class="site-brand">
+      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+      <span class="site-title">${esc(storeName)}</span>
+    </div>
+    <button class="drawer-close" id="drawer-close">&times;</button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="${homeUrl}" class="drawer-link">Home</a>
+    <a href="${galleryUrl}" class="drawer-link">Gallery</a>
+    <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${contactUrl}" class="drawer-link">Contact</a>
+  </nav>
+</div>
 <div class="page-wrap">
   <a href="${backUrl}" class="back-link">&larr; Back to ${esc(storeName)}</a>
   <h1 class="page-title">${esc(title)}</h1>
@@ -1206,6 +1513,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 </footer>
 <script>
 document.getElementById('tt').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('flipread-theme',d?'light':'dark')};
+
+// Mobile drawer toggle
+(function(){
+  var trigger = document.getElementById('menu-trigger');
+  var drawer = document.getElementById('mobile-drawer');
+  var overlay = document.getElementById('drawer-overlay');
+  var close = document.getElementById('drawer-close');
+
+  function toggle(open) {
+    drawer.classList.toggle('active', open);
+    overlay.classList.toggle('active', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  if(trigger) trigger.onclick = function() { toggle(true); };
+  if(close) close.onclick = function() { toggle(false); };
+  if(overlay) overlay.onclick = function() { toggle(false); };
+})();
 </script>
 </body>
 </html>`;

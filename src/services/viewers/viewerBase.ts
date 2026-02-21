@@ -67,6 +67,7 @@ export function getViewerBase(options: ViewerOptions): string {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -509,6 +510,21 @@ export function getViewerBase(options: ViewerOptions): string {
             .header-name { max-width: 50vw; font-size: 13px; }
         }
 
+        /* Tablet Adjustments - Left align title */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .header-name {
+                position: relative !important;
+                left: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                text-align: left !important;
+                margin-left: 20px !important;
+                flex: 2 !important;
+                max-width: none !important;
+            }
+            .header-left, .header-icons { flex: none !important; }
+        }
+
         .mobile-controls {
             display: none;
             width: 100%;
@@ -598,6 +614,7 @@ export function getViewerBase(options: ViewerOptions): string {
             ` : ''}
 
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
             ${showWebViewLink ? `
@@ -689,6 +706,23 @@ export function getViewerBase(options: ViewerOptions): string {
         </div>
     </div>
 
+    <!-- QR Modal -->
+    <div id="qr-modal" class="settings-modal" style="justify-content: center; align-items: center;">
+        <div class="settings-content" style="height: auto; border-radius: 20px; width: 340px; transform: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div class="set-header">
+                <div style="font-weight:600">Scan QR Code</div>
+                <button class="header-icon" onclick="window.toggleModal('qr-modal', false)" style="width:28px; height:28px">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="set-body" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px;">
+                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px;"></div>
+                <p style="text-align: center; font-size: 13px; color: #aaa;">Scan this code with your phone to open this book on the go.</p>
+                <button class="header-icon" style="width: 100%; justify-content: center; border-radius: 10px; background: var(--accent); color: white; padding: 10px; font-weight: 600;" onclick="window.toggleModal('qr-modal', false)">Close</button>
+            </div>
+        </div>
+    </div>
+
     ${getSidebarHtml(showHighlights)}
 
     <div class="controls" id="main-footer">
@@ -742,6 +776,21 @@ export function getViewerBase(options: ViewerOptions): string {
         window.copyLink = () => {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
+        };
+
+        window.showQRCode = () => {
+            const container = document.getElementById('qrcode-container');
+            if(!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: window.location.href,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            window.toggleModal('qr-modal', true);
         };
 
         // UI Helpers

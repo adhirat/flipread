@@ -79,6 +79,7 @@ function updateUI() {
   }
 
   // Legal
+  document.getElementById('st-about').value = s.about_us_content || '';
   document.getElementById('st-privacy').value = s.privacy_policy_content || '';
   document.getElementById('st-terms').value = s.terms_content || '';
   document.getElementById('st-contact').value = s.contact_info_content || '';
@@ -626,6 +627,7 @@ async function saveStoreSettings() {
     social_x: document.getElementById('st-social-x')?.value || '',
     social_youtube: document.getElementById('st-social-youtube')?.value || '',
     social_website: document.getElementById('st-social-website')?.value || '',
+    about_us_content: document.getElementById('st-about').value,
     privacy_policy_content: document.getElementById('st-privacy').value,
     terms_content: document.getElementById('st-terms').value,
     contact_info_content: document.getElementById('st-contact').value

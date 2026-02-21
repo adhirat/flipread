@@ -68,6 +68,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -388,6 +389,21 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             }
         }
 
+        /* Tablet Adjustments - Left align title */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .header-name {
+                position: relative !important;
+                left: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                text-align: left !important;
+                margin-left: 20px !important;
+                flex: 2 !important;
+                max-width: none !important;
+            }
+            .header-left, .header-icons { flex: none !important; }
+        }
+
         #scroll-top {
             position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px;
             background: var(--accent); color: white; border: none; border-radius: 50%;
@@ -453,6 +469,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             </button>
             ` : ''}
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
             ${showNightShift ? `
@@ -526,6 +543,21 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     </div>
 
     ${settingsHtml}
+
+    <!-- QR Modal -->
+    <div id="qr-modal" style="position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: white; border-radius: 20px; width: 340px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden;">
+            <div style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; color: #333;">Scan QR Code</span>
+                <button onclick="window.toggleQR(false)" style="width: 28px; height: 28px; border-radius: 50%; border: none; background: #f5f5f5; color: #666; cursor: pointer;">✕</button>
+            </div>
+            <div style="padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee;"></div>
+                <p style="text-align: center; font-size: 13px; color: #666; margin: 0;">Scan this code with your phone to open this book on the go.</p>
+                <button style="width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer;" onclick="window.toggleQR(false)">Close</button>
+            </div>
+        </div>
+    </div>
     
     ${getSidebarHtml(showHighlights)}
 
@@ -629,6 +661,33 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         window.copyLink = () => {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
+        };
+
+        window.toggleQR = (show) => {
+            const m = document.getElementById('qr-modal');
+            if(!m) return;
+            if(show) {
+                m.style.display = 'flex';
+                setTimeout(() => m.style.opacity = '1', 10);
+            } else {
+                m.style.opacity = '0';
+                setTimeout(() => m.style.display = 'none', 300);
+            }
+        };
+
+        window.showQRCode = () => {
+            const container = document.getElementById('qrcode-container');
+            if(!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: window.location.href,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            window.toggleQR(true);
         };
 
         // Night Shift
