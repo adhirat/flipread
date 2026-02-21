@@ -1271,7 +1271,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home/Gallery</a>
+    <a href="${homeUrl}" class="nav-link">Home</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
@@ -1309,7 +1309,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home/Gallery</a>
+    <a href="${homeUrl}" class="drawer-link">Home</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
@@ -1603,7 +1603,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home/Gallery</a>
+    <a href="${homeUrl}" class="nav-link">Home</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
@@ -1641,7 +1641,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home/Gallery</a>
+    <a href="${homeUrl}" class="drawer-link">Home</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
