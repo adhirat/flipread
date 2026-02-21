@@ -54,7 +54,7 @@ store.get('/:username', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
@@ -89,7 +89,7 @@ store.get('/:username/gallery', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
@@ -329,7 +329,15 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const bookCards = books.map((b, i) => {
     const firstLetter = (b.title || 'B').charAt(0).toUpperCase();
     const delay = Math.min(i, 11) * 0.06 + 0.4;
-    const dateStr = showDate && b.created_at ? new Date(b.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : '';
+    const itemSettings = typeof b.settings === 'string' ? JSON.parse(b.settings) : (b.settings || {});
+    
+    // Check if custom published_date exists, otherwise fallback to DB created_at, formatted nicely.
+    const createdDate = itemSettings.published_date ? new Date(itemSettings.published_date) : (b.created_at ? new Date(b.created_at) : null);
+    const dateStr = showDate && createdDate ? createdDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+    
+    const authorStr = itemSettings.author ? `<div class="bk-author" style="font-size:12px; color:var(--text-secondary); margin-bottom: 4px;">${esc(itemSettings.author)}</div>` : '';
+    const descStr = itemSettings.description ? `<div class="bk-desc" style="font-size:12px; color:var(--text-muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${esc(itemSettings.description)}</div>` : '';
+
     return `<a href="${appUrl}/read/${esc(b.slug)}" class="bk-card" data-title="${esc(b.title.toLowerCase())}" style="animation-delay:${delay.toFixed(2)}s">
       <div class="bk-3d">
         <div class="bk-spine"></div>
@@ -340,8 +348,10 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
         </div>
       </div>
       <div class="bk-info">
-        <h3 class="bk-title">${esc(b.title)}</h3>
-        <div class="bk-meta">
+        <h3 class="bk-title" style="margin-bottom: ${authorStr || descStr ? '2px' : '4px' }">${esc(b.title)}</h3>
+        ${authorStr}
+        ${descStr}
+        <div class="bk-meta" style="margin-top: ${authorStr || descStr ? '8px' : '0' }">
           ${showViewCount ? `<span class="bk-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${b.view_count.toLocaleString()}</span>` : ''}
           <span class="bk-type">${b.type.toUpperCase()}</span>
           ${dateStr ? `<span class="bk-date">${dateStr}</span>` : ''}

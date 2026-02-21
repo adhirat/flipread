@@ -11,6 +11,11 @@ import { subscriptionView } from './dashboard_components/subscription';
 import { settingsView } from './dashboard_components/settings';
 import { knowledgeView } from './dashboard_components/knowledge_base';
 import { dashboardScript } from './dashboard_components/script';
+import { composerView } from './dashboard_components/composer';
+import { utilitiesView } from './dashboard_components/utilities';
+import { productsView } from './dashboard_components/products';
+import { ordersView } from './dashboard_components/orders';
+import { promotionsView } from './dashboard_components/promotions';
 
 export function dashboardPage(appUrl: string): string {
   return `<!DOCTYPE html>
@@ -47,7 +52,12 @@ export function dashboardPage(appUrl: string): string {
     ${sidebar}
     <main class="content">
       ${dashboardOverview}
+      ${composerView}
       ${docsView}
+      ${utilitiesView}
+      ${productsView}
+      ${ordersView}
+      ${promotionsView}
       ${storeView}
       ${membersView}
       ${inquiriesView}

@@ -19,7 +19,7 @@ export const docsView = `
           <p style="color:var(--text-muted);font-size:12px;margin-top:4px">PDF, EPUB, DOCX, PPTX, XLSX, CSV, TXT, MD, HTML, Images</p>
           <div id="upload-msg" class="msg" style="margin-top:16px;display:inline-block"></div>
         </div>
-        <input type="file" id="file-input" accept=".pdf,.epub,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.rtf,.html,.htm,.jpg,.jpeg,.png,.gif,.webp,.svg" style="display:none" onchange="uploadBook(event)">
+        <input type="file" id="file-input" accept=".pdf,.epub,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.md,.rtf,.html,.htm,.jpg,.jpeg,.png,.gif,.webp,.svg,.mp3,.wav,.ogg,.m4a,.mp4,.webm,.mov,.avi" style="display:none" onchange="uploadBook(event)" multiple>
 
         <div class="books-toolbar">
           <div class="books-search-wrap">
@@ -87,7 +87,30 @@ export const docsView = `
         <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>flipread.adhirat.workers.dev</code>.
       </p>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:12px">
+    <div class="form-group">
+      <label>Author / Creator (Optional)</label>
+      <input type="text" id="edit-author" placeholder="Author name">
+    </div>
+    <div class="form-group">
+      <label>Description (Optional)</label>
+      <textarea id="edit-description" placeholder="A brief description of this work" rows="3" style="width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-family:'Work Sans',sans-serif;resize:vertical;"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Published Date (Optional)</label>
+      <input type="date" id="edit-published-date" style="width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);font-family:'Work Sans',sans-serif;">
+    </div>
+
+    <div id="edit-album-container" style="display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <label style="margin:0;">Album Files</label>
+        <button id="add-album-file-btn" class="btn-outline" style="padding: 4px 12px; font-size: 12px;" onclick="document.getElementById('album-file-input').click()">Add Files</button>
+        <input type="file" id="album-file-input" style="display:none" multiple onchange="addAlbumFiles(event)">
+      </div>
+      <div id="album-files-list" style="display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto;">
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">
       <button onclick="hideModal('edit-modal')" class="btn-outline" style="border:none">Cancel</button>
       <button onclick="saveBook()" class="btn">Save Changes</button>
     </div>

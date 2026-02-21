@@ -348,6 +348,32 @@ function renderBooks() {
   const books = getFilteredBooks();
   const canShare = currentUser && ['pro','business'].includes(currentUser.plan);
 
+  const limits = { free: 3, basic: 50, pro: 500, business: 50000 };
+  const maxBooks = limits[currentUser.plan] || 3;
+  const isLimitReached = currentBooks.length >= maxBooks;
+
+  const uploadZone = document.querySelector('.upload-zone');
+  const fileInput = document.getElementById('file-input');
+  const uploadMsg = document.getElementById('upload-msg');
+
+  if (uploadZone && uploadMsg && fileInput) {
+      if (isLimitReached) {
+          uploadZone.onclick = null;
+          uploadZone.style.opacity = '0.5';
+          uploadZone.style.cursor = 'not-allowed';
+          uploadMsg.innerHTML = \`Upload limit reached. Please delete files or upgrade your plan.\`;
+          uploadMsg.className = 'msg error';
+          uploadMsg.style.display = 'inline-block';
+          fileInput.disabled = true;
+      } else {
+          uploadZone.onclick = () => fileInput.click();
+          uploadZone.style.opacity = '1';
+          uploadZone.style.cursor = 'pointer';
+          uploadMsg.style.display = 'none';
+          fileInput.disabled = false;
+      }
+  }
+
   if (books.length === 0) {
     container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px">' + (currentBooks.length === 0 ? 'No books published yet.' : 'No matching books.') + '</div>';
     container.className = 'book-grid';
@@ -402,22 +428,26 @@ function renderBooks() {
   }
 }
 
-async function handleFileUpload(file) {
-  if (!file) return;
+async function handleFileUpload(files) {
+  if (!files || files.length === 0) return;
   const msgEl = document.getElementById('upload-msg');
   msgEl.textContent = 'Preparing...'; msgEl.className = 'msg success'; msgEl.style.display = 'inline-block';
 
   const fd = new FormData();
-  fd.append('file', file);
-  fd.append('title', file.name.replace(/\\.[^.]+$/, ''));
+  let firstFile = files[0];
+  for(let i=0; i < files.length; i++){
+    fd.append('file', files[i]);
+  }
+  const title = files.length > 1 ? 'Untitled Album' : firstFile.name.replace(/\.[^.]+$/, '');
+  fd.append('title', title);
 
   try {
-    // Attempt to extract cover for supported types
-    const arrayBuffer = await file.arrayBuffer();
+    // Attempt to extract cover for supported types from the first file
+    const arrayBuffer = await firstFile.arrayBuffer();
     let coverBlob = null;
-    const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-    const isEpub = file.type === 'application/epub+zip' || file.name.endsWith('.epub');
-    const isImage = file.type.startsWith('image/');
+    const isPdf = firstFile.type === 'application/pdf' || firstFile.name.endsWith('.pdf');
+    const isEpub = firstFile.type === 'application/epub+zip' || firstFile.name.endsWith('.epub');
+    const isImage = firstFile.type.startsWith('image/');
 
     if (isPdf) {
       msgEl.textContent = 'Extracting cover...';
@@ -444,7 +474,7 @@ async function handleFileUpload(file) {
     } else if (isImage) {
       // Use the image itself as cover (create a thumbnail)
       try {
-        const blob = new Blob([arrayBuffer], { type: file.type });
+        const blob = new Blob([arrayBuffer], { type: firstFile.type });
         const url = URL.createObjectURL(blob);
         const img = new Image();
         await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
@@ -482,8 +512,9 @@ async function handleFileUpload(file) {
 }
 
 async function uploadBook(e) {
-  const file = e.type === 'drop' ? e.dataTransfer.files[0] : e.target.files[0];
-  await handleFileUpload(file);
+  const files = e.type === 'drop' ? e.dataTransfer.files : e.target.files;
+  if (!files || files.length === 0) return;
+  await handleFileUpload(files);
   if(e.target.value) e.target.value = '';
 }
 
@@ -524,8 +555,94 @@ function editBook(id) {
   document.getElementById('edit-public').value = b.is_public ? "1" : "0";
   document.getElementById('edit-pass').value = b.password || '';
   document.getElementById('edit-domain').value = b.custom_domain || '';
+
+  const settings = typeof b.settings === 'string' ? JSON.parse(b.settings) : (b.settings || {});
+  const authorEl = document.getElementById('edit-author');
+  const descEl = document.getElementById('edit-description');
+  const dateEl = document.getElementById('edit-published-date');
+  if(authorEl) authorEl.value = settings.author || '';
+  if(descEl) descEl.value = settings.description || '';
+  if(dateEl) dateEl.value = settings.published_date || '';
+
+  const albumContainer = document.getElementById('edit-album-container');
+  if (albumContainer) {
+    if (['image', 'audio', 'video'].includes(b.type)) {
+      albumContainer.style.display = 'block';
+      renderAlbumFiles(id, settings.album_files || []);
+      const albumInput = document.getElementById('album-file-input');
+      if (albumInput) {
+          if (b.type === 'image') albumInput.accept = ".jpg,.jpeg,.png,.gif,.webp,.svg";
+          else if (b.type === 'audio') albumInput.accept = ".mp3,.wav,.ogg,.m4a";
+          else if (b.type === 'video') albumInput.accept = ".mp4,.webm,.mov,.avi";
+      }
+    } else {
+      albumContainer.style.display = 'none';
+    }
+  }
+
   showModal('edit-modal');
 }
+
+window.renderAlbumFiles = (bookId, albumFiles) => {
+   const list = document.getElementById('album-files-list');
+   if(!list) return;
+   if (!albumFiles || albumFiles.length === 0) {
+       list.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">No files in album.</div>';
+       return;
+   }
+   list.innerHTML = albumFiles.map((f, i) => \`
+     <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border);">
+       <span style="font-size:12px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:70%;" title="\${esc(f.name)}">\${i+1}. \${esc(f.name)}</span>
+       <button onclick="removeAlbumFile('\${bookId}', \${i})" style="color:var(--accent-magenta);background:none;border:none;cursor:pointer;" title="Remove File"><i class="fas fa-trash"></i></button>
+     </div>
+   \`).join('');
+};
+
+window.removeAlbumFile = async (bookId, index) => {
+   if (!confirm('Remove this file from the album?')) return;
+   try {
+       const res = await fetch(API + '/api/docs/' + bookId + '/album/' + index, { method: 'DELETE', credentials: 'include' });
+       if(res.ok) {
+           const data = await res.json();
+           renderAlbumFiles(bookId, data.album_files);
+           loadBooks(); // refresh background grid
+       } else {
+           const err = await res.json();
+           alert(err.error || 'Failed to remove file');
+       }
+   } catch (e) { console.error(e); }
+};
+
+window.addAlbumFiles = async (event) => {
+   const files = event.target.files;
+   if (!files || files.length === 0) return;
+   
+   const bookId = document.getElementById('edit-id').value;
+   const fd = new FormData();
+   for(let i=0; i<files.length; i++) fd.append('file', files[i]);
+   
+   const btn = document.getElementById('add-album-file-btn');
+   const oldText = btn.innerHTML;
+   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+   btn.disabled = true;
+   
+   try {
+       const res = await fetch(API + '/api/docs/' + bookId + '/album', { method: 'POST', body: fd, credentials: 'include' });
+       if (res.ok) {
+           const data = await res.json();
+           renderAlbumFiles(bookId, data.album_files);
+           loadBooks(); // refresh background grid
+       } else {
+           const err = await res.json();
+           alert(err.error || 'Failed to add files');
+       }
+   } catch(e) { console.error(e); }
+   
+   btn.innerHTML = oldText;
+   btn.disabled = false;
+   event.target.value = '';
+};
+
 
 async function saveBook() {
   const id = document.getElementById('edit-id').value;
@@ -534,10 +651,20 @@ async function saveBook() {
   const password = document.getElementById('edit-pass').value || null;
   const custom_domain = document.getElementById('edit-domain').value || null;
   
+  const b = currentBooks.find(x => x.id === id);
+  let settings = typeof b?.settings === 'string' ? JSON.parse(b.settings) : (b?.settings || {});
+  
+  const authorEl = document.getElementById('edit-author');
+  const descEl = document.getElementById('edit-description');
+  const dateEl = document.getElementById('edit-published-date');
+  if(authorEl) settings.author = authorEl.value;
+  if(descEl) settings.description = descEl.value;
+  if(dateEl) settings.published_date = dateEl.value;
+
   await fetch(API + '/api/docs/' + id, {
     method: 'PATCH', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, is_public, password, custom_domain })
+    body: JSON.stringify({ title, is_public, password, custom_domain, settings })
   });
   hideModal('edit-modal');
   loadBooks();

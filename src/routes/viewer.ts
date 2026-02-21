@@ -10,7 +10,8 @@ import {
   pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, 
   spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, 
   pdfWebViewerHTML, epubWebViewerHTML, docxWebViewerHTML, pptWebViewerHTML, 
-  spreadsheetWebViewerHTML, textWebViewerHTML, imageWebViewerHTML,
+  spreadsheetWebViewerHTML, textWebViewerHTML, imageWebViewerHTML, audioWebViewerHTML, videoWebViewerHTML,
+  audioViewerHTML, videoViewerHTML,
   passwordPage, errorPage, memberAccessPage 
 } from '../services/viewerTemplates';
 
@@ -34,6 +35,8 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
     if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (book.type === 'audio') return audioWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (book.type === 'video') return videoWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
 
@@ -49,6 +52,10 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
     return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (book.type === 'image') {
     return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+  } else if (book.type === 'audio') {
+    return audioViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+  } else if (book.type === 'video') {
+    return videoViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else {
     return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
@@ -134,15 +141,32 @@ viewer.get('/:slug', async (c) => {
 // GET /api/file/:bookId — serve the actual file from R2
 viewer.get('/api/file/:bookId', async (c) => {
   const bookId = c.req.param('bookId');
+  const indexStr = c.req.query('i');
 
   const book = await c.env.DB.prepare(
-    'SELECT file_key, type FROM books WHERE id = ? AND is_public = 1'
-  ).bind(bookId).first<{ file_key: string; type: string }>();
+    'SELECT file_key, type, settings FROM books WHERE id = ? AND is_public = 1'
+  ).bind(bookId).first<{ file_key: string; type: string; settings: string }>();
 
   if (!book) return c.text('Not found', 404);
 
+  let fileKey = book.file_key;
+  if (indexStr !== undefined) {
+    const settings = JSON.parse(book.settings || '{}');
+    const index = parseInt(indexStr);
+    if (settings.album_files && settings.album_files[index]) {
+      fileKey = settings.album_files[index].key;
+    } else {
+      return c.text('File index out of bounds', 404);
+    }
+  } else {
+    const settings = JSON.parse(book.settings || '{}');
+    if (settings.album_files && settings.album_files.length > 0) {
+      fileKey = settings.album_files[0].key;
+    }
+  }
+
   const storage = new StorageService(c.env.BUCKET);
-  const obj = await storage.getObject(book.file_key);
+  const obj = await storage.getObject(fileKey);
   if (!obj) return c.text('File not found', 404);
 
   const contentTypeMap: Record<string, string> = {
@@ -159,13 +183,19 @@ viewer.get('/api/file/:bookId', async (c) => {
     rtf: 'application/rtf',
     html: 'text/html',
     image: 'application/octet-stream',
+    audio: 'audio/mpeg',
+    video: 'video/mp4',
   };
-  // For images, detect from the file extension in the key
+  // For images or multimedia, detect from the file extension in the key
   let contentType = contentTypeMap[book.type] || 'application/octet-stream';
-  if (book.type === 'image') {
-    const ext = book.file_key.split('.').pop()?.toLowerCase() || '';
-    const imgMap: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
-    contentType = imgMap[ext] || 'image/jpeg';
+  if (['image', 'audio', 'video'].includes(book.type)) {
+    const ext = fileKey.split('.').pop()?.toLowerCase() || '';
+    const extMap: Record<string, string> = { 
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+      mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
+      mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo'
+    };
+    contentType = extMap[ext] || contentType;
   }
   return new Response(obj.body, {
     headers: {
