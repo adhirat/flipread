@@ -737,6 +737,7 @@ export function getViewerBase(options: ViewerOptions): string {
             
             <div class="mobile-icons-center">
                 <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" id="qr-btn-mob" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
                 <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
                 ${showWebViewLink ? `
                 <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>

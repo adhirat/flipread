@@ -19,4 +19,4 @@ export { pptWebViewerHTML } from './viewers/pptWebViewer';
 export { spreadsheetWebViewerHTML } from './viewers/spreadsheetWebViewer';
 export { textWebViewerHTML } from './viewers/textWebViewer';
 export { imageWebViewerHTML } from './viewers/imageWebViewer';
-export { passwordPage, errorPage, memberAccessPage } from './viewers/commonPages';
+export { passwordPage, errorPage, memberAccessPage, memberRegisterPage, memberForgotPage } from './viewers/commonPages';

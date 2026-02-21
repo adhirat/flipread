@@ -10,7 +10,7 @@ const members = new Hono<{ Bindings: Env; Variables: { user: any } }>();
 // Apply auth middleware to all routes except /verify
 members.use('/*', async (c, next) => {
   // Skip auth for the public verify endpoint
-  if (c.req.path.endsWith('/verify') && c.req.method === 'POST') {
+  if ((c.req.path.endsWith('/verify') || c.req.path.endsWith('/register') || c.req.path.endsWith('/forgot')) && c.req.method === 'POST') {
     return next();
   }
   return authMiddleware()(c, next);
@@ -136,6 +136,58 @@ members.post('/verify', async (c) => {
     maxAge: 60 * 60 * 24 * 30 // 30 days
   });
 
+  return c.json({ success: true });
+});
+
+// POST /api/members/register — Public registration
+members.post('/register', async (c) => {
+  const { email, name, owner_id } = await c.req.json();
+  if (!email || !owner_id) return c.json({ error: 'Missing information' }, 400);
+
+  // Check if owner exists
+  const owner = await c.env.DB.prepare('SELECT id, plan FROM users WHERE id = ?').bind(owner_id).first();
+  if (!owner) return c.json({ error: 'Store not found' }, 404);
+
+  // Check plan limits
+  const planLimits = getPlanLimits(owner.plan as string);
+  const countResult = await c.env.DB.prepare(
+    `SELECT COUNT(*) as count FROM store_members WHERE store_owner_id = ?`
+  ).bind(owner_id).first<{ count: number }>();
+  
+  if ((countResult?.count || 0) >= planLimits.maxMembers) {
+    return c.json({ error: 'Store has reached its member limit' }, 403);
+  }
+
+  const accessKey = crypto.randomUUID();
+  const id = crypto.randomUUID();
+
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO store_members (id, store_owner_id, email, name, access_key) VALUES (?, ?, ?, ?, ?)`
+    ).bind(id, owner_id, email, name || '', accessKey).run();
+
+    // In production, send email with access key
+    return c.json({ success: true });
+  } catch (e: any) {
+    if (e.message?.includes('UNIQUE')) return c.json({ error: 'Member already exists' }, 409);
+    return c.json({ error: 'Registration failed' }, 500);
+  }
+});
+
+// POST /api/members/forgot — Resend access key
+members.post('/forgot', async (c) => {
+  const { email, owner_id } = await c.req.json();
+  if (!email || !owner_id) return c.json({ error: 'Missing information' }, 400);
+
+  const member = await c.env.DB.prepare(
+    'SELECT access_key FROM store_members WHERE store_owner_id = ? AND email = ? AND is_active = 1'
+  ).bind(owner_id, email).first<{ access_key: string }>();
+
+  if (member) {
+    // In production, send email with member.access_key
+  }
+
+  // Always return success for security
   return c.json({ success: true });
 });
 

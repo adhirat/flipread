@@ -518,6 +518,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <button class="header-icon" onclick="window.prevPage()" title="Previous"><i class="fas fa-chevron-up"></i></button>
             <div class="mobile-icons-center">
                 <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
                 <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
                 <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
                 <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>

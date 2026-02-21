@@ -20,27 +20,20 @@ export async function getUserByCustomDomain(db: D1Database, domain: string): Pro
 }
 
 import { getCookie } from 'hono/cookie';
-import { memberAccessPage } from '../services/viewerTemplates';
+import { memberAccessPage, memberRegisterPage, memberForgotPage } from '../services/viewerTemplates';
 
-// GET /store/:username — displays a user's public book collection
+// GET /store/:username - Landing Page or Gallery
 store.get('/:username', async (c) => {
   const username = c.req.param('username');
   const user = await getUserByUsername(c.env.DB, username);
-
-  if (!user) {
-    return c.html(notFoundPage(), 404);
-  }
+  if (!user) return c.html(notFoundPage(), 404);
 
   const settings = JSON.parse(user.store_settings || '{}');
-
+  
   // Private Store Check
   if (settings.is_private) {
     const cookieName = `mk_${user.id}`;
     const accessKey = getCookie(c, cookieName);
-    
-    // Simple check: if cookie exists, we assume valid for now (stateless for speed)
-    // For more security, we should verify the key against DB, but verifying existence is a good first step
-    // Or we can verify against DB here:
     let isValid = false;
     if (accessKey) {
       const member = await c.env.DB.prepare(
@@ -48,27 +41,89 @@ store.get('/:username', async (c) => {
       ).bind(user.id, accessKey).first();
       if (member) isValid = true;
     }
-
     if (!isValid) {
-      // Inject owner ID for the client-side script to use (via simple template replacement or global var)
-      // The memberAccessPage template we made has a placeholder or we can pass args?
-      // Our memberAccessPage takes (storeName, logoUrl).
-      // We need to inject ownerId.
       let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
-      html = html.replace('__OWNER_ID__', user.id);
+      html = html.replace(/__OWNER_ID__/g, user.id);
       return c.html(html);
     }
   }
 
-  // Get their public books
+  // If landing page content exists, show landing page, otherwise gallery
+  if (settings.landing_page_content) {
+    return c.html(contentPage(user, settings.landing_title || 'Welcome', settings.landing_page_content, c.env.APP_URL));
+  }
+
   const booksResult = await c.env.DB.prepare(
     `SELECT id, title, slug, type, cover_url, view_count, created_at
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
-
   const books = booksResult.results || [];
 
   return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+});
+
+// GET /store/:username/gallery
+store.get('/:username/gallery', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+
+  const settings = JSON.parse(user.store_settings || '{}');
+  
+  // Private Store Check
+  if (settings.is_private) {
+    const cookieName = `mk_${user.id}`;
+    const accessKey = getCookie(c, cookieName);
+    let isValid = false;
+    if (accessKey) {
+      const member = await c.env.DB.prepare(
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+      ).bind(user.id, accessKey).first();
+      if (member) isValid = true;
+    }
+    if (!isValid) {
+      let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+      html = html.replace(/__OWNER_ID__/g, user.id);
+      return c.html(html);
+    }
+  }
+
+  const booksResult = await c.env.DB.prepare(
+    `SELECT id, title, slug, type, cover_url, view_count, created_at
+     FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+  ).bind(user.id).all<Book>();
+  const books = booksResult.results || [];
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+});
+
+// GET /store/:username/login
+store.get('/:username/login', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+  let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+  html = html.replace(/__OWNER_ID__/g, user.id);
+  return c.html(html);
+});
+
+// GET /store/:username/register
+store.get('/:username/register', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+  let html = memberRegisterPage(user.store_name || user.name, user.store_logo_url);
+  html = html.replace(/__OWNER_ID__/g, user.id);
+  return c.html(html);
+});
+
+// GET /store/:username/forgot-password
+store.get('/:username/forgot-password', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+  let html = memberForgotPage(user.store_name || user.name, user.store_logo_url);
+  html = html.replace(/__OWNER_ID__/g, user.id);
+  return c.html(html);
 });
 
 // GET /store/:username/about
@@ -154,11 +209,11 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 
   // Navigation Links
   const storeHandle = user.store_handle || user.name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-  const homeUrl = appUrl;
-  const galleryUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const homeUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const galleryUrl = isCustomDomain ? '/gallery' : `/store/${storeHandle}/gallery`;
   const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
-  const loginUrl = `${appUrl}/dashboard`;
+  const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
 
   // Announcement banner
   const bannerText = settings.banner_text || '';
@@ -1189,7 +1244,12 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
     </a>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1307,7 +1367,6 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const storeName = user.store_name || user.name;
   const settings = JSON.parse(user.store_settings || '{}');
   const accentColor = settings.accent_color || '#c45d3e';
-  const backUrl = isCustomDomain ? '/' : `/store/${user.store_handle || user.name.toLowerCase().replace(/ /g,'-')}`;
   const htmlContent = mdToHtml(content);
 
   // Social links for footer
@@ -1319,11 +1378,12 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 
   // Navigation Links
   const storeHandle = user.store_handle || user.name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-  const homeUrl = appUrl;
-  const galleryUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const homeUrl = isCustomDomain ? '/' : `/store/${storeHandle}`;
+  const galleryUrl = isCustomDomain ? '/gallery' : `/store/${storeHandle}/gallery`;
   const aboutUrl = isCustomDomain ? '/about' : `/store/${storeHandle}/about`;
   const contactUrl = isCustomDomain ? '/contact' : `/store/${storeHandle}/contact`;
-  const loginUrl = `${appUrl}/dashboard`;
+  const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
+  const backUrl = homeUrl;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1464,7 +1524,12 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
     </a>
     <button class="theme-toggle" id="tt" aria-label="Toggle theme" title="Toggle theme">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
