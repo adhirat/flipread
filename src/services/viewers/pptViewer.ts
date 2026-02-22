@@ -87,12 +87,19 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                             ld.style.opacity='0';
                             setTimeout(()=>ld.style.display='none', 500);
                           }
+                          const globalLd = document.getElementById('loading');
+                          if(globalLd) {
+                            globalLd.style.opacity='0';
+                            setTimeout(() => globalLd.style.display='none', 500);
+                          }
                       }
                   }, 500);
                   
                   setTimeout(() => { 
                     clearInterval(check); 
                     const ld = document.getElementById('ld-ppt');
+                    const globalLd = document.getElementById('loading');
+                    if(globalLd) globalLd.style.display = 'none';
                     if(ld && ld.style.display !== 'none') {
                         if (isOdp) ld.innerHTML = '<i class="fas fa-exclamation-triangle text-amber-500 text-3xl"></i><p class="mt-4">ODP Viewing Limited</p>';
                         else ld.style.display = 'none';

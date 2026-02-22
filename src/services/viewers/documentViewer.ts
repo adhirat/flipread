@@ -1,30 +1,144 @@
 import { getViewerBase } from './viewerBase';
-import { escapeHtml } from './viewerUtils';
+import { escapeHtml, COMMON_READER_SCRIPTS } from './viewerUtils';
 
 export function documentViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+    const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
 
     const extraStyles = `
-        #doc-v { width: 100%; height: 100%; overflow: auto; display: flex; justify-content: center; padding: 60px 20px; -webkit-overflow-scrolling: touch; }
-        #doc-c { background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 50px; min-height: 1000px; transform-origin: top center; transition: transform 0.2s; margin-bottom: 100px; border-radius: 4px; width: 100%; max-width: 850px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        :root {
+            --reader-bg: ${bg};
+            --reader-accent: ${accent};
+        }
+
+        /* Stage and Book Stage */
+        #s-c { 
+            position: absolute; 
+            inset: 60px 0 80px 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            perspective: 3500px; 
+            overflow: hidden; 
+            width: 100%; 
+            z-index: 50;
+        }
+        body.full-mode #s-c { inset: 0 !important; height: 100dvh !important; }
+
+        #b-t { 
+            position: relative; 
+            width: 95%; 
+            height: 90%; 
+            max-width: 1300px;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease; 
+            transform-style: preserve-3d; 
+            opacity: 0; 
+            pointer-events: none; 
+            display: flex;
+        }
+        #b-t.open { opacity: 1; pointer-events: auto; }
         
-        .side-nav { position: fixed; top: 50%; transform: translateY(-50%); z-index: 1000; width: 44px; height: 44px; background: rgba(0,0,0,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.3; transition: 0.3s; }
-        .side-nav:hover { opacity: 1; background: rgba(0,0,0,0.15); transform: translateY(-50%) scale(1.1); }
-        #side-prev { left: 24px; }
-        #side-next { right: 24px; }
+        #b-v { 
+            width: 100%; 
+            height: 100%; 
+            background: white; 
+            box-shadow: 0 40px 100px rgba(0,0,0,0.3); 
+            position: relative; 
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 4px;
+            display: flex;
+            background-color: #f9f9f9;
+        }
 
-        body.light-ui .side-nav { background: rgba(0,0,0,0.05); color: #000; border-color: rgba(0,0,0,0.1); }
-        body.light-ui .side-nav:hover { background: rgba(0,0,0,0.1); }
+        /* Middle Crease / Spine Effect */
+        #b-v::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0,0,0,0.05);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            z-index: 20;
+            pointer-events: none;
+        }
 
-        @media (max-width: 768px) {
-            #doc-v { padding: 40px 10px; }
-            #doc-c { width: 95%; padding: 20px; box-shadow: none; }
-            .side-nav { display: none; }
+        #doc-c {
+            width: 100%;
+            padding: 0;
+            background: white;
+        }
+
+        /* 2-Page Spread for Desktops */
+        @media (min-width: 1024px) {
+            #doc-c {
+                column-count: 2;
+                column-gap: 60px;
+                column-rule: 1px solid rgba(0,0,0,0.03);
+                padding: 60px 80px !important;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            #doc-c { padding: 40px 25px !important; }
+            #b-v::after { display: none; }
+        }
+
+        /* docx-preview fixes */
+        .docx { margin: 0 !important; width: 100% !important; padding: 0 !important; background: transparent !important; }
+        .docx p { margin-bottom: 20px !important; line-height: 1.6 !important; }
+
+        /* Cover Flipping */
+        .c-b { 
+            position: absolute; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200; 
+            width: 40vh; 
+            height: 60vh; 
+            transform-style: preserve-3d; 
+            transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1); 
+            cursor: pointer; 
+            border: none !important; 
+        }
+        .c-v { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4); 
+            background: #2c3e50; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            text-align: center; 
+            font-weight: bold; 
+            overflow: hidden; 
         }
         
-        /* docx-preview fixes */
-        .docx { margin: 0 auto !important; width: 100% !important; }
+        .a-f-o { animation: fO 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; pointer-events: none; }
+        .a-f-c { animation: fC 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) forwards; }
+
+        @keyframes fO { 0% { transform: translate(-50%, -50%) rotateY(0); opacity: 1; } 40% { transform: translate(-80%, -50%) rotateY(-60deg) translateZ(50px); opacity: 1; } 100% { transform: translate(-100%, -50%) rotateY(-180deg) translateZ(200px) scale(1.1); opacity: 0; } }
+        @keyframes fC { 0% { transform: translate(-100%, -50%) rotateY(-180deg) translateZ(200px) scale(1.1); opacity: 0; } 60% { transform: translate(-80%, -50%) rotateY(-60deg) translateZ(50px); opacity: 1; } 100% { transform: translate(-50%, -50%) rotateY(0); opacity: 1; } }
+
+        #nav-l, #nav-r { position: fixed; top: 100px; bottom: 100px; width: 15%; z-index: 600; cursor: pointer; }
+        #nav-l { left: 0; }
+        #nav-r { right: 0; }
+
+        .eb-f { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); color: white; padding: 12px 28px; border-radius: 30px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.2); z-index: 100; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); transition: 0.3s; }
+        .c-b:hover .eb-f { background: ${accent}; transform: translateX(-50%) scale(1.05); }
+
+        /* Night Shift */
+        body.night-shift { filter: sepia(0.6) brightness(0.9); }
     `;
 
     const extraHtml = `
@@ -33,84 +147,111 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
                 <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
                 <div class="absolute inset-0 border-4 border-t-${accent} rounded-full animate-spin"></div>
             </div>
-            <p class="uppercase tracking-[0.2em] text-[10px] font-bold opacity-60 mt-4">Rendering Document...</p>
+            <p class="uppercase tracking-[0.2em] text-[10px] font-bold opacity-60">Rendering Document...</p>
         </div>
 
-        <div id="doc-v">
-            <div id="doc-c"></div>
+        <div id="s-c">
+            <div id="c-b" class="c-b" onclick="window.openBook()">
+                <div class="c-v">
+                    ${coverUrl ? '<img src="' + coverUrl + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="p-8"><span>' + safeTitle + '</span><br/><span class="text-[9px] opacity-40 uppercase tracking-widest mt-4 block">Open Document</span></div>'}
+                    <div class="eb-f"><i class="fas fa-book-open"></i> Open</div>
+                </div>
+            </div>
+            <div id="b-t">
+                <div id="b-v">
+                    <div id="doc-c"></div>
+                </div>
+            </div>
         </div>
-        
-        <button id="side-prev" class="side-nav" onclick="prevDoc()"><i class="fas fa-chevron-left"></i></button>
-        <button id="side-next" class="side-nav" onclick="nextDoc()"><i class="fas fa-chevron-right"></i></button>
+
+        <div id="nav-l" onclick="window.prev()"></div>
+        <div id="nav-r" onclick="window.next()"></div>
     `;
 
     const extraScripts = `
+        ${COMMON_READER_SCRIPTS}
+
         async function initDoc() {
             try {
+                // Use FILE_URL and TITLE from global scope (injected by viewerBase)
                 const res = await fetch(FILE_URL);
                 if(!res.ok) throw new Error('Failed to load');
                 const blob = await res.blob();
                 
                 const isOdt = FILE_URL.match(/\\.odt$/i) || TITLE.match(/\\.odt$/i);
                 
+                const container = document.getElementById('doc-c');
                 if (isOdt) {
-                    // ODT rendering logic could be added here if a library is found.
-                    // For now, we attempt rendering with docx-preview as a fallback or show error.
-                    await docx.renderAsync(blob, document.getElementById('doc-c'), null, { className: "docx" });
+                    await docx.renderAsync(blob, container, null, { className: "docx" });
                 } else {
-                    const opts = { className: "docx", inWrapper: false, ignoreWidth: false, ignoreHeight: false };
-                    await docx.renderAsync(blob, document.getElementById('doc-c'), null, opts);
+                    const opts = { 
+                        className: "docx", 
+                        inWrapper: true, 
+                        ignoreWidth: false, 
+                        ignoreHeight: false, 
+                        useImageWidth: true,
+                        breakPages: true,
+                        ignoreLastRenderedPageBreak: false,
+                        experimental: true
+                    };
+                    await docx.renderAsync(blob, container, null, opts);
                 }
                 
-                const ld = document.getElementById('ld-doc');
-                if(ld) { ld.style.opacity='0'; setTimeout(()=>ld.style.display='none', 500); }
+                // Hide both loading popups
+                const ldDoc = document.getElementById('ld-doc');
+                if(ldDoc) ldDoc.style.display = 'none';
+                const globalLd = document.getElementById('loading');
+                if(globalLd) globalLd.style.display = 'none';
             } catch(e) {
                 console.error(e);
                 const ld = document.getElementById('ld-doc');
-                const isOdt = FILE_URL.match(/\\.odt$/i) || TITLE.match(/\\.odt$/i);
                 if(ld) {
-                    ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i><p class="mt-4">' + (isOdt ? 'ODT Rendering Limited' : 'Error Loading Document') + '</p>';
+                    ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i><p class="mt-4">Error Loading Document</p>';
                 }
             }
         }
 
-        // Override applyZoom
-        const baseApplyZoom = window.applyZoom;
-        window.applyZoom = () => {
-            if(typeof baseApplyZoom === 'function') baseApplyZoom();
-            const c = document.getElementById('doc-c');
-            if(c) c.style.transform = 'scale(' + (window.zoom || 1) + ')';
+        window.openBook = () => {
+            const cb = document.getElementById('c-b');
+            const bt = document.getElementById('b-t');
+            cb.classList.add('a-f-o');
+            setTimeout(() => {
+                cb.style.display = 'none';
+                bt.classList.add('open');
+            }, 800);
         };
 
-        window.prevDoc = () => {
-            const container = document.getElementById('doc-v');
-            container.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
-        };
-
-        window.nextDoc = () => {
-            const container = document.getElementById('doc-v');
-            container.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
-        };
-        
-        // Touch Swiping
-        let ts=0, ty=0;
-        document.addEventListener('touchstart', e => { ts = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive: true});
-        document.addEventListener('touchend', e => {
-            if(!ts || (window.zoom || 1) > 1) return;
-            const te = e.changedTouches[0].clientX;
-            const tye = e.changedTouches[0].clientY;
-            const dx = ts - te;
-            const dy = ty - tye;
-            
-            if(Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
-                const el = e.target.closest('#chat-w') || e.target.closest('.modal-c');
-                if(!el) {
-                    if(dx > 0) nextDoc();
-                    else if(dx < 0) prevDoc();
-                }
+        window.prev = () => {
+            const bv = document.getElementById('b-v');
+            if(bv.scrollTop === 0) {
+                closeToFront();
+            } else {
+                bv.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
             }
-            ts = 0; ty = 0;
-        }, {passive: true});
+        };
+
+        window.next = () => {
+            const bv = document.getElementById('b-v');
+            bv.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+        };
+
+        function closeToFront() {
+            const cb = document.getElementById('c-b');
+            const bt = document.getElementById('b-t');
+            cb.style.display = 'block';
+            bt.classList.remove('open');
+            cb.classList.remove('a-f-o');
+            cb.classList.add('a-f-c');
+            setTimeout(() => cb.classList.remove('a-f-c'), 1200);
+        }
+
+        // Night Shift
+        window.toggleNight = () => {
+            const active = document.body.classList.toggle('night-shift');
+            const btn = document.getElementById('ns-toggle');
+            if(btn) btn.innerText = active ? 'ON' : 'OFF';
+            window.setReaderSetting('ns', active);
+        };
 
         initDoc();
     `;
@@ -137,3 +278,4 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
         ]
     });
 }
+
