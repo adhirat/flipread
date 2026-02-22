@@ -26,10 +26,11 @@ export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 background-position: 0 0, 12px 12px;
             }
             #content-wrapper { 
-                padding: 100px 0 200px 0; 
+                padding: 60px 0 120px 0; 
                 display: flex; 
                 flex-direction: column; 
                 align-items: center; 
+                background: #f3f4f6;
             }
             
             #docx-container {
@@ -39,44 +40,51 @@ export function docxWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 align-items: center;
             }
 
-            /* Customizing docx-preview output */
+            /* Standard A4 Page Layout */
             .docx-wrapper {
                 background: transparent !important;
                 padding: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;
-                gap: 60px !important;
+                gap: 40px !important;
                 width: 100% !important;
             }
 
             .docx-wrapper > section.docx {
                 background: white !important;
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 20mm 25mm !important; /* Standard Word Margins */
                 box-shadow: 
-                    0 10px 30px rgba(0,0,0,0.05),
-                    0 1px 8px rgba(0,0,0,0.1),
-                    0 40px 100px rgba(0,0,0,0.08) !important;
-                margin-bottom: 0 !important;
-                border: 1px solid rgba(0,0,0,0.05) !important;
+                    0 0 1px rgba(0,0,0,0.15),
+                    0 10px 30px rgba(0,0,0,0.08),
+                    0 30px 70px rgba(0,0,0,0.1) !important;
+                border: none !important;
                 position: relative;
-                width: 850px !important;
-                max-width: 95vw !important;
-                min-height: 1100px;
-                padding: 90px !important;
-                background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png') !important;
                 box-sizing: border-box !important;
-                transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png') !important;
+                transition: transform 0.3s ease;
                 border-radius: 2px;
+                overflow: hidden;
             }
             
-            .docx-wrapper > section.docx:hover {
-                transform: translateY(-8px) scale(1.01);
-                box-shadow: 0 50px 120px rgba(0,0,0,0.12) !important;
+            @media (max-width: 210mm) {
+                .docx-wrapper > section.docx {
+                    width: 95vw !important;
+                    padding: 15mm !important;
+                    min-height: auto !important;
+                }
             }
 
-            /* Fix for paragraphs and content spacing inside pages */
-            .docx p { margin-bottom: 1.25em !important; line-height: 1.6 !important; }
-            .docx h1, .docx h2, .docx h3 { margin-top: 1.5em !important; margin-bottom: 0.75em !important; }
+            .docx-wrapper > section.docx:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 40px 100px rgba(0,0,0,0.15) !important;
+            }
+
+            /* Typography refinement for A4 feel */
+            .docx p { line-height: 1.6 !important; margin-bottom: 1em !important; }
 
             #settings-btn { display: none !important; }
         `,
