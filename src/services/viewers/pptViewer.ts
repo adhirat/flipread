@@ -70,6 +70,7 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
 
     const extraScripts = `
           async function initPpt() {
+              const isOdp = FILE_URL.match(/\\.odp$/i) || TITLE.match(/\\.odp$/i);
               try {
                   $("#ppt-c").pptxToHtml({
                       pptxFileUrl: FILE_URL,
@@ -92,12 +93,15 @@ export function pptViewerHTML(title: string, fileUrl: string, coverUrl: string, 
                   setTimeout(() => { 
                     clearInterval(check); 
                     const ld = document.getElementById('ld-ppt');
-                    if(ld) ld.style.display='none'; 
+                    if(ld && ld.style.display !== 'none') {
+                        if (isOdp) ld.innerHTML = '<i class="fas fa-exclamation-triangle text-amber-500 text-3xl"></i><p class="mt-4">ODP Viewing Limited</p>';
+                        else ld.style.display = 'none';
+                    }
                   }, 10000);
                   
               } catch(e) {
                   const ld = document.getElementById('ld-ppt');
-                  if(ld) ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500"></i><p>Error Loading Presentation</p>';
+                  if(ld) ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-3xl"></i><p class="mt-4">' + (isOdp ? 'ODP Rendering Error' : 'Error Loading Presentation') + '</p>';
               }
           }
           

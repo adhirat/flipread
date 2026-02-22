@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS books (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('pdf', 'epub', 'docx', 'odt', 'ods', 'odp', 'pptx', 'xlsx', 'csv', 'txt', 'md', 'rtf', 'html', 'image', 'audio', 'video')),
+  type TEXT NOT NULL CHECK(type IN ('pdf', 'epub', 'docx', 'odt', 'ods', 'odp', 'pptx', 'xlsx', 'csv', 'tsv', 'txt', 'md', 'rtf', 'html', 'image', 'audio', 'video')),
   file_key TEXT NOT NULL, -- R2 object key
   cover_url TEXT DEFAULT '',
   cover_key TEXT DEFAULT '',

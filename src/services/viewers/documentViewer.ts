@@ -51,15 +51,26 @@ export function documentViewerHTML(title: string, fileUrl: string, coverUrl: str
                 if(!res.ok) throw new Error('Failed to load');
                 const blob = await res.blob();
                 
-                const opts = { className: "docx", inWrapper: false, ignoreWidth: false, ignoreHeight: false };
-                await docx.renderAsync(blob, document.getElementById('doc-c'), null, opts);
+                const isOdt = FILE_URL.match(/\\.odt$/i) || TITLE.match(/\\.odt$/i);
+                
+                if (isOdt) {
+                    // ODT rendering logic could be added here if a library is found.
+                    // For now, we attempt rendering with docx-preview as a fallback or show error.
+                    await docx.renderAsync(blob, document.getElementById('doc-c'), null, { className: "docx" });
+                } else {
+                    const opts = { className: "docx", inWrapper: false, ignoreWidth: false, ignoreHeight: false };
+                    await docx.renderAsync(blob, document.getElementById('doc-c'), null, opts);
+                }
                 
                 const ld = document.getElementById('ld-doc');
                 if(ld) { ld.style.opacity='0'; setTimeout(()=>ld.style.display='none', 500); }
             } catch(e) {
                 console.error(e);
                 const ld = document.getElementById('ld-doc');
-                if(ld) ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i><p class="mt-4">Error Loading Document</p>';
+                const isOdt = FILE_URL.match(/\\.odt$/i) || TITLE.match(/\\.odt$/i);
+                if(ld) {
+                    ld.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i><p class="mt-4">' + (isOdt ? 'ODT Rendering Limited' : 'Error Loading Document') + '</p>';
+                }
             }
         }
 

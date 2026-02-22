@@ -1,7 +1,7 @@
 
 import { getWebViewerBase } from './webViewerBase';
 
-export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead', fileType: string = 'txt'): string {
     return getWebViewerBase({
         title,
         fileUrl,
@@ -13,7 +13,10 @@ export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         showTTS: false,
         showNightShift: true,
         dependencies: [
-            'https://cdn.jsdelivr.net/npm/marked/marked.min.js'
+            'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+            'https://unpkg.com/rtf.js/dist/WMFJS.bundle.js',
+            'https://unpkg.com/rtf.js/dist/EMFJS.bundle.js',
+            'https://unpkg.com/rtf.js/dist/RTFJS.bundle.js'
         ],
         settingsHtml: `
             <div id="set-m">
@@ -72,7 +75,25 @@ export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                     const textDiv = document.createElement('div');
                     textDiv.id = 'text-container';
                     
-                    if (FU.endsWith('.md')) {
+                    const FILE_TYPE = "${fileType}";
+                    const isMarkdown = FILE_TYPE === 'md' || FU.endsWith('.md');
+                    const isHtml = FILE_TYPE === 'html' || FU.match(/\\.html?$/i);
+                    const isRtf = FILE_TYPE === 'rtf' || FU.match(/\\.rtf$/i);
+
+                    if (isHtml) {
+                        textDiv.innerHTML = text;
+                    } else if (isRtf) {
+                        try {
+                            const buf = await (await fetch(FU)).arrayBuffer();
+                            const doc = new RTFJS.Document(buf);
+                            const htmlEls = await doc.render();
+                            textDiv.innerHTML = '';
+                            htmlEls.forEach(h => textDiv.appendChild(h));
+                        } catch(re) {
+                            console.error("RTF Render Error:", re);
+                            textDiv.innerText = text;
+                        }
+                    } else if (isMarkdown) {
                         textDiv.className = 'markdown-body';
                         textDiv.innerHTML = marked.parse(text);
                     } else {
@@ -82,7 +103,7 @@ export function textWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                     container.appendChild(textDiv);
                     
                     // TOC for Markdown
-                    if (FU.endsWith('.md')) {
+                    if (isMarkdown) {
                         const headers = textDiv.querySelectorAll('h1, h2, h3');
                         const tocList = document.getElementById('toc-list');
                         headers.forEach((h, i) => {

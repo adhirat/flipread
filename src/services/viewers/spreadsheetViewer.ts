@@ -51,9 +51,10 @@ export function spreadsheetViewerHTML(title: string, fileUrl: string, coverUrl: 
                 if(!res.ok) throw new Error('Failed to load');
                 const buf = await res.arrayBuffer();
 
-                // Detect CSV by file extension or content type
                 const ct = res.headers.get('content-type') || '';
-                if(ct.includes('text/csv') || FILE_URL.match(/\\.csv$/i)) {
+                const isText = ct.includes('text/') || FILE_URL.match(/\\.(csv|tsv|txt)$/i);
+
+                if(isText) {
                     const text = new TextDecoder().decode(buf);
                     workbook = XLSX.read(text, { type: 'string' });
                 } else {

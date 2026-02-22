@@ -57,8 +57,17 @@ export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUr
                     }
 
                     const res = await fetch(FU);
-                    const arrayBuffer = await res.arrayBuffer();
-                    workbook = XLSX.read(arrayBuffer);
+                    const buf = await res.arrayBuffer();
+                    
+                    const ct = res.headers.get('content-type') || '';
+                    const isText = ct.includes('text/') || FU.match(/\\.(csv|tsv|txt)$/i);
+
+                    if(isText) {
+                        const text = new TextDecoder().decode(buf);
+                        workbook = XLSX.read(text, { type: 'string' });
+                    } else {
+                        workbook = XLSX.read(buf, { type: 'array' });
+                    }
                     
                     const container = document.getElementById('content-wrapper');
                     const tabs = document.createElement('div');

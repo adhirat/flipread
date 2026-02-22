@@ -1,7 +1,7 @@
 import { getViewerBase } from './viewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function textViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+export function textViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, unknown>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead', fileType: string = 'txt'): string {
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
 
@@ -46,8 +46,9 @@ export function textViewerHTML(title: string, fileUrl: string, coverUrl: string,
     `;
 
     const extraScripts = `
-        const isMarkdown = FILE_URL.match(/\\.(md|markdown)$/i) || TITLE.match(/\\.(md|markdown)$/i);
-        const isHtml = FILE_URL.match(/\\.html?$/i) || TITLE.match(/\\.html?$/i);
+        const FILE_TYPE = "${fileType}";
+        const isMarkdown = FILE_TYPE === 'md' || FILE_URL.match(/\\.(md|markdown)$/i) || TITLE.match(/\\.(md|markdown)$/i);
+        const isHtml = FILE_TYPE === 'html' || FILE_URL.match(/\\.html?$/i) || TITLE.match(/\\.html?$/i);
 
         async function initText() {
             try {
@@ -58,6 +59,18 @@ export function textViewerHTML(title: string, fileUrl: string, coverUrl: string,
 
                 if(isHtml) {
                     el.innerHTML = text;
+                } else if(FILE_TYPE === 'rtf' || TITLE.match(/\\.rtf$/i)) {
+                    try {
+                        const buf = await (await fetch(FILE_URL)).arrayBuffer();
+                        const doc = new RTFJS.Document(buf);
+                        const htmlEls = await doc.render();
+                        el.innerHTML = '';
+                        htmlEls.forEach(h => el.appendChild(h));
+                    } catch(re) {
+                        console.error("RTF Render Error:", re);
+                        el.textContent = text;
+                        el.classList.add('plain-text');
+                    }
                 } else if(isMarkdown) {
                     marked.setOptions({ 
                         breaks: true, 
@@ -132,7 +145,10 @@ export function textViewerHTML(title: string, fileUrl: string, coverUrl: string,
         settingsHtml,
         dependencies: [
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'
+            'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js',
+            'https://unpkg.com/rtf.js/dist/WMFJS.bundle.js',
+            'https://unpkg.com/rtf.js/dist/EMFJS.bundle.js',
+            'https://unpkg.com/rtf.js/dist/RTFJS.bundle.js'
         ]
     });
 }

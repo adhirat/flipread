@@ -45,7 +45,7 @@ export function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-export type FileType = 'pdf' | 'epub' | 'docx' | 'odt' | 'ods' | 'odp' | 'pptx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'rtf' | 'html' | 'image' | 'audio' | 'video';
+export type FileType = 'pdf' | 'epub' | 'docx' | 'odt' | 'ods' | 'odp' | 'pptx' | 'xlsx' | 'csv' | 'tsv' | 'txt' | 'md' | 'rtf' | 'html' | 'image' | 'audio' | 'video';
 
 const FILE_TYPE_MAP: Record<string, FileType> = {
   pdf: 'pdf',
@@ -57,6 +57,7 @@ const FILE_TYPE_MAP: Record<string, FileType> = {
   xls: 'xlsx',
   xlsx: 'xlsx',
   csv: 'csv',
+  tsv: 'tsv',
   txt: 'txt',
   md: 'md',
   rtf: 'rtf',
