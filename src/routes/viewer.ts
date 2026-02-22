@@ -30,9 +30,9 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
 
   if (mode === 'web') {
     if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['doc', 'docx', 'odt'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['ppt', 'pptx', 'odp'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['xlsx', 'xls', 'csv', 'ods'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     if (book.type === 'audio') return audioWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
@@ -42,11 +42,11 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
 
   if (book.type === 'pdf') {
     return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['doc', 'docx'].includes(book.type)) {
+  } else if (['doc', 'docx', 'odt'].includes(book.type)) {
     return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['ppt', 'pptx'].includes(book.type)) {
+  } else if (['ppt', 'pptx', 'odp'].includes(book.type)) {
     return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['xlsx', 'xls', 'csv'].includes(book.type)) {
+  } else if (['xlsx', 'xls', 'csv', 'ods'].includes(book.type)) {
     return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['txt', 'md', 'rtf', 'html'].includes(book.type)) {
     return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
@@ -181,6 +181,9 @@ viewer.get('/api/file/:bookId', async (c) => {
     txt: 'text/plain',
     md: 'text/plain',
     rtf: 'application/rtf',
+    odt: 'application/vnd.oasis.opendocument.text',
+    ods: 'application/vnd.oasis.opendocument.spreadsheet',
+    odp: 'application/vnd.oasis.opendocument.presentation',
     html: 'text/html',
     image: 'application/octet-stream',
     audio: 'audio/mpeg',

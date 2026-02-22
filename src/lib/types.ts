@@ -43,7 +43,7 @@ export interface Book {
   user_id: string;
   title: string;
   slug: string;
-  type: 'pdf' | 'epub' | 'doc' | 'docx' | 'ppt' | 'pptx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'rtf' | 'html' | 'image' | 'audio' | 'video';
+  type: 'pdf' | 'epub' | 'doc' | 'docx' | 'odt' | 'ods' | 'odp' | 'ppt' | 'pptx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'rtf' | 'html' | 'image' | 'audio' | 'video';
   file_key: string;
   cover_url: string;
   cover_key: string;

@@ -1721,7 +1721,7 @@ if (document.getElementById('contact-form')) {
     };
 
     try {
-      const res = await fetch(\`\${location.pathname.replace(/\\/$/, '')}/inquiry\`, {
+      const res = await fetch('/store/${storeHandle}/inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

@@ -39,9 +39,9 @@ export const inquiriesView = `
     <!-- Inquiry Detail Modal -->
     <div id="inquiry-modal" class="modal">
       <div class="modal-content" style="max-width:700px">
-        <div class="modal-header">
-          <h3>Inquiry Details</h3>
-          <i class="fas fa-times" onclick="hideModal('inquiry-modal')" style="cursor:pointer"></i>
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3 style="margin:0; font-size:22px;">Inquiry Details</h3>
+          <i class="fas fa-times close-icon" onclick="hideModal('inquiry-modal')" style="cursor:pointer; font-size:20px; color:var(--text-muted); padding:4px; transition:color 0.2s;"></i>
         </div>
         <div class="modal-body">
           <div id="inquiry-detail-content"></div>
@@ -67,14 +67,16 @@ export const inquiriesView = `
             </div>
           </div>
         </div>
-        <div class="modal-footer" id="inquiry-modal-footer">
-          <div id="inquiry-actions-left" style="display:flex;gap:8px">
-              <button class="btn" onclick="convertInquiryToMember()"><i class="fas fa-user-plus"></i> Add as Member</button>
+        <div class="modal-footer" id="inquiry-modal-footer" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:24px; padding-top:24px; border-top:1px solid var(--border);">
+          <div id="inquiry-actions-left" style="display:flex; gap:8px;">
+              <button class="btn-outline" style="color:var(--text-primary); border-color:var(--border);" onclick="convertInquiryToMember()"><i class="fas fa-user-plus" style="margin-right:6px;"></i> Add as Member</button>
           </div>
           <div style="flex:1"></div>
-          <button class="btn-outline" onclick="toggleResponse(true)" id="btn-open-reply"><i class="fas fa-reply"></i> Reply</button>
-          <button class="btn" id="btn-mark-status" onclick="updateInquiryStatus()"></button>
-          <button class="btn-outline" style="color:var(--accent-magenta);border-color:var(--accent-magenta)" onclick="archiveInquiry()"><i class="fas fa-archive"></i> Archive</button>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="btn-outline" onclick="toggleResponse(true)" id="btn-open-reply"><i class="fas fa-reply" style="margin-right:6px;"></i> Reply</button>
+              <button class="btn" id="btn-mark-status" onclick="updateInquiryStatus()"></button>
+              <button class="btn-outline" style="color:var(--accent-magenta); border-color:var(--accent-magenta);" onclick="archiveInquiry()"><i class="fas fa-archive" style="margin-right:6px;"></i> Archive</button>
+          </div>
         </div>
       </div>
     </div>
