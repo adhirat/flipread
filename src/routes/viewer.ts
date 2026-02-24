@@ -134,10 +134,31 @@ viewer.get('/:slug', async (c) => {
 // GET /api/file/:bookId — serve the actual file from R2
 viewer.get('/api/file/:bookId', async (c) => {
   const bookId = c.req.param('bookId');
+  const cacheKey = `file_meta:${bookId}`;
 
-  const book = await c.env.DB.prepare(
-    'SELECT file_key, type FROM books WHERE id = ? AND is_public = 1'
-  ).bind(bookId).first<{ file_key: string; type: string }>();
+  // Try to get from KV cache first
+  let book: { file_key: string; type: string } | null = null;
+  const cached = await c.env.KV.get(cacheKey);
+
+  if (cached) {
+    try {
+      book = JSON.parse(cached);
+    } catch (e) {
+      console.error('Failed to parse cached book metadata', e);
+    }
+  }
+
+  // If not in cache, lookup in DB
+  if (!book) {
+    book = await c.env.DB.prepare(
+      'SELECT file_key, type FROM books WHERE id = ? AND is_public = 1'
+    ).bind(bookId).first<{ file_key: string; type: string }>();
+
+    if (book) {
+      // Cache for 24 hours
+      await c.env.KV.put(cacheKey, JSON.stringify(book), { expirationTtl: 86400 });
+    }
+  }
 
   if (!book) return c.text('Not found', 404);
 

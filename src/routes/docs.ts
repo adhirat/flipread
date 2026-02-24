@@ -195,6 +195,9 @@ books.patch('/:id', async (c) => {
       `UPDATE books SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`
     ).bind(...values).run();
 
+    // Invalidate KV cache on any update to ensure consistency
+    await c.env.KV.delete(`file_meta:${bookId}`);
+
     // Log activity
     await logActivity(c, user.id, 'update_book', 'book', bookId, updates);
   }
@@ -275,6 +278,9 @@ books.delete('/:id', async (c) => {
 
   // Delete from D1 (cascades to view_logs)
   await c.env.DB.prepare('DELETE FROM books WHERE id = ?').bind(bookId).run();
+
+  // Invalidate KV cache
+  await c.env.KV.delete(`file_meta:${bookId}`);
 
   // Log activity
   await logActivity(c, user.id, 'delete_book', 'book', bookId, { title: book.title });
