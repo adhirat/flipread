@@ -3,6 +3,7 @@
 import { Hono } from 'hono';
 import type { Env, Book } from '../lib/types';
 import { StorageService } from '../services/storage';
+import { getMimeType } from '../lib/utils';
 import { trackView } from '../middleware/viewCounter';
 import { getPlanLimits } from '../lib/plans';
 import { getCookie } from 'hono/cookie';
@@ -52,6 +53,19 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
   } else {
     return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
+}
+
+/**
+ * Helper to serve a file from R2 with consistent headers
+ */
+function serveR2Object(obj: R2ObjectBody, contentType: string, cacheMaxAge: number) {
+  return new Response(obj.body, {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': `public, max-age=${cacheMaxAge}`,
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }
 
 const viewer = new Hono<{ Bindings: Env }>();
@@ -145,35 +159,8 @@ viewer.get('/api/file/:bookId', async (c) => {
   const obj = await storage.getObject(book.file_key);
   if (!obj) return c.text('File not found', 404);
 
-  const contentTypeMap: Record<string, string> = {
-    pdf: 'application/pdf',
-    epub: 'application/epub+zip',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ppt: 'application/vnd.ms-powerpoint',
-    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    csv: 'text/csv',
-    txt: 'text/plain',
-    md: 'text/plain',
-    rtf: 'application/rtf',
-    html: 'text/html',
-    image: 'application/octet-stream',
-  };
-  // For images, detect from the file extension in the key
-  let contentType = contentTypeMap[book.type] || 'application/octet-stream';
-  if (book.type === 'image') {
-    const ext = book.file_key.split('.').pop()?.toLowerCase() || '';
-    const imgMap: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
-    contentType = imgMap[ext] || 'image/jpeg';
-  }
-  return new Response(obj.body, {
-    headers: {
-      'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=3600',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+  const contentType = getMimeType(book.file_key, book.type, book.type === 'image' ? 'image/jpeg' : 'application/octet-stream');
+  return serveR2Object(obj, contentType, 3600);
 });
 
 // GET /api/cover/:bookId — serve cover image from R2
@@ -190,15 +177,8 @@ viewer.get('/api/cover/:bookId', async (c) => {
   const obj = await storage.getObject(book.cover_key);
   if (!obj) return c.text('Cover not found', 404);
 
-  const ext = book.cover_key.split('.').pop() || 'jpg';
-  const mimeMap: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
-  return new Response(obj.body, {
-    headers: {
-      'Content-Type': mimeMap[ext] || 'image/jpeg',
-      'Cache-Control': 'public, max-age=86400',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+  const contentType = getMimeType(book.cover_key, 'image', 'image/jpeg');
+  return serveR2Object(obj, contentType, 86400);
 });
 
 // GET /api/logo/:userId — serve store logo from R2
@@ -215,18 +195,8 @@ viewer.get('/api/logo/:userId', async (c) => {
   const obj = await storage.getObject(user.store_logo_key);
   if (!obj) return c.text('Logo not found', 404);
 
-  const ext = user.store_logo_key.split('.').pop() || 'png';
-  const mimeMap: Record<string, string> = { 
-    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', 
-    webp: 'image/webp', svg: 'image/svg+xml' 
-  };
-  return new Response(obj.body, {
-    headers: {
-      'Content-Type': mimeMap[ext] || 'image/png',
-      'Cache-Control': 'public, max-age=86400',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+  const contentType = getMimeType(user.store_logo_key, 'image', 'image/png');
+  return serveR2Object(obj, contentType, 86400);
 });
 
 export default viewer;

@@ -74,3 +74,41 @@ export function getFileType(filename: string): FileType | null {
   const ext = filename.toLowerCase().split('.').pop() || '';
   return FILE_TYPE_MAP[ext] || null;
 }
+
+const MIME_TYPE_MAP: Record<string, string> = {
+  pdf: 'application/pdf',
+  epub: 'application/epub+zip',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xls: 'application/vnd.ms-excel',
+  csv: 'text/csv',
+  txt: 'text/plain',
+  md: 'text/plain',
+  rtf: 'application/rtf',
+  html: 'text/html',
+  htm: 'text/html',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  svg: 'image/svg+xml',
+};
+
+/**
+ * Returns the MIME type for a given file key and optional type.
+ */
+export function getMimeType(key: string, type?: string, defaultMime: string = 'application/octet-stream'): string {
+  const ext = key.toLowerCase().split('.').pop() || '';
+
+  // If type is provided and it's a known format (not the generic 'image'), use it
+  if (type && type !== 'image' && MIME_TYPE_MAP[type]) {
+    return MIME_TYPE_MAP[type];
+  }
+
+  // Otherwise, use the extension
+  return MIME_TYPE_MAP[ext] || defaultMime;
+}
