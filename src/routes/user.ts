@@ -4,6 +4,7 @@ import type { Env, User } from '../lib/types';
 import { authMiddleware } from '../middleware/auth';
 import { StorageService } from '../services/storage';
 import { logActivity } from '../lib/activity';
+import { sendEmail } from '../services/email';
 
 type Variables = { user: User };
 
@@ -149,6 +150,57 @@ user.post('/store/logo', async (c) => {
 });
 
 /**
+ * POST /api/user/store/hero
+ * Uploads a hero background image for the store.
+ */
+user.post('/store/hero', async (c) => {
+  const currentUser = c.get('user');
+  const formData = await c.req.formData();
+  const file = formData.get('hero') as File | null;
+
+  if (!file) {
+    return c.json({ error: 'No image provided' }, 400);
+  }
+
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    return c.json({ error: 'Hero image must be JPEG, PNG, or WebP' }, 400);
+  }
+
+  // Max 2MB for hero background
+  if (file.size > 2 * 1024 * 1024) {
+    return c.json({ error: 'Hero image must be under 2MB' }, 400);
+  }
+
+  const storage = new StorageService(c.env.BUCKET);
+
+  // Delete old hero if exists
+  const oldHeroKey = currentUser.store_hero_key;
+  if (oldHeroKey) {
+    try {
+      await storage.delete(oldHeroKey);
+    } catch (e) {
+      console.warn('Failed to delete old hero image:', e);
+    }
+  }
+
+  const ext = file.name.split('.').pop() || 'jpg';
+  const heroKey = `heros/${currentUser.id}.${ext}`;
+  await storage.upload(heroKey, await file.arrayBuffer(), file.type);
+
+  const heroUrl = `/read/api/hero/${currentUser.id}`;
+
+  await c.env.DB.prepare(
+    "UPDATE users SET store_hero_url = ?, store_hero_key = ?, updated_at = datetime('now') WHERE id = ?"
+  ).bind(heroUrl, heroKey, currentUser.id).run();
+
+  await logActivity(c, currentUser.id, 'update_store_hero', 'user', currentUser.id);
+
+  return c.json({ success: true, hero_url: heroUrl });
+});
+
+/**
  * GET /api/user/keys
  * Lists all API keys for the user.
  */
@@ -166,6 +218,105 @@ user.get('/activity', async (c) => {
   const currentUser = c.get('user');
   const activity = await c.env.DB.prepare('SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').bind(currentUser.id).all();
   return c.json({ activity: activity.results });
+});
+
+/**
+ * GET /api/user/inquiries
+ * Lists all store inquiries for the user. Supports status filter.
+ */
+user.get('/inquiries', async (c) => {
+  const currentUser = c.get('user');
+  const { status } = c.req.query();
+  
+  let query = 'SELECT * FROM store_inquiries WHERE store_owner_id = ?';
+  const params: any[] = [currentUser.id];
+
+  if (status && ['pending', 'done', 'archived'].includes(status)) {
+    query += ' AND status = ?';
+    params.push(status);
+  } else if (status === 'all') {
+    // Show all
+  } else {
+    // Default: Show pending and done, exclude archived?
+    // Actually, let's default to all non-archived if no status provided
+    query += " AND status != 'archived'";
+  }
+
+  query += ' ORDER BY created_at DESC';
+  
+  const inquiries = await c.env.DB.prepare(query).bind(...params).all();
+  return c.json({ inquiries: inquiries.results });
+});
+
+/**
+ * PATCH /api/user/inquiries/:id
+ * Updates an inquiry (status).
+ */
+user.patch('/inquiries/:id', async (c) => {
+  const currentUser = c.get('user');
+  const id = c.req.param('id');
+  const { status } = await c.req.json<{ status: string }>();
+
+  if (!['pending', 'done', 'archived'].includes(status)) {
+    return c.json({ error: 'Invalid status' }, 400);
+  }
+
+  await c.env.DB.prepare(
+    'UPDATE store_inquiries SET status = ? WHERE id = ? AND store_owner_id = ?'
+  ).bind(status, id, currentUser.id).run();
+
+  await logActivity(c, currentUser.id, 'update_inquiry_status', 'inquiry', id, { status });
+
+  return c.json({ success: true });
+});
+
+/**
+ * POST /api/user/inquiries/:id/respond
+ * Sends an email response to an inquiry.
+ */
+user.post('/inquiries/:id/respond', async (c) => {
+  const currentUser = c.get('user');
+  const id = c.req.param('id');
+  const { subject, message, mark_done } = await c.req.json<{ subject: string; message: string; mark_done?: boolean }>();
+
+  const inquiry = await c.env.DB.prepare(
+    'SELECT * FROM store_inquiries WHERE id = ? AND store_owner_id = ?'
+  ).bind(id, currentUser.id).first();
+
+  if (!inquiry) return c.json({ error: 'Inquiry not found' }, 404);
+
+  // Send email response
+  const sendSuccess = await sendEmail(c.env, {
+    to: inquiry.email as string,
+    subject: subject || `Re: Inquiry about ${currentUser.store_name || 'FlipRead Store'}`,
+    from: `${currentUser.store_name || currentUser.name} <noreply@adhirat.com>`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+        <h2 style="color: #4f46e5; margin-bottom: 20px;">Response from ${currentUser.store_name || currentUser.name}</h2>
+        <p>Hi ${inquiry.name},</p>
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0; white-space: pre-wrap;">
+          ${message}
+        </div>
+        <p style="color: #64748b; font-size: 14px; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+          Original Inquiry: " ${inquiry.message} "
+        </p>
+      </div>
+    `
+  });
+
+  if (!sendSuccess) {
+    return c.json({ error: 'Failed to send email' }, 500);
+  }
+
+  if (mark_done) {
+    await c.env.DB.prepare(
+      "UPDATE store_inquiries SET status = 'done' WHERE id = ? AND store_owner_id = ?"
+    ).bind(id, currentUser.id).run();
+  }
+
+  await logActivity(c, currentUser.id, 'respond_to_inquiry', 'inquiry', id);
+
+  return c.json({ success: true });
 });
 
 /**

@@ -29,14 +29,38 @@ export const sidebar = `
       <div onclick="switchView('dashboard');closeSidebar()" class="nav-item active" id="nav-dashboard" title="Dashboard">
         <i class="fas fa-home"></i> <span>Dashboard</span>
       </div>
+      <div onclick="switchView('composer');closeSidebar()" class="nav-item" id="nav-composer" title="Composer">
+        <i class="fas fa-edit"></i> <span>Composer</span>
+      </div>
       <div onclick="switchView('docs');closeSidebar()" class="nav-item" id="nav-docs" title="Docs">
         <i class="fas fa-file-alt"></i> <span>Docs</span>
+      </div>
+      <div onclick="switchView('utilities');closeSidebar()" class="nav-item" id="nav-utilities" title="Utilities">
+        <i class="fas fa-tools"></i> <span>Utilities</span>
+      </div>
+      <div onclick="switchView('products');closeSidebar()" class="nav-item" id="nav-products" title="Products">
+        <i class="fas fa-box"></i> <span>Products</span>
+      </div>
+      <div onclick="switchView('orders');closeSidebar()" class="nav-item" id="nav-orders" title="Orders">
+        <i class="fas fa-shopping-cart"></i> <span>Orders</span>
+      </div>
+      <div onclick="switchView('categories');closeSidebar()" class="nav-item" id="nav-categories" title="Categories">
+        <i class="fas fa-tags"></i> <span>Categories</span>
+      </div>
+      <div onclick="switchView('promotions');closeSidebar()" class="nav-item" id="nav-promotions" title="Promotions">
+        <i class="fas fa-bullhorn"></i> <span>Promotions</span>
+      </div>
+      <div onclick="switchView('integrations');closeSidebar()" class="nav-item" id="nav-integrations" title="Integrations">
+        <i class="fas fa-plug"></i> <span>Integrations</span>
       </div>
       <div onclick="switchView('store');closeSidebar()" class="nav-item" id="nav-store" title="Store">
         <i class="fas fa-store"></i> <span>Store</span>
       </div>
       <div onclick="switchView('members');closeSidebar()" class="nav-item" id="nav-members" title="Members">
         <i class="fas fa-users"></i> <span>Members</span>
+      </div>
+      <div onclick="switchView('inquiries');closeSidebar()" class="nav-item" id="nav-inquiries" title="Inquiries">
+        <i class="fas fa-envelope"></i> <span>Inquiries</span>
       </div>
       <div onclick="switchView('subscription');closeSidebar()" class="nav-item" id="nav-subscription" title="Subscription">
         <i class="fas fa-credit-card"></i> <span>Subscription</span>

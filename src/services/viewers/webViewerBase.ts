@@ -18,10 +18,33 @@ export interface WebViewerOptions {
     storeName?: string;
     showHighlights?: boolean;
     showZoom?: boolean;
+    showNightShift?: boolean;
+    showTexture?: boolean;
+    showFullMode?: boolean;
 }
 
 export function getWebViewerBase(options: WebViewerOptions): string {
-    const { title, fileUrl, coverUrl, settings, showBranding, logoUrl = '', storeUrl = '/', extraStyles = '', extraHtml = '', extraScripts = '', settingsHtml = '', dependencies = [], showTTS = false, storeName = 'FlipRead', showHighlights = true, showZoom = false } = options;
+    const { 
+        title, 
+        fileUrl, 
+        coverUrl, 
+        settings, 
+        showBranding, 
+        logoUrl = '', 
+        storeUrl = '/', 
+        extraStyles = '', 
+        extraHtml = '', 
+        extraScripts = '', 
+        settingsHtml = '', 
+        dependencies = [], 
+        showTTS = false, 
+        storeName = 'FlipRead', 
+        showHighlights = true, 
+        showZoom = false,
+        showNightShift = false,
+        showTexture = false,
+        showFullMode = false
+    } = options;
     const bg = (settings.background as string) || '#ffffff';
     const accent = (settings.accent_color as string) || '#4f46e5';
     const safeTitle = escapeHtml(title);
@@ -45,6 +68,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -63,8 +87,15 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 1em; color: #111; }
         p { line-height: 1.8; margin-bottom: 1.5em; font-size: 1.125rem; color: #374151; }
         
+        /* Night Shift Overlay */
+        body.night-shift::after {
+            content: ""; position: fixed; inset: 0; background: rgba(255, 140, 0, 0.1); 
+            pointer-events: none; z-index: 10000; mix-blend-mode: multiply;
+        }
+        
         /* Main Content */
-        #content-wrapper { width: 100%; margin: 0 auto; padding: 40px 0 200px 0; min-height: calc(100vh - 60px); }
+        #content-wrapper { width: 100%; margin: 0 auto; padding: 40px 0 200px 0; min-height: calc(100vh - 60px); transition: max-width 0.3s ease; }
+        body.full-mode #content-wrapper { max-width: 100% !important; }
         
         /* Dynamic Sections */
         .page-content { margin: 0; padding: 0; }
@@ -164,11 +195,11 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             pointer-events: none;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .header.up {
+        .header.visible {
             transform: translateY(0);
             opacity: 1;
         }
-        .header.down {
+        .header.hidden {
             transform: translateY(-100%);
             opacity: 0;
         }
@@ -325,8 +356,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 padding: 0 !important;
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s !important;
             }
-            .controls.down { transform: translate(-50%, 100px) !important; opacity: 0 !important; }
-            .controls.up { transform: translate(-50%, 0) !important; opacity: 1 !important; }
+            .controls.hidden { transform: translate(-50%, 100px) !important; opacity: 0 !important; }
+            .controls.visible { transform: translate(-50%, 0) !important; opacity: 1 !important; }
             .footer-icons-mobile {
                 display: flex !important;
                 width: 100%;
@@ -356,6 +387,21 @@ export function getWebViewerBase(options: WebViewerOptions): string {
                 width: 100vw !important; height: 100vh !important; 
                 border-radius: 0 !important; z-index: 3000 !important;
             }
+        }
+
+        /* Tablet Adjustments - Left align title */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .header-name {
+                position: relative !important;
+                left: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                text-align: left !important;
+                margin-left: 20px !important;
+                flex: 2 !important;
+                max-width: none !important;
+            }
+            .header-left, .header-icons { flex: none !important; }
         }
 
         #scroll-top {
@@ -423,8 +469,21 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             </button>
             ` : ''}
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
+            ${showNightShift ? `
+            <button class="header-icon" id="night-shift-btn" title="Night Shift">
+                <i class="fas fa-moon"></i>
+            </button>
+            ` : ''}
+
+            ${showFullMode ? `
+            <button class="header-icon" id="full-mode-btn" title="Toggle Full Mode">
+                <i class="fas fa-expand"></i>
+            </button>
+            ` : ''}
+
             <a href="?mode=standard" class="header-icon" id="standard-btn" title="Standard View">
                 <i class="fas fa-book-open"></i>
             </a>
@@ -459,6 +518,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             <button class="header-icon" onclick="window.prevPage()" title="Previous"><i class="fas fa-chevron-up"></i></button>
             <div class="mobile-icons-center">
                 <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
                 <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
                 <a href="?mode=standard" class="header-icon" title="Standard View"><i class="fas fa-book-open"></i></a>
                 <button class="header-icon" onclick="toggleSettings()" title="Appearance"><i class="fas fa-palette"></i></button>
@@ -484,6 +544,21 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     </div>
 
     ${settingsHtml}
+
+    <!-- QR Modal -->
+    <div id="qr-modal" style="position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: white; border-radius: 20px; width: 340px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden;">
+            <div style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; color: #333;">Scan QR Code</span>
+                <button onclick="window.toggleQR(false)" style="width: 28px; height: 28px; border-radius: 50%; border: none; background: #f5f5f5; color: #666; cursor: pointer;">✕</button>
+            </div>
+            <div style="padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee;"></div>
+                <p style="text-align: center; font-size: 13px; color: #666; margin: 0;">Scan this code with your phone to open this book on the go.</p>
+                <button style="width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer;" onclick="window.toggleQR(false)">Close</button>
+            </div>
+        </div>
+    </div>
     
     ${getSidebarHtml(showHighlights)}
 
@@ -516,22 +591,34 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              if (diff > 0 && curS > 80) {
                  // Scrolling down - hide
                  if (isNavScroll) return;
-                 document.getElementById('main-header').classList.remove('up');
-                 document.getElementById('main-header').classList.add('down');
-                 document.getElementById('main-footer').classList.remove('up');
-                 document.getElementById('main-footer').classList.add('down');
+                 document.getElementById('main-header').classList.remove('visible');
+                 document.getElementById('main-header').classList.add('hidden');
+                 document.getElementById('main-footer').classList.remove('visible');
+                 document.getElementById('main-footer').classList.add('hidden');
              } else if (diff < -10 || curS < 50) {
                  // Scrolling up or at top - show
-                 document.getElementById('main-header').classList.remove('down');
-                 document.getElementById('main-header').classList.add('up');
-                 document.getElementById('main-footer').classList.remove('down');
-                 document.getElementById('main-footer').classList.add('up');
+                 document.getElementById('main-header').classList.remove('hidden');
+                 document.getElementById('main-header').classList.add('visible');
+                 document.getElementById('main-footer').classList.remove('hidden');
+                 document.getElementById('main-footer').classList.add('visible');
              }
              lastS = curS;
 
              // Scroll Top Button
              if (curS > 200) stBtn.classList.add('v');
              else stBtn.classList.remove('v');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            const h = document.getElementById('main-header');
+            const f = document.getElementById('main-footer');
+            const threshold = 60;
+            if (e.clientY < threshold) {
+                if(h) { h.classList.remove('hidden'); h.classList.add('visible'); }
+            }
+            if (window.innerHeight - e.clientY < threshold) {
+                if(f) { f.classList.remove('hidden'); f.classList.add('visible'); }
+            }
         });
 
         window.prevPage = () => {
@@ -576,6 +663,56 @@ export function getWebViewerBase(options: WebViewerOptions): string {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
         };
+
+        window.toggleQR = (show) => {
+            const m = document.getElementById('qr-modal');
+            if(!m) return;
+            if(show) {
+                m.style.display = 'flex';
+                setTimeout(() => m.style.opacity = '1', 10);
+            } else {
+                m.style.opacity = '0';
+                setTimeout(() => m.style.display = 'none', 300);
+            }
+        };
+
+        window.showQRCode = () => {
+            const container = document.getElementById('qrcode-container');
+            if(!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: window.location.href,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            window.toggleQR(true);
+        };
+
+        // Night Shift
+        const nsBtn = document.getElementById('night-shift-btn');
+        if(nsBtn) {
+            const isNS = localStorage.getItem('fr_web_ns') === 'true';
+            if(isNS) document.body.classList.add('night-shift');
+            nsBtn.classList.toggle('text-yellow-400', isNS);
+            
+            nsBtn.onclick = () => {
+                const active = document.body.classList.toggle('night-shift');
+                localStorage.setItem('fr_web_ns', active);
+                nsBtn.classList.toggle('text-yellow-400', active);
+            };
+        }
+
+        // Full Mode
+        const fullBtn = document.getElementById('full-mode-btn');
+        if(fullBtn) {
+            fullBtn.onclick = () => {
+                const isFull = document.body.classList.toggle('full-mode');
+                fullBtn.innerHTML = isFull ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+            };
+        }
 
         ${getSidebarScripts(fileUrl, showHighlights)}
 

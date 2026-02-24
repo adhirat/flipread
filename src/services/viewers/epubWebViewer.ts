@@ -1,5 +1,6 @@
 
 import { getWebViewerBase } from './webViewerBase';
+import { COMMON_READER_SCRIPTS, escapeHtml } from './viewerUtils';
 
 export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
     const accent = (settings.accent_color as string) || '#4f46e5';
@@ -13,11 +14,19 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
         logoUrl,
         storeUrl, storeName,
         showTTS: true,
+        showFullMode: true,
+        showNightShift: true,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js',
             'https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js'
         ],
         extraStyles: `
+            :root {
+                --reader-bg: #ffffff;
+                --reader-accent: ${accent};
+                --reader-text: #1a1a1a;
+            }
+
             /* Hide desktop footer if any */
             @media (min-width: 769px) { #main-footer { display: none !important; } }
 
@@ -156,17 +165,34 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             </div>
         `,
         extraScripts: `
+            function escapeHtml(unsafe) { return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+            ${COMMON_READER_SCRIPTS}
+
             let syn = window.speechSynthesis;
             let utter = null;
             let speaking = false;
             let ttsPaused = false;
-            let amb = null;
+            
+            // Note: FU and highlights are already declared in webViewerBase.ts
 
             async function init() {
                 try {
-                    injectFullscreen();
                     document.getElementById('settings-btn').style.display = 'flex';
+                    
+                    // Sync Full Mode Resize
+                    const fb = document.getElementById('full-mode-btn');
+                    if(fb) {
+                        fb.addEventListener('click', () => {
+                            if(bookRender) {
+                                bookRender.resize();
+                                setTimeout(() => bookRender.resize(), 100);
+                            }
+                        });
+                    }
+
                     const res = await fetch(FU);
+                    if(!res.ok) throw new Error("Failed to fetch book: " + res.statusText);
                     const blob = await res.blob();
                     await renderEPUB(blob);
                     
@@ -175,11 +201,11 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                         opt.onclick = () => window.setBg(opt.getAttribute('data-bg'));
                     });
 
-                    // Initial state from localstorage
-                    const sb = localStorage.getItem('fr_web_bg');
+                    // Initial state from common settings
+                    const sb = window.getReaderSetting('bg');
                     if(sb) window.setBg(sb);
                     
-                    const st = localStorage.getItem('fr_web_tex');
+                    const st = window.getReaderSetting('tex');
                     if(st === 'true') {
                         document.body.classList.add('textured');
                         const texBtn = document.getElementById('tex-toggle');
@@ -191,7 +217,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                         }
                     }
 
-                    const sn = localStorage.getItem('fr_web_ns');
+                    const sn = window.getReaderSetting('ns');
                     if(sn === 'true') {
                         document.body.classList.add('night-shift');
                         const nsToggle = document.getElementById('ns-toggle');
@@ -202,12 +228,9 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                             nsToggle.style.borderColor = 'transparent';
                         }
                     }
-
-                    document.getElementById('ld').style.opacity = '0';
-                    setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
                 } catch(e) {
                     console.error(e);
-                    document.getElementById('ld').innerHTML = '<p class="text-red-500">Error loading content.</p>';
+                    document.getElementById('ld').innerHTML = '<p class="text-red-500">Error loading content: ' + e.message + '</p>';
                 }
             }
 
@@ -220,17 +243,24 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 bookRender = book.renderTo(container, {
                     flow: "scrolled",
                     width: "100%",
-                    manager: "continuous"
+                    manager: "continuous",
+                    allowScriptedContent: true
                 });
                 
                 document.getElementById('settings-btn').style.display='flex';
-                await bookRender.display();
                 
+                let loaderHidden = false;
+
                 bookRender.hooks.content.register(contents => {
                     const doc = contents.document;
                     const win = contents.window;
+                    const iframe = win.frameElement;
                     
-                    // Inject styles and fonts
+                    if (iframe) {
+                        const section = book.spine.get(contents.sectionIndex);
+                        if (section) iframe.setAttribute('data-href', section.href);
+                    }
+
                     const gFont = doc.createElement('link');
                     gFont.rel = 'stylesheet';
                     gFont.href = 'https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700&family=EB+Garamond:wght@400;700&family=Inter:wght@400;700&family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap';
@@ -249,7 +279,6 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                     \`;
                     doc.head.appendChild(style);
 
-                    // Apply stored settings
                     applyAllStyles();
 
                     const resize = () => {
@@ -266,15 +295,70 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                     setTimeout(resize, 100);
                 });
                 
-                const navigation = await book.loaded.navigation;
-                navigation.toc.forEach(chapter => {
-                   const item = document.createElement('div');
-                   item.className = 'toc-item';
-                   item.innerText = chapter.label.trim();
-                   item.onclick = () => { bookRender.display(chapter.href); toggleTOC(); };
-                   tocList.appendChild(item);
+                bookRender.on("relocated", (location) => {
+                    if(location.start.cfi) window.setReaderSetting('cfi_' + FU, location.start.cfi);
+                    
+                    // Reliable loader hide: wait until we have a location and at least one iframe is present
+                    if(!loaderHidden) {
+                        const iframes = document.querySelectorAll('#content-wrapper iframe');
+                        if(iframes.length > 0) {
+                            loaderHidden = true;
+                            // Add a tiny buffer for actual rendering
+                            setTimeout(() => {
+                                document.getElementById('ld').style.opacity = '0';
+                                setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
+                            }, 100);
+                        }
+                    }
                 });
-                
+
+                book.ready.then(async () => {
+                    const navigation = await book.loaded.navigation;
+                    navigation.toc.forEach(chapter => {
+                        const item = document.createElement('div');
+                        item.className = 'toc-item';
+                        item.innerText = chapter.label.trim();
+                        item.onclick = async () => { 
+                            const tocMenu = document.getElementById('toc-menu');
+                            if(tocMenu) tocMenu.classList.remove('open');
+                            const href = chapter.href.split('#')[0];
+                            const iframes = document.querySelectorAll('#content-wrapper iframe');
+                            let found = false;
+                            for(let f of iframes) {
+                                try {
+                                    const iframeHref = f.getAttribute('data-href');
+                                    if(iframeHref && (iframeHref.includes(href) || href.includes(iframeHref))) {
+                                        f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        found = true;
+                                        break;
+                                    }
+                                } catch(e) {}
+                            }
+                            if(!found) await bookRender.display(chapter.href);
+                        };
+                        tocList.appendChild(item);
+                    });
+
+                    if (book.spine) {
+                        const savedCfi = window.getReaderSetting('cfi_' + FU);
+                        // If we have a saved CFI, display it. Otherwise start at beginning.
+                        await bookRender.display(savedCfi || undefined);
+                        
+                        // Apply highlights after initial display
+                        applyHighlights();
+
+                        // Background-preload limited sections
+                        const preloadLimit = 3;
+                        const startIndex = savedCfi ? (book.spine.get(savedCfi) ? book.spine.get(savedCfi).index : 0) : 0;
+                        for(let i = startIndex + 1; i < Math.min(startIndex + preloadLimit + 1, book.spine.length); i++) {
+                            const section = book.spine.get(i);
+                            if(section) bookRender.display(section.href);
+                        }
+                    }
+                    
+                    if(window.renderHighlights) window.renderHighlights();
+                });
+
                 bookRender.on("selected", (cfiRange, contents) => {
                       book.getRange(cfiRange).then(range => {
                           const sel = contents.window.getSelection();
@@ -283,10 +367,8 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                           const iframe = contents.window.frameElement;
                           const iframeRect = iframe.getBoundingClientRect();
                           const rect = sel.getRangeAt(0).getBoundingClientRect();
-                          
                           const top = window.scrollY + iframeRect.top + rect.top - 60;
                           const left = window.scrollX + iframeRect.left + rect.left + (rect.width / 2);
-                          
                           menu.style.top = top + 'px';
                           menu.style.left = left + 'px';
                           menu.style.display = 'flex';
@@ -311,23 +393,29 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                       };
                 });
                 
-                book.ready.then(() => {
+                function applyHighlights() {
                     highlights.forEach(h => {
-                        try { bookRender.annotations.add("highlight", h.cfi, {}, null, 'hl-' + (h.c || 'yellow')); } catch(e){}
-                        
-                        // Repair highlights with missing text (from previous schema)
-                        if(!h.text && h.cfi) {
-                            book.getRange(h.cfi).then(range => {
-                                h.text = range.toString();
-                                localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
-                                if(window.renderHighlights) window.renderHighlights();
-                            }).catch(err => console.error("Highlight repair error:", err));
+                        const cfi = h.cfi || h.range;
+                        if(cfi) {
+                            try { 
+                                bookRender.annotations.add("highlight", cfi, {}, null, 'hl-' + (h.c || 'yellow')); 
+                            } catch(e){}
+                            
+                            if(!(h.t || h.text)) {
+                                book.getRange(cfi).then(range => {
+                                    h.t = range.toString();
+                                    localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
+                                    if(window.renderHighlights) window.renderHighlights();
+                                }).catch(err => {});
+                            }
                         }
                     });
-                    
-                    const fs = localStorage.getItem('fr_web_fs');
-                    const ff = localStorage.getItem('fr_web_ff');
-                    const lh = localStorage.getItem('fr_web_lh');
+                }
+
+                book.ready.then(() => {
+                    const fs = window.getReaderSetting('fs');
+                    const ff = window.getReaderSetting('ff');
+                    const lh = window.getReaderSetting('lh');
                     if(fs) window.changeFontSize(0);
                     if(ff) window.setFont(ff);
                     if(lh) window.setLH(lh);
@@ -341,35 +429,28 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             }
 
             window.setBg = (c) => {
-                 document.body.style.background = c;
-                 localStorage.setItem('fr_web_bg', c);
+                 document.body.style.setProperty('--reader-bg', c);
+                 window.setReaderSetting('bg', c);
                  document.querySelectorAll('.bg-option').forEach(opt => {
                     if(opt.getAttribute('data-bg') === c) opt.classList.add('active');
                     else opt.classList.remove('active');
                  });
-                 // If background is very dark, update UI colors
                  const isDark = c === '#1a1a1a' || c === '#333333' || c === '#0d1b2a' || c === '#1e1e1e' || c === '#2d3436' || c === '#0f172a' || c.includes('black');
                  const content = document.getElementById('set-m-c');
                  content.style.background = isDark ? 'rgba(30, 30, 30, 0.96)' : 'rgba(255, 255, 255, 0.98)';
                  content.style.backdropFilter = 'blur(25px)';
                  content.style.color = isDark ? '#eee' : '#111';
                  content.style.boxShadow = isDark ? '0 0 50px rgba(0,0,0,0.6)' : '0 0 50px rgba(0,0,0,0.1)';
-
                  const header = content.querySelector('.set-m-h div');
                  if(header) header.style.color = isDark ? 'white' : '#111';
-
                  const labels = document.querySelectorAll('.set-label, .modern-stepper span');
-                 labels.forEach(l => {
-                    l.style.color = isDark ? '#ccc' : '#333';
-                 });
-                 
+                 labels.forEach(l => { l.style.color = isDark ? '#ccc' : '#333'; });
                  const selects = document.querySelectorAll('.modern-select');
                  selects.forEach(s => {
                     s.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
                     s.style.color = isDark ? 'white' : '#333';
                     s.style.borderColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
                  });
-
                  const steppers = document.querySelectorAll('.modern-stepper');
                  steppers.forEach(s => {
                     s.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
@@ -379,13 +460,12 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                         b.style.color = isDark ? 'white' : '#111';
                     });
                  });
-
                  applyAllStyles();
              };
 
             window.toggleTexture = () => {
                 const active = document.body.classList.toggle('textured');
-                localStorage.setItem('fr_web_tex', active);
+                window.setReaderSetting('tex', active);
                 const btn = document.getElementById('tex-toggle');
                 btn.innerText = active ? 'ON' : 'OFF';
                 btn.style.background = active ? '${accent}' : 'rgba(0,0,0,0.04)';
@@ -394,20 +474,20 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
             };
 
             window.changeFontSize = (d) => {
-                let current = parseInt(localStorage.getItem('fr_web_fs') || '100');
+                let current = parseInt(window.getReaderSetting('fs', '100'));
                 let wfz = Math.max(50, Math.min(200, current + d));
                 document.getElementById('wfz-v').textContent = wfz + '%';
-                localStorage.setItem('fr_web_fs', wfz);
+                window.setReaderSetting('fs', wfz);
                 applyAllStyles();
             };
             
             window.setFont = (f) => {
-                localStorage.setItem('fr_web_ff', f);
+                window.setReaderSetting('ff', f);
                 applyAllStyles();
             };
 
             window.setLH = (v) => {
-                localStorage.setItem('fr_web_lh', v);
+                window.setReaderSetting('lh', v);
                 const input = document.getElementById('wlh-s');
                 if(input) input.value = v;
                 applyAllStyles();
@@ -415,7 +495,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
 
             window.toggleNight = () => {
                 const active = document.body.classList.toggle('night-shift');
-                localStorage.setItem('fr_web_ns', active);
+                window.setReaderSetting('ns', active);
                 const btn = document.getElementById('ns-toggle');
                 btn.innerText = active ? 'ON' : 'OFF';
                 btn.style.background = active ? '${accent}' : 'rgba(0,0,0,0.04)';
@@ -423,29 +503,14 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 btn.style.borderColor = active ? 'transparent' : 'rgba(0,0,0,0.08)';
             };
 
-            window.playAmbient = (type) => {
-                if(amb) amb.pause();
-                if(type === 'none') return;
-                const urls = { 
-                    rain: 'https://cdn.pixabay.com/audio/2022/03/10/audio_51307b0f69.mp3', 
-                    fire: 'https://cdn.pixabay.com/audio/2021/08/09/audio_65b750170a.mp3', 
-                    library: 'https://cdn.pixabay.com/audio/2023/10/24/audio_985b8c9d0d.mp3' 
-                };
-                amb = new Audio(urls[type]);
-                amb.loop = true;
-                amb.play();
-            };
-
             function applyAllStyles() {
                 if(!bookRender) return;
-                const ff = localStorage.getItem('fr_web_ff') || "'Inter', sans-serif";
-                const fs = localStorage.getItem('fr_web_fs') || "100";
-                const lh = localStorage.getItem('fr_web_lh') || "1.6";
-                
-                const bg = localStorage.getItem('fr_web_bg') || '#ffffff';
+                const ff = window.getReaderSetting('ff', "'Inter', sans-serif");
+                const fs = window.getReaderSetting('fs', "100");
+                const lh = window.getReaderSetting('lh', "1.6");
+                const bg = window.getReaderSetting('bg', '#ffffff');
                 const isDark = bg === '#1a1a1a' || bg === '#333333' || bg === '#0d1b2a' || bg === '#1e1e1e' || bg === '#2d3436' || bg === '#0f172a' || bg.includes('black') || bg.includes('gradient');
                 const textColor = isDark ? '#f8fafc' : '#1a1a1a';
-                
                 bookRender.getContents().forEach(c => {
                     c.addStylesheetRules({
                         "body": {
@@ -462,43 +527,15 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 const m = document.getElementById('set-m');
                 const isOpen = m.classList.toggle('o');
                 const fs = localStorage.getItem('fr_web_fs') || '100';
-                document.getElementById('wfz-v').textContent = fs + '%';
-                
-                // Block/Unblock background scroll
+                const el = document.getElementById('wfz-v');
+                if(el) el.textContent = fs + '%';
                 document.body.style.overflow = isOpen ? 'hidden' : '';
-
-                // Ensure header and footer are visible when modal opens/closes
                 const hdr = document.getElementById('main-header');
                 const ftr = document.getElementById('main-footer');
-                if(hdr) { hdr.classList.remove('down'); hdr.classList.add('up'); }
-                if(ftr) { ftr.classList.remove('down'); ftr.classList.add('up'); }
-                
-                // Force layout recalculation to prevent footer disappearance
-                setTimeout(() => {
-                    if(ftr) ftr.style.display = 'flex';
-                }, 100);
+                if(hdr) { hdr.classList.remove('hidden'); hdr.classList.add('visible'); }
+                if(ftr) { ftr.classList.remove('hidden'); ftr.classList.add('visible'); }
+                setTimeout(() => { if(ftr) ftr.style.display = 'flex'; }, 100);
             };
-
-            function injectFullscreen() {
-                const hdr = document.getElementById('header-icons');
-                const btn = document.createElement('button');
-                btn.className = 'header-icon';
-                btn.title = 'Toggle Fullscreen';
-                btn.innerHTML = '<i class="fas fa-expand"></i>';
-                const notesBtn = document.getElementById('notes-btn');
-                if(notesBtn && hdr.contains(notesBtn)) hdr.insertBefore(btn, notesBtn.nextSibling);
-                else hdr.appendChild(btn);
-                
-                btn.onclick = () => {
-                    if(!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
-                        btn.innerHTML = '<i class="fas fa-compress"></i>';
-                    } else {
-                        document.exitFullscreen();
-                        btn.innerHTML = '<i class="fas fa-expand"></i>';
-                    }
-                };
-            }
 
             window.toggleTTS = () => { if(speaking || ttsPaused) stopTTS(); else startTTS(); };
             window.startTTS = () => {
@@ -512,10 +549,7 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 utter.onstart = () => { speaking = true; ttsPaused = false; updateTTSUI(); };
                 if (syn.paused) syn.resume();
                 syn.cancel(); 
-                setTimeout(() => {
-                    if (syn.paused) syn.resume();
-                    syn.speak(utter);
-                }, 150);
+                setTimeout(() => { if (syn.paused) syn.resume(); syn.speak(utter); }, 150);
                 document.getElementById('tts-ctrls').classList.remove('hidden');
             };
             window.togglePlayPauseTTS = () => {
@@ -523,43 +557,52 @@ export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: stri
                 else { syn.pause(); ttsPaused = true; speaking = false; }
                 updateTTSUI();
             };
-            window.stopTTS = () => {
-                syn.cancel(); speaking = false; ttsPaused = false;
-                document.getElementById('tts-ctrls').classList.add('hidden');
-                updateTTSUI();
-            };
+            window.stopTTS = () => { syn.cancel(); speaking = false; ttsPaused = false; document.getElementById('tts-ctrls').classList.add('hidden'); updateTTSUI(); };
             window.updateTTSUI = () => {
-                const pp = document.getElementById('tts-pp-i');
-                const btn = document.getElementById('tts-btn');
+                const pp = document.getElementById('tts-pp-i'); const btn = document.getElementById('tts-btn');
                 if (pp) pp.className = ttsPaused ? 'fas fa-play' : 'fas fa-pause';
-                if (btn) {
-                    btn.classList.toggle('tts-playing', speaking);
-                    btn.classList.toggle('tts-paused', ttsPaused);
-                }
+                if (btn) { btn.classList.toggle('tts-playing', speaking); btn.classList.toggle('tts-paused', ttsPaused); }
             };
 
             window.addHighlight = (color) => {
                 if(!window.currentSelection) return;
                 const { cfiRange, text, contents } = window.currentSelection;
-                
-                try {
-                    bookRender.annotations.add("highlight", cfiRange, {}, null, 'hl-' + color);
-                } catch(e) { console.error("Highlight error:", e); }
-                
-                highlights.push({ cfi: cfiRange, text, c: color });
+                try { bookRender.annotations.add("highlight", cfiRange, {}, null, 'hl-' + color); } catch(e) {}
+                // Ensure we use the global highlights array
+                highlights.push({ cfi: cfiRange, t: text, d: new Date().toLocaleDateString(), c: color });
                 localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
-                
                 contents.window.getSelection().removeAllRanges();
                 document.getElementById('hl-menu').style.display = 'none';
-                
                 if(window.renderHighlights) window.renderHighlights();
+            };
+
+            window.deleteHighlight = (i) => {
+                if(!confirm('Delete highlight?')) return;
+                try { bookRender.annotations.remove(highlights[i].cfi, "highlight"); } catch(e){}
+                highlights.splice(i, 1);
+                localStorage.setItem('fr_hi_' + FU, JSON.stringify(highlights));
+                window.renderHighlights();
+            };
+
+            window.renderHighlights = () => {
+                const container = document.getElementById('hi-list');
+                if(!container) return;
+                container.innerHTML = highlights.map((h, i) => \`
+                    <div class="chat-item cursor-pointer hover:bg-gray-50 transition-colors" onclick="bookRender.display('\${h.cfi}')">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="w-3 h-3 rounded-full bg-[var(--hl-\${h.c||'yellow'})]" style="background:rgba(255, 165, 0, 0.4)"></div>
+                            <button class="chat-del text-xs" onclick="event.stopPropagation();window.deleteHighlight(\${i})"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="text-xs opacity-80 italic leading-relaxed">"\${h.t || h.text || ''}"</p>
+                    </div>
+                \`).join('');
             };
 
             window.goToHighlight = (i) => {
                 const h = highlights[i];
                 if(h && h.cfi && bookRender) {
                     bookRender.display(h.cfi);
-                    if(window.innerWidth < 1024) toggleChat(); // Close sidebar on mobile
+                    if(window.innerWidth < 1024) toggleChat();
                 }
             };
         `

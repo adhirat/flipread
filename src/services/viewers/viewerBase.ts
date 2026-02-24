@@ -20,6 +20,8 @@ export interface ViewerOptions {
     showTTS?: boolean;
     storeName?: string;
     showHighlights?: boolean;
+    showFullMode?: boolean;
+    showNightShift?: boolean;
 }
 
 export function getViewerBase(options: ViewerOptions): string {
@@ -41,7 +43,9 @@ export function getViewerBase(options: ViewerOptions): string {
         footerHtml = '',
         showTTS = false,
         storeName = 'FlipRead',
-        showHighlights = true
+        showHighlights = true,
+        showFullMode = false,
+        showNightShift = false
     } = options;
     
     const safeTitle = escapeHtml(title);
@@ -63,6 +67,7 @@ export function getViewerBase(options: ViewerOptions): string {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -80,6 +85,12 @@ export function getViewerBase(options: ViewerOptions): string {
             width: 100vw;
             position: fixed;
             transition: background 0.3s ease;
+        }
+
+        /* Night Shift Overlay */
+        body.night-shift::after {
+            content: ""; position: fixed; inset: 0; background: rgba(255, 140, 0, 0.1); 
+            pointer-events: none; z-index: 10000; mix-blend-mode: multiply;
         }
 
         /* Header */
@@ -499,6 +510,21 @@ export function getViewerBase(options: ViewerOptions): string {
             .header-name { max-width: 50vw; font-size: 13px; }
         }
 
+        /* Tablet Adjustments - Left align title */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .header-name {
+                position: relative !important;
+                left: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                text-align: left !important;
+                margin-left: 20px !important;
+                flex: 2 !important;
+                max-width: none !important;
+            }
+            .header-left, .header-icons { flex: none !important; }
+        }
+
         .mobile-controls {
             display: none;
             width: 100%;
@@ -574,7 +600,21 @@ export function getViewerBase(options: ViewerOptions): string {
                 <i class="fas fa-volume-up"></i>
             </button>
             ` : ''}
+
+            ${showFullMode ? `
+            <button class="header-icon" id="full-mode-btn" title="Toggle Full Mode">
+                <i class="fas fa-expand"></i>
+            </button>
+            ` : ''}
+
+            ${showNightShift ? `
+            <button class="header-icon" id="night-shift-btn" title="Night Shift">
+                <i class="fas fa-moon"></i>
+            </button>
+            ` : ''}
+
             <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
             <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
             
             ${showWebViewLink ? `
@@ -666,6 +706,23 @@ export function getViewerBase(options: ViewerOptions): string {
         </div>
     </div>
 
+    <!-- QR Modal -->
+    <div id="qr-modal" class="settings-modal" style="justify-content: center; align-items: center;">
+        <div class="settings-content" style="height: auto; border-radius: 20px; width: 340px; transform: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div class="set-header">
+                <div style="font-weight:600">Scan QR Code</div>
+                <button class="header-icon" onclick="window.toggleModal('qr-modal', false)" style="width:28px; height:28px">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="set-body" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px;">
+                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px;"></div>
+                <p style="text-align: center; font-size: 13px; color: #aaa;">Scan this code with your phone to open this book on the go.</p>
+                <button class="header-icon" style="width: 100%; justify-content: center; border-radius: 10px; background: var(--accent); color: white; padding: 10px; font-weight: 600;" onclick="window.toggleModal('qr-modal', false)">Close</button>
+            </div>
+        </div>
+    </div>
+
     ${getSidebarHtml(showHighlights)}
 
     <div class="controls" id="main-footer">
@@ -680,6 +737,7 @@ export function getViewerBase(options: ViewerOptions): string {
             
             <div class="mobile-icons-center">
                 <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" id="qr-btn-mob" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
                 <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
                 ${showWebViewLink ? `
                 <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>
@@ -696,8 +754,6 @@ export function getViewerBase(options: ViewerOptions): string {
         const FILE_URL = '${fileUrl}';
         const TITLE = '${safeTitle}';
         
-
-
         // --- Shared Logic ---
         window.shareBook = async () => {
             const url = window.location.href;
@@ -722,6 +778,99 @@ export function getViewerBase(options: ViewerOptions): string {
              navigator.clipboard.writeText(window.location.href);
              alert('Link copied!');
         };
+
+        window.showQRCode = () => {
+            const container = document.getElementById('qrcode-container');
+            if(!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: window.location.href,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            window.toggleModal('qr-modal', true);
+        };
+
+        // UI Helpers
+        window.toggleModal = (id, show) => {
+            const m = document.getElementById(id);
+            if(m) m.classList.toggle('open', show);
+        };
+
+        // Shared Background Control
+        window.setBg = (c) => {
+            document.body.style.background = c;
+            localStorage.setItem('fr_bg_choice', c);
+            document.querySelectorAll('.bg-option').forEach(opt => {
+                opt.classList.toggle('active', opt.getAttribute('data-bg') === c);
+            });
+        };
+
+        // Initialize Shared UI
+        document.addEventListener('DOMContentLoaded', () => {
+            // Index Modal
+            const idxBtn = document.getElementById('index-btn');
+            if(idxBtn) idxBtn.onclick = () => window.toggleModal('index-modal', true);
+            const idxClose = document.getElementById('index-close-btn');
+            if(idxClose) idxClose.onclick = () => window.toggleModal('index-modal', false);
+            
+            // Settings Modal
+            const setBtn = document.getElementById('bg-settings-btn');
+            if(setBtn) setBtn.onclick = () => window.toggleModal('settings-modal', true);
+            const setBtnMob = document.getElementById('bg-settings-btn-mob');
+            if(setBtnMob) setBtnMob.onclick = () => window.toggleModal('settings-modal', true);
+            const setClose = document.getElementById('settings-close-btn');
+            if(setClose) setClose.onclick = () => window.toggleModal('settings-modal', false);
+
+            // Background Options
+            document.querySelectorAll('.bg-option').forEach(opt => {
+                opt.onclick = () => window.setBg(opt.getAttribute('data-bg'));
+            });
+            const savedBg = localStorage.getItem('fr_bg_choice');
+            if(savedBg) window.setBg(savedBg);
+
+            // Texture Toggle
+            const texToggle = document.getElementById('tex-toggle');
+            if(texToggle) {
+                const isTex = localStorage.getItem('fr_tex_on') === 'true';
+                if(isTex) document.body.classList.add('textured');
+                texToggle.innerText = isTex ? 'ON' : 'OFF';
+                texToggle.style.background = isTex ? '#4CAF50' : '#444';
+                
+                texToggle.onclick = () => {
+                    const active = document.body.classList.toggle('textured');
+                    localStorage.setItem('fr_tex_on', active);
+                    texToggle.innerText = active ? 'ON' : 'OFF';
+                    texToggle.style.background = active ? '#4CAF50' : '#444';
+                };
+            }
+
+            // Full Mode Toggle
+            const fullBtn = document.getElementById('full-mode-btn');
+            if(fullBtn) {
+                fullBtn.onclick = () => {
+                    const isFull = document.body.classList.toggle('full-mode');
+                    fullBtn.innerHTML = isFull ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                };
+            }
+
+            // Night Shift Toggle
+            const nsBtn = document.getElementById('night-shift-btn');
+            if(nsBtn) {
+                const isNS = localStorage.getItem('fr_ns_on') === 'true';
+                if(isNS) document.body.classList.add('night-shift');
+                nsBtn.classList.toggle('text-yellow-400', isNS);
+
+                nsBtn.onclick = () => {
+                    const active = document.body.classList.toggle('night-shift');
+                    localStorage.setItem('fr_ns_on', active);
+                    nsBtn.classList.toggle('text-yellow-400', active);
+                };
+            }
+        });
 
         ${getSidebarScripts(fileUrl, showHighlights)}
 

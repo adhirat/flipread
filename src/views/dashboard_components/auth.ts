@@ -38,7 +38,7 @@ export const authView = `
     </div>
 
     <div id="back-to-login" class="hidden" style="text-align:center;margin-top:20px;font-size:14px">
-      <a onclick="setAuthMode('login')" style="color:var(--text-secondary);cursor:pointer">← Back to Login</a>
+      <a onclick="setAuthMode('login')" style="color:var(--text-secondary);cursor:pointer">&larr; Back to Login</a>
     </div>
   </div>
 </div>

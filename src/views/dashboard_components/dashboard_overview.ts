@@ -18,6 +18,10 @@ export const dashboardOverview = `
           <div class="stat-val" id="d-plan">Free</div>
           <div class="stat-label">Current Plan</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-val" id="d-inquiries">0</div>
+          <div class="stat-label">Store Inquiries</div>
+        </div>
       </div>
       <div class="card">
         <h3 style="margin-bottom:16px;font-family:'Rajdhani',sans-serif">Quick Actions</h3>

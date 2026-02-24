@@ -2,6 +2,14 @@
 import { getWebViewerBase } from './webViewerBase';
 
 export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+    const albumFiles = settings.album_files as {name: string, key: string, type: string}[] | undefined;
+    const isAlbum = albumFiles && albumFiles.length > 0;
+    
+    let imageUrls = [fileUrl];
+    if (isAlbum) {
+        imageUrls = albumFiles.map((_, i) => `${fileUrl}?i=${i}`);
+    }
+
     return getWebViewerBase({
         title,
         fileUrl,
@@ -10,6 +18,8 @@ export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: str
         showBranding,
         logoUrl,
         storeUrl, storeName,
+        showFullMode: true,
+        showNightShift: true,
         settingsHtml: `
             <div id="set-m">
                 <div class="flex justify-between items-center mb-4">
@@ -29,25 +39,31 @@ export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: str
             </div>
         `,
         extraStyles: `
-            #image-container { display: flex; justify-content: center; padding: 40px 20px; transition: all 0.3s ease; }
+            #image-container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; transition: all 0.3s ease; gap: 40px; }
             #image-container img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); transition: all 0.3s ease; }
+            .content-image { max-width: 100%; }
         `,
         extraScripts: `
             let currentWidth = 100;
+            const imageUrls = ${JSON.stringify(imageUrls)};
             async function init() {
                 try {
                     document.getElementById('settings-btn').style.display = 'flex';
                     const container = document.getElementById('content-wrapper');
                     const div = document.createElement('div');
                     div.id = 'image-container';
-                    const img = document.createElement('img');
-                    img.id = 'main-img';
-                    img.src = FU;
-                    img.alt = 'Content Image';
-                    div.appendChild(img);
+                    
+                    for (const url of imageUrls) {
+                        const img = document.createElement('img');
+                        img.className = 'content-image';
+                        img.src = url;
+                        img.alt = 'Content Image';
+                        div.appendChild(img);
+                    }
+                    
                     container.appendChild(div);
                     
-                    document.getElementById('toc-list').innerHTML = '<div class="p-4 text-xs opacity-50">Image file.</div>';
+                    document.getElementById('toc-list').innerHTML = '<div class="p-4 text-xs opacity-50">${isAlbum ? `Album (${albumFiles.length} images)` : 'Image file.'}</div>';
 
                     document.getElementById('ld').style.opacity = '0';
                     setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
@@ -65,8 +81,8 @@ export function imageWebViewerHTML(title: string, fileUrl: string, coverUrl: str
             window.changeWidth = (d) => {
                 currentWidth = Math.max(20, Math.min(200, currentWidth + d));
                 document.getElementById('width-v').textContent = currentWidth + '%';
-                const img = document.getElementById('main-img');
-                if(img) img.style.maxWidth = currentWidth + '%';
+                const imgs = document.querySelectorAll('.content-image');
+                imgs.forEach(img => img.style.maxWidth = currentWidth + '%');
             };
         `
     });

@@ -10,7 +10,8 @@ import {
   pdfViewerHTML, epubViewerHTML, documentViewerHTML, pptViewerHTML, 
   spreadsheetViewerHTML, textViewerHTML, imageViewerHTML, 
   pdfWebViewerHTML, epubWebViewerHTML, docxWebViewerHTML, pptWebViewerHTML, 
-  spreadsheetWebViewerHTML, textWebViewerHTML, imageWebViewerHTML,
+  spreadsheetWebViewerHTML, textWebViewerHTML, imageWebViewerHTML, audioWebViewerHTML, videoWebViewerHTML,
+  audioViewerHTML, videoViewerHTML,
   passwordPage, errorPage, memberAccessPage 
 } from '../services/viewerTemplates';
 
@@ -29,26 +30,32 @@ export function viewerPage(book: Book & { author_name: string; author_plan: stri
 
   if (mode === 'web') {
     if (book.type === 'pdf') return pdfWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['doc', 'docx'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['ppt', 'pptx'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['xlsx', 'xls', 'csv'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['doc', 'docx', 'odt'].includes(book.type)) return docxWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['ppt', 'pptx', 'odp'].includes(book.type)) return pptWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['xlsx', 'xls', 'csv', 'tsv', 'ods'].includes(book.type)) return spreadsheetWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (['txt', 'md', 'rtf', 'html'].includes(book.type)) return textWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName, book.type);
     if (book.type === 'image') return imageWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (book.type === 'audio') return audioWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    if (book.type === 'video') return videoWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
     return epubWebViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
 
   if (book.type === 'pdf') {
     return pdfViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['doc', 'docx'].includes(book.type)) {
+  } else if (['doc', 'docx', 'odt'].includes(book.type)) {
     return documentViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['ppt', 'pptx'].includes(book.type)) {
+  } else if (['ppt', 'pptx', 'odp'].includes(book.type)) {
     return pptViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
-  } else if (['xlsx', 'xls', 'csv'].includes(book.type)) {
+  } else if (['xlsx', 'xls', 'csv', 'tsv', 'ods'].includes(book.type)) {
     return spreadsheetViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else if (['txt', 'md', 'rtf', 'html'].includes(book.type)) {
-    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+    return textViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName, book.type);
   } else if (book.type === 'image') {
     return imageViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+  } else if (book.type === 'audio') {
+    return audioViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
+  } else if (book.type === 'video') {
+    return videoViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   } else {
     return epubViewerHTML(book.title, fileUrl, coverUrl, settings, showBranding, logoUrl, storeUrl, storeName);
   }
@@ -89,7 +96,7 @@ viewer.get('/:slug', async (c) => {
       // Validate key lightly (or deeply)
       // Deep validation:
       const member = await c.env.DB.prepare(
-        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1 AND is_verified = 1'
       ).bind(book.user_id, accessKey).first();
       if (member) isValid = true;
     }
@@ -134,15 +141,32 @@ viewer.get('/:slug', async (c) => {
 // GET /api/file/:bookId — serve the actual file from R2
 viewer.get('/api/file/:bookId', async (c) => {
   const bookId = c.req.param('bookId');
+  const indexStr = c.req.query('i');
 
   const book = await c.env.DB.prepare(
-    'SELECT file_key, type FROM books WHERE id = ? AND is_public = 1'
-  ).bind(bookId).first<{ file_key: string; type: string }>();
+    'SELECT file_key, type, settings FROM books WHERE id = ? AND is_public = 1'
+  ).bind(bookId).first<{ file_key: string; type: string; settings: string }>();
 
   if (!book) return c.text('Not found', 404);
 
+  let fileKey = book.file_key;
+  if (indexStr !== undefined) {
+    const settings = JSON.parse(book.settings || '{}');
+    const index = parseInt(indexStr);
+    if (settings.album_files && settings.album_files[index]) {
+      fileKey = settings.album_files[index].key;
+    } else {
+      return c.text('File index out of bounds', 404);
+    }
+  } else {
+    const settings = JSON.parse(book.settings || '{}');
+    if (settings.album_files && settings.album_files.length > 0) {
+      fileKey = settings.album_files[0].key;
+    }
+  }
+
   const storage = new StorageService(c.env.BUCKET);
-  const obj = await storage.getObject(book.file_key);
+  const obj = await storage.getObject(fileKey);
   if (!obj) return c.text('File not found', 404);
 
   const contentTypeMap: Record<string, string> = {
@@ -154,18 +178,28 @@ viewer.get('/api/file/:bookId', async (c) => {
     pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     csv: 'text/csv',
+    tsv: 'text/tab-separated-values',
     txt: 'text/plain',
     md: 'text/plain',
     rtf: 'application/rtf',
+    odt: 'application/vnd.oasis.opendocument.text',
+    ods: 'application/vnd.oasis.opendocument.spreadsheet',
+    odp: 'application/vnd.oasis.opendocument.presentation',
     html: 'text/html',
     image: 'application/octet-stream',
+    audio: 'audio/mpeg',
+    video: 'video/mp4',
   };
-  // For images, detect from the file extension in the key
+  // For images or multimedia, detect from the file extension in the key
   let contentType = contentTypeMap[book.type] || 'application/octet-stream';
-  if (book.type === 'image') {
-    const ext = book.file_key.split('.').pop()?.toLowerCase() || '';
-    const imgMap: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
-    contentType = imgMap[ext] || 'image/jpeg';
+  if (['image', 'audio', 'video'].includes(book.type)) {
+    const ext = fileKey.split('.').pop()?.toLowerCase() || '';
+    const extMap: Record<string, string> = { 
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+      mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
+      mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo'
+    };
+    contentType = extMap[ext] || contentType;
   }
   return new Response(obj.body, {
     headers: {
@@ -223,6 +257,34 @@ viewer.get('/api/logo/:userId', async (c) => {
   return new Response(obj.body, {
     headers: {
       'Content-Type': mimeMap[ext] || 'image/png',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+});
+
+// GET /api/hero/:userId — serve store hero image from R2
+viewer.get('/api/hero/:userId', async (c) => {
+  const userId = c.req.param('userId');
+
+  const user = await c.env.DB.prepare(
+    'SELECT store_hero_key FROM users WHERE id = ?'
+  ).bind(userId).first<{ store_hero_key: string }>();
+
+  if (!user || !user.store_hero_key) return c.text('Not found', 404);
+
+  const storage = new StorageService(c.env.BUCKET);
+  const obj = await storage.getObject(user.store_hero_key);
+  if (!obj) return c.text('Hero image not found', 404);
+
+  const ext = user.store_hero_key.split('.').pop() || 'jpg';
+  const mimeMap: Record<string, string> = { 
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', 
+    webp: 'image/webp'
+  };
+  return new Response(obj.body, {
+    headers: {
+      'Content-Type': mimeMap[ext] || 'image/jpeg',
       'Cache-Control': 'public, max-age=86400',
       'Access-Control-Allow-Origin': '*',
     },

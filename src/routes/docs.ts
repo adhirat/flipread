@@ -55,27 +55,48 @@ books.post('/upload', async (c) => {
 
   // Parse multipart form
   const formData = await c.req.formData();
-  const file = formData.get('file') as File | null;
-  const title = (formData.get('title') as string) || 'Untitled Book';
+  const files = formData.getAll('file').filter(f => typeof f !== 'string') as File[];
+  const customTitle = formData.get('title') as string | null;
   const customSlug = formData.get('slug') as string | null;
 
-  if (!file) {
+  if (!files || files.length === 0) {
     return c.json({ error: 'No file provided' }, 400);
   }
 
-  // Validate file type
-  const fileType = getFileType(file.name);
+  // Validate file type(s)
+  let fileType = getFileType(files[0].name);
   if (!fileType) {
-    return c.json({ error: 'Unsupported file type. Supported: PDF, EPUB, DOCX, PPTX, XLSX, CSV, TXT, MD, RTF, HTML, JPG, PNG, GIF, WebP, SVG' }, 400);
+    return c.json({ error: 'Unsupported file type.' }, 400);
   }
 
+  // Handle multiple files
+  if (files.length > 1) {
+    if (user.plan !== 'business') {
+      return c.json({ error: 'Multiple file upload (albums) is only available on the Business plan.' }, 403);
+    }
+    if (fileType !== 'image' && fileType !== 'audio' && fileType !== 'video') {
+      return c.json({ error: 'Albums can only contain image, audio, or video files.' }, 400);
+    }
+    
+    for (const f of files) {
+      if (getFileType(f.name) !== fileType) {
+        return c.json({ error: 'All files in a multiple upload must be the exact same media category (image, audio, or video).' }, 400);
+      }
+    }
+  }
+
+  let totalSize = 0;
+  for (const f of files) totalSize += f.size;
+
   // Validate file size
-  if (file.size > plan.maxFileSizeBytes) {
+  if (totalSize > plan.maxFileSizeBytes) {
     const maxMB = Math.round(plan.maxFileSizeBytes / (1024 * 1024));
     return c.json({
-      error: `File too large. Your ${user.plan} plan allows up to ${maxMB}MB. Upgrade for larger files.`,
+      error: `Total file size too large. Your ${user.plan} plan allows up to ${maxMB}MB. Upgrade for larger files.`,
     }, 413);
   }
+
+  const title = customTitle || (files.length > 1 ? 'Untitled Album' : files[0].name.replace(/\.[^.]+$/, ''));
 
   // Generate IDs
   const bookId = generateId();
@@ -104,14 +125,34 @@ books.post('/upload', async (c) => {
     coverUrl = `/read/api/cover/${bookId}`;
   }
 
-  // Upload to R2
-  const fileKey = StorageService.generateFileKey(user.id, bookId, file.name);
-  await storage.upload(fileKey, await file.arrayBuffer(), file.type);
+  let fileKey = '';
+  let settings: any = {};
+  
+  if (files.length === 1) {
+    const file = files[0];
+    fileKey = StorageService.generateFileKey(user.id, bookId, file.name);
+    await storage.upload(fileKey, await file.arrayBuffer(), file.type);
+  } else {
+    // It's a multiple file album
+    fileKey = `albums/${user.id}/${bookId}/`;
+    const uploadedFiles = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const key = `albums/${user.id}/${bookId}/${i}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        await storage.upload(key, await file.arrayBuffer(), file.type);
+        uploadedFiles.push({
+            name: file.name,
+            key: key,
+            type: file.type
+        });
+    }
+    settings.album_files = uploadedFiles;
+  }
 
   // Insert into D1
   await c.env.DB.prepare(
-    `INSERT INTO books (id, user_id, title, slug, type, file_key, file_size_bytes, max_views, is_public, cover_url, cover_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO books (id, user_id, title, slug, type, file_key, file_size_bytes, max_views, is_public, cover_url, cover_key, settings)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
     bookId,
     user.id,
@@ -119,11 +160,12 @@ books.post('/upload', async (c) => {
     slug,
     fileType,
     fileKey,
-    file.size,
+    totalSize,
     plan.maxMonthlyViews === Infinity ? -1 : plan.maxMonthlyViews,
     1,
     coverUrl,
-    coverKey
+    coverKey,
+    JSON.stringify(settings)
   ).run();
 
   // Log activity
@@ -200,6 +242,91 @@ books.patch('/:id', async (c) => {
   }
 
   return c.json({ success: true });
+});
+
+// POST /api/books/:id/album — add files to existing album
+books.post('/:id/album', async (c) => {
+  const user = c.get('user');
+  const bookId = c.req.param('id');
+  
+  const book = await c.env.DB.prepare(
+    'SELECT * FROM books WHERE id = ? AND user_id = ?'
+  ).bind(bookId, user.id).first<Book>();
+
+  if (!book) return c.json({ error: 'Book not found' }, 404);
+  
+  const formData = await c.req.parseBody();
+  const files = formData['file'];
+  const fileArray = Array.isArray(files) ? files : (files ? [files] : []);
+
+  if (fileArray.length === 0) return c.json({ error: 'No files provided.' }, 400);
+
+  const settings = typeof book.settings === 'string' ? JSON.parse(book.settings) : (book.settings || {});
+  let albumFiles = settings.album_files || [];
+  
+  if (albumFiles.length === 0 && book.file_key && !book.file_key.startsWith('albums/')) {
+    // Current book has single file, convert to album
+    albumFiles.push({
+      name: 'Original File',
+      key: book.file_key,
+      type: book.type
+    });
+  }
+
+  const storage = new StorageService(c.env.BUCKET);
+  const startIndex = albumFiles.length;
+  
+  for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i] as File;
+      const key = `albums/${user.id}/${bookId}/${startIndex + i}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      await storage.upload(key, await file.arrayBuffer(), file.type);
+      albumFiles.push({
+          name: file.name,
+          key: key,
+          type: file.type
+      });
+  }
+  
+  settings.album_files = albumFiles;
+  
+  await c.env.DB.prepare(
+    "UPDATE books SET settings = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
+  ).bind(JSON.stringify(settings), bookId, user.id).run();
+
+  return c.json({ success: true, album_files: albumFiles });
+});
+
+// DELETE /api/books/:id/album/:index — remove file from existing album
+books.delete('/:id/album/:index', async (c) => {
+  const user = c.get('user');
+  const bookId = c.req.param('id');
+  const index = parseInt(c.req.param('index'));
+  
+  const book = await c.env.DB.prepare(
+    'SELECT * FROM books WHERE id = ? AND user_id = ?'
+  ).bind(bookId, user.id).first<Book>();
+
+  if (!book) return c.json({ error: 'Book not found' }, 404);
+  
+  const settings = typeof book.settings === 'string' ? JSON.parse(book.settings) : (book.settings || {});
+  let albumFiles = settings.album_files || [];
+  
+  if (index < 0 || index >= albumFiles.length) {
+    return c.json({ error: 'Index out of bounds' }, 400);
+  }
+  
+  const fileToRemove = albumFiles[index];
+  const storage = new StorageService(c.env.BUCKET);
+  // Optional: delete from R2? await storage.delete(fileToRemove.key);
+  
+  albumFiles.splice(index, 1);
+  settings.album_files = albumFiles;
+  
+  await c.env.DB.prepare(
+    "UPDATE books SET settings = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?"
+  ).bind(JSON.stringify(settings), bookId, user.id).run();
+
+  return c.json({ success: true, album_files: albumFiles });
 });
 
 // POST /api/books/:id/cover — upload cover image

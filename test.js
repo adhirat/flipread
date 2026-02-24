@@ -1,4 +1,4 @@
-export const dashboardScript = `
+
 const API = '';
 let currentUser = null;
 let currentBooks = [];
@@ -116,7 +116,7 @@ function updateUI() {
   document.getElementById('set-email').value = currentUser.email;
   document.getElementById('set-name-input').value = currentUser.name || '';
   
-  const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
+  const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
   document.getElementById('store-link-top').href = '/store/' + encodeURIComponent(handle);
   
   const limits = { free: '5 MB', basic: '10 MB', pro: '50 MB', business: '200 MB' };
@@ -369,7 +369,7 @@ function renderBooks() {
           uploadZone.onclick = null;
           uploadZone.style.opacity = '0.5';
           uploadZone.style.cursor = 'not-allowed';
-          uploadMsg.innerHTML = \`Upload limit reached. Please delete files or upgrade your plan.\`;
+          uploadMsg.innerHTML = `Upload limit reached. Please delete files or upgrade your plan.`;
           uploadMsg.className = 'msg error';
           uploadMsg.style.display = 'inline-block';
           fileInput.disabled = true;
@@ -392,46 +392,46 @@ function renderBooks() {
     container.className = 'book-list';
     container.innerHTML = books.map(b => {
       const url = location.origin + '/read/' + b.slug;
-      return \`<div class="book-list-item">
+      return `<div class="book-list-item">
         <div class="book-thumb">
-          \${b.cover_url ? \`<img src="\${esc(b.cover_url)}">\` : '<i class="fas fa-book" style="font-size:18px;opacity:0.2"></i>'}
+          ${b.cover_url ? `<img src="${esc(b.cover_url)}">` : '<i class="fas fa-book" style="font-size:18px;opacity:0.2"></i>'}
         </div>
         <div class="book-meta">
-          <div class="book-title" title="\${esc(b.title)}">\${esc(b.title)}</div>
-          <div style="font-size:12px;color:var(--text-muted)">\${b.type.toUpperCase()} &middot; \${formatSize(b.file_size_bytes)} &middot; <i class="fas fa-eye"></i> \${b.view_count}</div>
+          <div class="book-title" title="${esc(b.title)}">${esc(b.title)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${b.type.toUpperCase()} &middot; ${formatSize(b.file_size_bytes)} &middot; <i class="fas fa-eye"></i> ${b.view_count}</div>
         </div>
         <div class="book-actions" style="margin-top:0;flex-shrink:0">
-          <button onclick="editBook('\${b.id}')"><i class="fas fa-cog"></i></button>
-          \${canShare ? \`<button onclick="openShareModal('\${b.id}')"><i class="fas fa-share-alt"></i></button>\` : ''}
-          <button onclick="window.open('\${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
-          <button onclick="copyText('\${esc(url)}',this)"><i class="fas fa-link"></i></button>
-          <button onclick="deleteBook('\${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
+          <button onclick="editBook('${b.id}')"><i class="fas fa-cog"></i></button>
+          ${canShare ? `<button onclick="openShareModal('${b.id}')"><i class="fas fa-share-alt"></i></button>` : ''}
+          <button onclick="window.open('${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
+          <button onclick="copyText('${esc(url)}',this)"><i class="fas fa-link"></i></button>
+          <button onclick="deleteBook('${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
         </div>
-      </div>\`;
+      </div>`;
     }).join('');
   } else {
     container.className = 'book-grid';
     container.innerHTML = books.map(b => {
       const url = location.origin + '/read/' + b.slug;
-      return \`<div class="book-item">
+      return `<div class="book-item">
         <div class="book-cover">
-          \${b.cover_url ? \`<img src="\${esc(b.cover_url)}">\` : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>'}
+          ${b.cover_url ? `<img src="${esc(b.cover_url)}">` : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>'}
         </div>
         <div class="book-content">
-          <div class="book-title" title="\${esc(b.title)}">\${esc(b.title)}</div>
+          <div class="book-title" title="${esc(b.title)}">${esc(b.title)}</div>
           <div style="font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between">
-            <span>\${formatSize(b.file_size_bytes)}</span>
-            <span><i class="fas fa-eye"></i> \${b.view_count}</span>
+            <span>${formatSize(b.file_size_bytes)}</span>
+            <span><i class="fas fa-eye"></i> ${b.view_count}</span>
           </div>
           <div class="book-actions">
-            <button onclick="editBook('\${b.id}')"><i class="fas fa-cog"></i></button>
-            \${canShare ? \`<button onclick="openShareModal('\${b.id}')"><i class="fas fa-share-alt"></i></button>\` : ''}
-            <button onclick="window.open('\${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
-            <button onclick="copyText('\${esc(url)}',this)"><i class="fas fa-link"></i></button>
-            <button onclick="deleteBook('\${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
+            <button onclick="editBook('${b.id}')"><i class="fas fa-cog"></i></button>
+            ${canShare ? `<button onclick="openShareModal('${b.id}')"><i class="fas fa-share-alt"></i></button>` : ''}
+            <button onclick="window.open('${esc(url)}','_blank')"><i class="fas fa-external-link-alt"></i></button>
+            <button onclick="copyText('${esc(url)}',this)"><i class="fas fa-link"></i></button>
+            <button onclick="deleteBook('${b.id}')" style="color:var(--accent-magenta)"><i class="fas fa-trash"></i></button>
           </div>
         </div>
-      </div>\`;
+      </div>`;
     }).join('');
   }
 }
@@ -446,7 +446,7 @@ async function handleFileUpload(files) {
   for(let i=0; i < files.length; i++){
     fd.append('file', files[i]);
   }
-  const title = files.length > 1 ? 'Untitled Album' : firstFile.name.replace(/\.[^.]+$/, '');
+  const title = files.length > 1 ? 'Untitled Album' : firstFile.name.replace(/.[^.]+$/, '');
   fd.append('title', title);
 
   try {
@@ -596,10 +596,10 @@ function editBook(id) {
     } else {
       editCategories.innerHTML = globalCategories.map(c => {
         const isChecked = activeCats.includes(c.name) ? 'checked' : '';
-        return \`<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;">
-          <input type="checkbox" class="edit-cat-cb" value="\${esc(c.name)}" \${isChecked}>
-          \${esc(c.name)}
-        </label>\`;
+        return `<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;">
+          <input type="checkbox" class="edit-cat-cb" value="${esc(c.name)}" ${isChecked}>
+          ${esc(c.name)}
+        </label>`;
       }).join('');
     }
   }
@@ -614,12 +614,12 @@ window.renderAlbumFiles = (bookId, albumFiles) => {
        list.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">No files in album.</div>';
        return;
    }
-   list.innerHTML = albumFiles.map((f, i) => \`
+   list.innerHTML = albumFiles.map((f, i) => `
      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border);">
-       <span style="font-size:12px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:70%;" title="\${esc(f.name)}">\${i+1}. \${esc(f.name)}</span>
-       <button onclick="removeAlbumFile('\${bookId}', \${i})" style="color:var(--accent-magenta);background:none;border:none;cursor:pointer;" title="Remove File"><i class="fas fa-trash"></i></button>
+       <span style="font-size:12px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:70%;" title="${esc(f.name)}">${i+1}. ${esc(f.name)}</span>
+       <button onclick="removeAlbumFile('${bookId}', ${i})" style="color:var(--accent-magenta);background:none;border:none;cursor:pointer;" title="Remove File"><i class="fas fa-trash"></i></button>
      </div>
-   \`).join('');
+   `).join('');
 };
 
 window.removeAlbumFile = async (bookId, index) => {
@@ -1083,11 +1083,11 @@ function mdCmd(id, cmd) {
   var insert = '';
   if(cmd === 'bold')   insert = '**' + (sel || 'bold text') + '**';
   if(cmd === 'italic') insert = '*' + (sel || 'italic text') + '*';
-  if(cmd === 'h2')     insert = '\\n## ' + (sel || 'Heading');
-  if(cmd === 'h3')     insert = '\\n### ' + (sel || 'Heading');
-  if(cmd === 'ul')     insert = '\\n- ' + (sel || 'List item');
-  if(cmd === 'ol')     insert = '\\n1. ' + (sel || 'List item');
-  if(cmd === 'hr')     insert = '\\n\\n---\\n';
+  if(cmd === 'h2')     insert = '\n## ' + (sel || 'Heading');
+  if(cmd === 'h3')     insert = '\n### ' + (sel || 'Heading');
+  if(cmd === 'ul')     insert = '\n- ' + (sel || 'List item');
+  if(cmd === 'ol')     insert = '\n1. ' + (sel || 'List item');
+  if(cmd === 'hr')     insert = '\n\n---\n';
   if(cmd === 'link') {
     var url = prompt('Enter URL:', 'https://');
     if(!url) return;
@@ -1119,43 +1119,43 @@ function mdSwitch(id, mode) {
 
 function mdRender(md) {
   if(!md) return '<p style="color:var(--text-muted);font-style:italic">Nothing to preview yet.</p>';
-  var lines = md.split('\\n');
+  var lines = md.split('\n');
   var out = [];
   var inUl = false, inOl = false;
   function flush() { if(inUl){out.push('</ul>');inUl=false;} if(inOl){out.push('</ol>');inOl=false;} }
   function inl(s) {
     return s
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/\\*\\*\\*(.+?)\\*\\*\\*/g,'<strong><em>$1</em></strong>')
-      .replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')
-      .replace(/\\*(.+?)\\*/g,'<em>$1</em>')
-      .replace(/\\x60([^\\x60]+)\\x60/g,'<code>$1</code>')
-      .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g,'<a href="$2" target="_blank">$1</a>');
+      .replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/\x60([^\x60]+)\x60/g,'<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
   }
   for(var ri=0;ri<lines.length;ri++) {
-    var l = lines[ri].replace(/\\s+$/,'');
+    var l = lines[ri].replace(/\s+$/,'');
     if(/^#### /.test(l)){flush();out.push('<h4>'+inl(l.slice(5))+'</h4>');continue;}
     if(/^### /.test(l)) {flush();out.push('<h3>'+inl(l.slice(4))+'</h3>');continue;}
     if(/^## /.test(l))  {flush();out.push('<h2>'+inl(l.slice(3))+'</h2>');continue;}
     if(/^# /.test(l))   {flush();out.push('<h1>'+inl(l.slice(2))+'</h1>');continue;}
-    if(/^---+$/.test(l)||/^\\*\\*\\*[ -]*$/.test(l)){flush();out.push('<hr>');continue;}
+    if(/^---+$/.test(l)||/^\*\*\*[ -]*$/.test(l)){flush();out.push('<hr>');continue;}
     if(/^> /.test(l))   {flush();out.push('<blockquote><p>'+inl(l.slice(2))+'</p></blockquote>');continue;}
     if(/^[*-] /.test(l)) {
       if(inOl){out.push('</ol>');inOl=false;}
       if(!inUl){out.push('<ul>');inUl=true;}
       out.push('<li>'+inl(l.slice(2))+'</li>'); continue;
     }
-    if(/^\\d+\\. /.test(l)) {
+    if(/^\d+\. /.test(l)) {
       if(inUl){out.push('</ul>');inUl=false;}
       if(!inOl){out.push('<ol>');inOl=true;}
-      out.push('<li>'+inl(l.replace(/^\\d+\\. /,''))+'</li>'); continue;
+      out.push('<li>'+inl(l.replace(/^\d+\. /,''))+'</li>'); continue;
     }
     flush();
     if(l === ''){out.push('<br>');continue;}
     out.push('<p>'+inl(l)+'</p>');
   }
   flush();
-  return out.join('\\n');
+  return out.join('\n');
 }
 
 // Members Management
@@ -1226,10 +1226,10 @@ function renderMembers() {
   
   const allSelected = filtered.length > 0 && filtered.every(m => selectedMembers.has(m.id));
 
-  container.innerHTML = \`<table class="members-table">
+  container.innerHTML = `<table class="members-table">
     <thead>
       <tr>
-        <th style="width:40px"><input type="checkbox" onclick="toggleSelectAllMembers(event)" \${allSelected ? 'checked' : ''}></th>
+        <th style="width:40px"><input type="checkbox" onclick="toggleSelectAllMembers(event)" ${allSelected ? 'checked' : ''}></th>
         <th>Name</th>
         <th>Email</th>
         <th>Status</th>
@@ -1237,28 +1237,28 @@ function renderMembers() {
         <th style="text-align:right">Actions</th>
       </tr>
     </thead>
-    <tbody>\` + filtered.map(m => {
+    <tbody>` + filtered.map(m => {
     const v = m.is_verified ? '<span style="color:#10b981;font-size:10px;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-check-circle"></i> Verified</span>' : 
-                               '<span style="color:#f59e0b;font-size:10px;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-clock"></i> Unverified <button onclick="resendVerificationAdmin(\\''+m.id+'\\')" title="Resend Link" style="border:none;background:none;padding:0;cursor:pointer;color:var(--accent-cyan);margin-left:4px;text-decoration:underline"><i class="fas fa-paper-plane"></i> Resend</button></span>';
+                               '<span style="color:#f59e0b;font-size:10px;display:flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-clock"></i> Unverified <button onclick="resendVerificationAdmin(\''+m.id+'\')" title="Resend Link" style="border:none;background:none;padding:0;cursor:pointer;color:var(--accent-cyan);margin-left:4px;text-decoration:underline"><i class="fas fa-paper-plane"></i> Resend</button></span>';
     
     const statusText = m.is_archived ? 'Archived' : (m.is_active ? 'Active' : 'Inactive');
     const statusClass = m.is_archived ? 'inactive' : (m.is_active ? 'active' : 'inactive');
 
-    return \`<tr>
-      <td><input type="checkbox" onclick="toggleSelectMember('\${m.id}')" \${selectedMembers.has(m.id) ? 'checked' : ''}></td>
-      <td><b>\${esc(m.name || '-')}</b></td>
-      <td>\${esc(m.email)}\${v}</td>
-      <td><span class="member-status \${statusClass}" onclick="toggleMemberStatus('\${m.id}')"><i class="fas fa-circle" style="font-size:6px"></i> \${statusText}</span></td>
-      <td><span class="access-key-text" title="\${esc(m.access_key)}">\${esc(m.access_key.substring(0,8))}...</span> <button onclick="copyText('\${esc(m.access_key)}',this)" style="border:none;background:none;cursor:pointer;color:var(--text-muted);padding:4px"><i class="fas fa-copy"></i></button></td>
+    return `<tr>
+      <td><input type="checkbox" onclick="toggleSelectMember('${m.id}')" ${selectedMembers.has(m.id) ? 'checked' : ''}></td>
+      <td><b>${esc(m.name || '-')}</b></td>
+      <td>${esc(m.email)}${v}</td>
+      <td><span class="member-status ${statusClass}" onclick="toggleMemberStatus('${m.id}')"><i class="fas fa-circle" style="font-size:6px"></i> ${statusText}</span></td>
+      <td><span class="access-key-text" title="${esc(m.access_key)}">${esc(m.access_key.substring(0,8))}...</span> <button onclick="copyText('${esc(m.access_key)}',this)" style="border:none;background:none;cursor:pointer;color:var(--text-muted);padding:4px"><i class="fas fa-copy"></i></button></td>
       <td style="text-align:right;white-space:nowrap">
-        <button onclick="editMember('\${m.id}')" class="btn-icon"><i class="fas fa-edit"></i></button> 
-        \${m.is_archived ? 
-            \`<button onclick="archiveMember('\${m.id}', false)" class="btn-icon" title="Restore"><i class="fas fa-undo"></i></button>\` : 
-            \`<button onclick="archiveMember('\${m.id}', true)" class="btn-icon" title="Archive"><i class="fas fa-archive"></i></button>\`
+        <button onclick="editMember('${m.id}')" class="btn-icon"><i class="fas fa-edit"></i></button> 
+        ${m.is_archived ? 
+            `<button onclick="archiveMember('${m.id}', false)" class="btn-icon" title="Restore"><i class="fas fa-undo"></i></button>` : 
+            `<button onclick="archiveMember('${m.id}', true)" class="btn-icon" title="Archive"><i class="fas fa-archive"></i></button>`
         }
-        <button onclick="deleteMember('\${m.id}')" class="btn-icon"><i class="fas fa-trash" style="color:var(--accent-magenta)"></i></button>
+        <button onclick="deleteMember('${m.id}')" class="btn-icon"><i class="fas fa-trash" style="color:var(--accent-magenta)"></i></button>
       </td>
-    </tr>\`;
+    </tr>`;
   }).join('') + '</tbody></table>';
 }
 
@@ -1423,7 +1423,7 @@ function renderShareList() {
     return;
   }
   el.innerHTML = currentShares.map(s => {
-    return '<div class="share-item"><span style="font-size:14px">'+esc(s.shared_with_email)+'</span><button onclick="revokeShare(\\''+s.id+'\\',\\''+document.getElementById('share-book-id').value+'\\')"><i class="fas fa-times" style="color:var(--accent-magenta)"></i></button></div>';
+    return '<div class="share-item"><span style="font-size:14px">'+esc(s.shared_with_email)+'</span><button onclick="revokeShare(\''+s.id+'\',\''+document.getElementById('share-book-id').value+'\')"><i class="fas fa-times" style="color:var(--accent-magenta)"></i></button></div>';
   }).join('');
 }
 
@@ -1492,7 +1492,7 @@ function renderSharedBooks() {
   }
   grid.innerHTML = sharedWithMe.map(b => {
     const url = location.origin + '/read/' + b.slug;
-    return '<div class="book-item"><div class="book-cover">' + (b.cover_url ? '<img src="'+esc(b.cover_url)+'">' : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>') + '</div><div class="book-content"><div class="book-title" title="'+esc(b.title)+'">'+esc(b.title)+'</div><div style="font-size:12px;color:var(--text-muted)">Shared by '+esc(b.owner_name || 'Unknown')+'</div><div class="book-actions"><button onclick="window.open(\\''+esc(url)+'\\',\\'_blank\\')"><i class="fas fa-external-link-alt"></i></button></div></div></div>';
+    return '<div class="book-item"><div class="book-cover">' + (b.cover_url ? '<img src="'+esc(b.cover_url)+'">' : '<i class="fas fa-book" style="font-size:40px;opacity:0.2"></i>') + '</div><div class="book-content"><div class="book-title" title="'+esc(b.title)+'">'+esc(b.title)+'</div><div style="font-size:12px;color:var(--text-muted)">Shared by '+esc(b.owner_name || 'Unknown')+'</div><div class="book-actions"><button onclick="window.open(\''+esc(url)+'\',\'_blank\')"><i class="fas fa-external-link-alt"></i></button></div></div></div>';
   }).join('');
 }
 
@@ -1557,7 +1557,7 @@ function renderCategories() {
   const parentSelect = document.getElementById('new-category-parent');
   
   if (parentSelect) {
-    const parentOptions = globalCategories.map(c => \`<option value="\${esc(c.id)}">\${esc(c.name)}</option>\`).join('');
+    const parentOptions = globalCategories.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
     parentSelect.innerHTML = '<option value="">None (Top-Level Category)</option>' + parentOptions;
   }
   
@@ -1571,7 +1571,7 @@ function renderCategories() {
     if (c.parent_name) {
       nameToRender = '<span style="color:var(--text-muted);font-size:11px">' + esc(c.parent_name) + ' &rsaquo; </span>' + nameToRender;
     }
-    return \`<span style="background:var(--bg-elevated);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;display:inline-block">\${nameToRender}</span>\`
+    return `<span style="background:var(--bg-elevated);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;display:inline-block">${nameToRender}</span>`
   }).join('');
 }
 
@@ -1632,14 +1632,14 @@ function renderProducts() {
     return;
   }
   container.innerHTML = currentProducts.map(p => {
-    return \`
+    return `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--bg-elevated);">
         <div>
-          <h4 style="margin:0; margin-bottom:4px;">\${esc(p.title)} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">\${p.status}</span></h4>
-          <span style="font-size:13px; color:var(--text-secondary);">$\${p.selling_price} | \${p.product_type}</span>
+          <h4 style="margin:0; margin-bottom:4px;">${esc(p.title)} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">${p.status}</span></h4>
+          <span style="font-size:13px; color:var(--text-secondary);">$${p.selling_price} | ${p.product_type}</span>
         </div>
-        <button onclick="editProduct('\${p.id}')" class="btn-outline">Edit</button>
-      </div>\`
+        <button onclick="editProduct('${p.id}')" class="btn-outline">Edit</button>
+      </div>`
   }).join('');
 }
 
@@ -1658,7 +1658,7 @@ function showProductModal() {
   
   const catsContainer = document.getElementById('edit-product-categories');
   if(catsContainer) {
-    catsContainer.innerHTML = globalCategories.map(c => \`<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-prod-cat-cb" value="\${esc(c.id)}"> \${esc(c.name)}</label>\`).join('');
+    catsContainer.innerHTML = globalCategories.map(c => `<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-prod-cat-cb" value="${esc(c.id)}"> ${esc(c.name)}</label>`).join('');
   }
   
   document.getElementById('product-modal-title').textContent = 'New Product';
@@ -1684,7 +1684,7 @@ function editProduct(id) {
   const prodCats = p.categories ? JSON.parse(p.categories) : [];
   const catsContainer = document.getElementById('edit-product-categories');
   if(catsContainer) {
-    catsContainer.innerHTML = globalCategories.map(c => \`<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-prod-cat-cb" value="\${esc(c.id)}" \${prodCats.includes(c.id) ? 'checked': ''}> \${esc(c.name)}</label>\`).join('');
+    catsContainer.innerHTML = globalCategories.map(c => `<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-prod-cat-cb" value="${esc(c.id)}" ${prodCats.includes(c.id) ? 'checked': ''}> ${esc(c.name)}</label>`).join('');
   }
 
   document.getElementById('product-modal-title').textContent = 'Edit Product';
@@ -1761,14 +1761,14 @@ function renderPromotions() {
     return;
   }
   container.innerHTML = currentPromotions.map(p => {
-    return \`
+    return `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--bg-elevated);">
         <div>
-          <h4 style="margin:0; margin-bottom:4px;">\${esc(p.promocode)} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">\${p.status}</span></h4>
-          <span style="font-size:13px; color:var(--text-secondary);">\${p.discount_type === 'percentage' ? p.discount_value + '%' : '$' + p.discount_value} OFF</span>
+          <h4 style="margin:0; margin-bottom:4px;">${esc(p.promocode)} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">${p.status}</span></h4>
+          <span style="font-size:13px; color:var(--text-secondary);">${p.discount_type === 'percentage' ? p.discount_value + '%' : '$' + p.discount_value} OFF</span>
         </div>
-        <button onclick="editPromo('\${p.id}')" class="btn-outline">Edit</button>
-      </div>\`
+        <button onclick="editPromo('${p.id}')" class="btn-outline">Edit</button>
+      </div>`
   }).join('');
 }
 
@@ -1786,7 +1786,7 @@ function showPromoModal() {
   
   const catsContainer = document.getElementById('edit-promo-categories');
   if(catsContainer) {
-    catsContainer.innerHTML = globalCategories.map(c => \`<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-promo-cat-cb" value="\${esc(c.id)}"> \${esc(c.name)}</label>\`).join('');
+    catsContainer.innerHTML = globalCategories.map(c => `<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-promo-cat-cb" value="${esc(c.id)}"> ${esc(c.name)}</label>`).join('');
   }
   
   document.getElementById('promo-modal-title').textContent = 'New Promotion';
@@ -1810,7 +1810,7 @@ function editPromo(id) {
   const promoCats = p.categories ? JSON.parse(p.categories) : [];
   const catsContainer = document.getElementById('edit-promo-categories');
   if(catsContainer) {
-    catsContainer.innerHTML = globalCategories.map(c => \`<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-promo-cat-cb" value="\${esc(c.id)}" \${promoCats.includes(c.id) ? 'checked': ''}> \${esc(c.name)}</label>\`).join('');
+    catsContainer.innerHTML = globalCategories.map(c => `<label style="display:flex; align-items:center; gap:4px; font-size:13px; background:var(--bg-secondary); padding:4px 8px; border-radius:12px; cursor:pointer;"><input type="checkbox" class="edit-promo-cat-cb" value="${esc(c.id)}" ${promoCats.includes(c.id) ? 'checked': ''}> ${esc(c.name)}</label>`).join('');
   }
 
   document.getElementById('promo-modal-title').textContent = 'Edit Promotion';
@@ -1874,14 +1874,14 @@ function renderOrders() {
     return;
   }
   container.innerHTML = currentOrders.map(o => {
-    return \`
+    return `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--bg-elevated);">
         <div>
-          <h4 style="margin:0; margin-bottom:4px;">#\${o.id.split('-')[0]} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">\${o.status}</span></h4>
-          <span style="font-size:13px; color:var(--text-secondary);">$\${o.total_amount} | \${o.member_email || 'Guest'}</span>
+          <h4 style="margin:0; margin-bottom:4px;">#${o.id.split('-')[0]} <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:var(--bg-secondary);">${o.status}</span></h4>
+          <span style="font-size:13px; color:var(--text-secondary);">$${o.total_amount} | ${o.member_email || 'Guest'}</span>
         </div>
-        <button onclick="editOrder('\${o.id}')" class="btn-outline">View/Edit</button>
-      </div>\`
+        <button onclick="editOrder('${o.id}')" class="btn-outline">View/Edit</button>
+      </div>`
   }).join('');
 }
 
@@ -1896,17 +1896,17 @@ function editOrder(id) {
   document.getElementById('edit-order-comments').value = o.comments || '';
   
   // Render readonly info
-  let info = \`Email: \${o.member_email || 'N/A'}<br>Name: \${o.member_name || 'N/A'}<br>Amount Paid: $\${o.total_amount} (Discount: $\${o.discount_amount})\`;
+  let info = `Email: ${o.member_email || 'N/A'}<br>Name: ${o.member_name || 'N/A'}<br>Amount Paid: $${o.total_amount} (Discount: $${o.discount_amount})`;
   if(o.address_details) {
       try {
           const adr = JSON.parse(o.address_details);
-          info += \`<br>Address: \${adr.street}, \${adr.city} \${adr.state}\`;
+          info += `<br>Address: ${adr.street}, ${adr.city} ${adr.state}`;
       } catch(e) {}
   }
   document.getElementById('edit-order-customer-info').innerHTML = info;
   
   // order items would be fetched in a real scenario or passed down in json
-  document.getElementById('edit-order-items-info').innerHTML = \`<em>Items fetch not fully implemented in current list query mapping</em>\`;
+  document.getElementById('edit-order-items-info').innerHTML = `<em>Items fetch not fully implemented in current list query mapping</em>`;
 
   showModal('edit-order-modal');
 }
@@ -2004,7 +2004,7 @@ if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.inner
 
 function viewMyStore() {
   if (currentUser) {
-    const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\\s+/g, '-');
+    const handle = currentUser.store_handle || (currentUser.name || 'user').toLowerCase().replace(/\s+/g, '-');
     window.open('/store/' + encodeURIComponent(handle), '_blank');
   } else {
     alert('Please log in.');
@@ -2029,10 +2029,10 @@ function renderApiKeys(keys) {
         list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px;border:1px dashed var(--border);border-radius:8px">No API keys generated.</div>';
         return;
     }
-    list.innerHTML = keys.map(k => \`<div style="background:var(--bg-elevated);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-family:monospace;font-size:13px;color:var(--text-primary)">\${k.key_value}</div>
-            <button onclick="deleteApiKey('\${k.id}')" style="border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px"><i class="fas fa-trash"></i></button>
-        </div>\`).join('');
+    list.innerHTML = keys.map(k => `<div style="background:var(--bg-elevated);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-family:monospace;font-size:13px;color:var(--text-primary)">${k.key_value}</div>
+            <button onclick="deleteApiKey('${k.id}')" style="border:none;background:none;color:var(--text-muted);cursor:pointer;padding:4px"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
 }
 
 async function generateApiKey() {
@@ -2111,16 +2111,16 @@ async function fetchActivity() {
                     
                     const actionName = l.action.replace(/_/g, ' ');
 
-                    return \`<div style="display:flex;gap:12px;align-items:start;padding:12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border)">
-                        <div style="background:var(--bg-card);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:\${color};flex-shrink:0;border:1px solid var(--border)">
-                            <i class="fas \${icon}"></i>
+                    return `<div style="display:flex;gap:12px;align-items:start;padding:12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border)">
+                        <div style="background:var(--bg-card);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:${color};flex-shrink:0;border:1px solid var(--border)">
+                            <i class="fas ${icon}"></i>
                         </div>
                         <div style="flex:1">
-                            <div style="font-size:13px;font-weight:600;color:var(--text-primary);text-transform:capitalize">\${actionName}</div>
-                            \${detailsText ? \`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;word-break:break-all">\${detailsText}</div>\` : ''}
-                            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">\${date}</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--text-primary);text-transform:capitalize">${actionName}</div>
+                            ${detailsText ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;word-break:break-all">${detailsText}</div>` : ''}
+                            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">${date}</div>
                         </div>
-                    </div>\`;
+                    </div>`;
                 }).join('');
             }
         } else {
@@ -2175,35 +2175,35 @@ function renderInquiries() {
   });
 
   if(filtered.length === 0) {
-    container.innerHTML = \`<div style="text-align:center;padding:40px;color:var(--text-muted)">
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">
         <i class="fas fa-envelope-open-text" style="font-size:48px;margin-bottom:16px;opacity:0.2"></i>
-        <p>\${currentInquiries.length === 0 ? 'No inquiries in this view.' : 'No matching inquiries.'}</p>
-    </div>\`;
+        <p>${currentInquiries.length === 0 ? 'No inquiries in this view.' : 'No matching inquiries.'}</p>
+    </div>`;
     return;
   }
 
   const statEl = document.getElementById('d-inquiries');
   if(statEl) statEl.textContent = filtered.length;
 
-  container.innerHTML = \`<div class="table-responsive"><table class="members-table">
+  container.innerHTML = `<div class="table-responsive"><table class="members-table">
     <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead>
-    <tbody>\${filtered.map(i => {
+    <tbody>${filtered.map(i => {
       const statusIcon = i.status === 'done' ? 'fa-check-circle' : (i.status === 'archived' ? 'fa-archive' : 'fa-clock');
       const statusColor = i.status === 'done' ? '#10b981' : (i.status === 'archived' ? '#64748b' : '#f59e0b');
       
-      return \`<tr style="\${i.status === 'archived' ? 'opacity:0.6' : ''}">
-        <td><b>\${esc(i.name)}</b></td>
-        <td>\${esc(i.email)}</td>
-        <td><span style="color:\${statusColor};font-size:12px;display:inline-flex;align-items:center;gap:6px"><i class="fas \${statusIcon}"></i> \${i.status}</span></td>
-        <td>\${new Date(i.created_at).toLocaleDateString()}</td>
+      return `<tr style="${i.status === 'archived' ? 'opacity:0.6' : ''}">
+        <td><b>${esc(i.name)}</b></td>
+        <td>${esc(i.email)}</td>
+        <td><span style="color:${statusColor};font-size:12px;display:inline-flex;align-items:center;gap:6px"><i class="fas ${statusIcon}"></i> ${i.status}</span></td>
+        <td>${new Date(i.created_at).toLocaleDateString()}</td>
         <td style="text-align:right">
-          <button class="btn-outline" style="padding:4px 10px;font-size:12px" onclick="viewInquiryDetail('\${i.id}')">
+          <button class="btn-outline" style="padding:4px 10px;font-size:12px" onclick="viewInquiryDetail('${i.id}')">
             <i class="fas fa-eye"></i> View
           </button>
         </td>
-      </tr>\`;
+      </tr>`;
     }).join('')}
-    </tbody></table></div>\`;
+    </tbody></table></div>`;
 }
 
 function viewInquiryDetail(id) {
@@ -2211,25 +2211,25 @@ function viewInquiryDetail(id) {
   if(!i) return;
   activeInquiry = i;
   
-  document.getElementById('inquiry-detail-content').innerHTML = \`
+  document.getElementById('inquiry-detail-content').innerHTML = `
     <div style="display:grid;gap:16px;background:var(--bg-elevated);padding:20px;border-radius:12px;border:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:start">
           <div>
               <label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">From</label>
-              <div style="font-size:16px"><b>\${esc(i.name)}</b></div>
-              <div style="color:var(--text-secondary)">\${esc(i.email)}</div>
+              <div style="font-size:16px"><b>${esc(i.name)}</b></div>
+              <div style="color:var(--text-secondary)">${esc(i.email)}</div>
           </div>
-          \${i.mobile ? \`<div><label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Mobile</label><div>\${esc(i.mobile)}</div></div>\` : ''}
+          ${i.mobile ? `<div><label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Mobile</label><div>${esc(i.mobile)}</div></div>` : ''}
       </div>
       <div>
           <label style="font-weight:600;font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Message</label>
-          <div style="white-space:pre-wrap;background:var(--bg-card);padding:14px;border-radius:10px;border:1px solid var(--border);line-height:1.6;font-size:14px">\${esc(i.message)}</div>
+          <div style="white-space:pre-wrap;background:var(--bg-card);padding:14px;border-radius:10px;border:1px solid var(--border);line-height:1.6;font-size:14px">${esc(i.message)}</div>
       </div>
       <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center">
-          <span>Received on \${new Date(i.created_at).toLocaleString()}</span>
-          <span style="text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-tertiary)">ID: \${i.id.substring(0,8)}</span>
+          <span>Received on ${new Date(i.created_at).toLocaleString()}</span>
+          <span style="text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-tertiary)">ID: ${i.id.substring(0,8)}</span>
       </div>
-    </div>\`;
+    </div>`;
 
   // Update status button and archive visibility
   const markBtn = document.getElementById('btn-mark-status');
@@ -2337,4 +2337,3 @@ function convertInquiryToMember() {
   
   showToast('Member info pre-filled. Review and click Add.');
 }
-`;

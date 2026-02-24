@@ -13,6 +13,8 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
         logoUrl,
         storeUrl, storeName,
         showTTS: false,
+        showFullMode: false,
+        showNightShift: true,
         dependencies: [
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
         ],
@@ -115,35 +117,39 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             let utter = null;
             let speaking = false;
             let ttsPaused = false;
-            let currentPdfBlob = null;
+            let currentPdfBlob = FU;
 
-            async function init() {
+            window.init = async () => {
                 try {
-                    injectFullscreen();
                     document.getElementById('settings-btn').style.display = 'flex';
-                    
                     await renderPDF(FU);
+                    setupHeaderZoom();
 
-                    // Initial state from localstorage
                     const sn = localStorage.getItem('fr_web_ns_pdf');
                     if(sn === 'true') {
                         document.body.classList.add('night-shift');
                         const nsToggle = document.getElementById('ns-toggle');
                         if(nsToggle) { 
                             nsToggle.innerText = 'ON'; 
-                            nsToggle.style.background = '${accent}'; 
-                            nsToggle.style.color = 'white'; 
-                            nsToggle.style.borderColor = 'transparent';
+                            if(typeof accent !== 'undefined') {
+                                nsToggle.style.background = '${accent}'; 
+                                nsToggle.style.color = 'white'; 
+                                nsToggle.style.borderColor = 'transparent';
+                            }
                         }
                     }
 
-                    document.getElementById('ld').style.opacity = '0';
-                    setTimeout(() => document.getElementById('ld').style.display = 'none', 500);
+                    const ld = document.getElementById('ld');
+                    if(ld) {
+                        ld.style.opacity = '0';
+                        setTimeout(() => ld.style.display = 'none', 500);
+                    }
                 } catch(e) {
                     console.error(e);
-                    document.getElementById('ld').innerHTML = '<p class="text-red-500">Error loading content.</p>';
+                    const ld = document.getElementById('ld');
+                    if(ld) ld.innerHTML = '<p class="text-red-500">Error loading content.</p>';
                 }
-            }
+            };
 
             let pdfDoc = null;
             let pageStates = new Map(); 
@@ -159,7 +165,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
                 
-                // Pass source object to enable streaming/range requests
                 pdfDoc = await pdfjsLib.getDocument({
                     url: source,
                     disableAutoFetch: true,
@@ -167,10 +172,11 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/',
                     cMapPacked: true,
                 }).promise;
+
                 const container = document.getElementById('content-wrapper');
                 const tocList = document.getElementById('toc-list');
-                tocList.innerHTML = '';
-                container.innerHTML = '';
+                if(tocList) tocList.innerHTML = '';
+                if(container) container.innerHTML = '';
                 pageStates.clear();
                 activePages.clear();
 
@@ -182,13 +188,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                         }
                     });
                 }, { rootMargin: '200% 0px 200% 0px', threshold: 0 });
-
-                // Try to get native outline
-                const outline = await pdfDoc.getOutline();
-                if (outline && outline.length > 0) {
-                    tocList.innerHTML = '';
-                    await buildNativeTOC(outline, tocList);
-                }
 
                 for (let i = 1; i <= pdfDoc.numPages; i++) {
                     const section = document.createElement('div');
@@ -208,17 +207,20 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     canvasWrapper.style.minHeight = '300px';
                     
                     section.appendChild(canvasWrapper);
-                    container.appendChild(section);
+                    if(container) container.appendChild(section);
                     observer.observe(section);
 
-                    const item = document.createElement('div');
-                    item.className = 'toc-item';
-                    item.innerText = 'Page ' + i;
-                    item.onclick = () => {  
-                        document.getElementById('page-'+i).scrollIntoView({behavior:'smooth'});
-                        toggleTOC();
-                    };
-                    tocList.appendChild(item);
+                    if(tocList) {
+                        const item = document.createElement('div');
+                        item.className = 'toc-item';
+                        item.innerText = 'Page ' + i;
+                        item.onclick = () => {  
+                            const p = document.getElementById('page-'+i);
+                            if(p) p.scrollIntoView({behavior:'smooth'});
+                            if(typeof toggleTOC === 'function') toggleTOC();
+                        };
+                        tocList.appendChild(item);
+                    }
                     
                     pageStates.set(i, { status: 'empty' });
                 }
@@ -227,7 +229,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     const firstPage = await pdfDoc.getPage(1);
                     const vp = firstPage.getViewport({ scale: pdfScale });
                     const ratio = vp.height / vp.width;
-                    const containerWidth = container.clientWidth || 900;
+                    const containerWidth = container ? container.clientWidth : 900;
                     const w = Math.min(window.innerWidth - 40, containerWidth);
                     
                     document.querySelectorAll('.page-content').forEach(s => {
@@ -245,8 +247,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 const state = pageStates.get(i);
                 if (!state || state.status === 'rendered' || state.status === 'loading') return;
 
-                // Enforce strict limit on active canvases to prevent memory exhaustion
-                // Prefer purging pages that are already not intersecting if possible
                 if (activePages.size >= MAX_ACTIVE) {
                     let furthestPage = -1;
                     let maxDist = -1;
@@ -257,9 +257,7 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                             furthestPage = p;
                         }
                     });
-                    if (furthestPage !== -1) {
-                        purgePage(furthestPage);
-                    }
+                    if (furthestPage !== -1) purgePage(furthestPage);
                 }
 
                 pageStates.set(i, { status: 'loading' });
@@ -271,36 +269,28 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                     if (!section) return;
                     const wrapper = section.querySelector('.canvas-wrapper');
                     
-                    const dpr = window.devicePixelRatio || 1;
-                    const vp = page.getViewport({ scale: pdfScale * dpr });
+                    const vp = page.getViewport({ scale: pdfScale });
                     const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
                     canvas.className = 'max-w-full h-auto block';
-                    
-                    // Physical pixels (HiDPI)
                     canvas.width = vp.width;
                     canvas.height = vp.height;
-                    
                     wrapper.appendChild(canvas);
 
                     const textLayer = document.createElement('div');
                     textLayer.className = 'textLayer absolute inset-0';
                     wrapper.appendChild(textLayer);
 
-                    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
                     
-                    // The text layer must be sized relative to the UI scale, not the DPR-scaled physical pixels
-                    const uiVp = page.getViewport({ scale: pdfScale });
                     const textContent = await page.getTextContent();
                     pdfjsLib.renderTextLayer({
                         textContent: textContent,
                         container: textLayer,
-                        viewport: uiVp,
+                        viewport: vp,
                         textDivs: []
                     });
 
                     pageStates.set(i, { status: 'rendered', canvas, textLayer });
-                    // Cleanup worker resources for this page
                     page.cleanup();
                     pdfDoc.cleanup();
                 } catch (e) {
@@ -330,12 +320,10 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
 
             window.toggleSettings = () => {
                 const m = document.getElementById('set-m');
+                if(!m) return;
                 const isOpen = m.classList.toggle('o');
-                
-                // Block/Unblock background scroll
                 document.body.style.overflow = isOpen ? 'hidden' : '';
 
-                // Ensure header and footer are visible when modal opens
                 const hdr = document.getElementById('main-header');
                 const ftr = document.getElementById('main-footer');
                 if(hdr) { hdr.classList.remove('down'); hdr.classList.add('up'); }
@@ -356,10 +344,12 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 const active = document.body.classList.toggle('night-shift');
                 localStorage.setItem('fr_web_ns_pdf', active);
                 const btn = document.getElementById('ns-toggle');
-                btn.innerText = active ? 'ON' : 'OFF';
-                btn.style.background = active ? '${accent}' : 'rgba(0,0,0,0.04)';
-                btn.style.color = active ? 'white' : '#333';
-                btn.style.borderColor = active ? 'transparent' : 'rgba(0,0,0,0.08)';
+                if(btn) {
+                    btn.innerText = active ? 'ON' : 'OFF';
+                    btn.style.background = active ? '${accent}' : 'rgba(0,0,0,0.04)';
+                    btn.style.color = active ? 'white' : '#333';
+                    btn.style.borderColor = active ? 'transparent' : 'rgba(0,0,0,0.08)';
+                }
             };
 
             function setupHeaderZoom() {
@@ -369,28 +359,6 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 if(zo) zo.onclick = () => window.changeZoom(-0.1);
                 const hdrV = document.getElementById('zoom-v-hdr');
                 if(hdrV) hdrV.textContent = pdfScale.toFixed(1) + 'x';
-            }
-
-            function injectFullscreen() {
-                const hdr = document.getElementById('header-icons');
-                const btn = document.createElement('button');
-                btn.className = 'header-icon';
-                btn.title = 'Toggle Fullscreen';
-                btn.innerHTML = '<i class="fas fa-expand"></i>';
-                
-                const zoomCtrl = document.getElementById('zoom-controls');
-                if(zoomCtrl) hdr.insertBefore(btn, zoomCtrl);
-                else hdr.appendChild(btn);
-                
-                btn.onclick = () => {
-                    if(!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
-                        btn.innerHTML = '<i class="fas fa-compress"></i>';
-                    } else {
-                        document.exitFullscreen();
-                        btn.innerHTML = '<i class="fas fa-expand"></i>';
-                    }
-                };
             }
 
             window.toggleTTS = () => { if(speaking || ttsPaused) stopTTS(); else startTTS(); };
@@ -410,7 +378,8 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
                 utter.onstart = () => { speaking = true; ttsPaused = false; updateTTSUI(); };
                 syn.cancel(); 
                 setTimeout(() => { syn.resume(); syn.speak(utter); }, 100);
-                document.getElementById('tts-ctrls').classList.remove('hidden');
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) ctrls.classList.remove('hidden');
             };
             window.togglePlayPauseTTS = () => {
                 if (syn.paused) { syn.resume(); ttsPaused = false; speaking = true; }
@@ -419,44 +388,10 @@ export function pdfWebViewerHTML(title: string, fileUrl: string, coverUrl: strin
             };
             window.stopTTS = () => {
                 syn.cancel(); speaking = false; ttsPaused = false;
-                document.getElementById('tts-ctrls').classList.add('hidden');
+                const ctrls = document.getElementById('tts-ctrls');
+                if(ctrls) ctrls.classList.add('hidden');
                 updateTTSUI();
             };
-            async function buildNativeTOC(items, container, depth = 0) {
-                for (const item of items) {
-                    const el = document.createElement('div');
-                    el.className = 'toc-item';
-                    el.style.paddingLeft = (depth * 20 + 20) + 'px';
-                    el.style.fontSize = depth === 0 ? '13px' : '12px';
-                    el.style.fontWeight = depth === 0 ? '700' : '400';
-                    el.innerText = item.title;
-                    
-                    el.onclick = async () => {
-                        try {
-                            let pageIdx = -1;
-                            if (typeof item.dest === 'string') {
-                                const dest = await pdfDoc.getDestination(item.dest);
-                                pageIdx = await pdfDoc.getPageIndex(dest[0]);
-                            } else if (Array.isArray(item.dest)) {
-                                pageIdx = await pdfDoc.getPageIndex(item.dest[0]);
-                            }
-                            
-                            if (pageIdx !== -1) {
-                                document.getElementById('page-' + (pageIdx + 1)).scrollIntoView({ behavior: 'smooth' });
-                                toggleTOC();
-                            }
-                        } catch (e) {
-                            console.error("Link error:", e);
-                        }
-                    };
-                    
-                    container.appendChild(el);
-                    if (item.items && item.items.length > 0) {
-                        await buildNativeTOC(item.items, container, depth + 1);
-                    }
-                }
-            }
-
             window.updateTTSUI = () => {
                 const pp = document.getElementById('tts-pp-i');
                 const btn = document.getElementById('tts-btn');

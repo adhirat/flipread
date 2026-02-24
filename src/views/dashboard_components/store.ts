@@ -1,8 +1,41 @@
 export const storeView = `
     <!-- Store View -->
-    <div id="view-store" class="view-section">
-      <div class="header"><h2>Store Customization</h2></div>
-      <div class="card" style="max-width:700px">
+    <div id="view-store" class="view-section store-builder">
+      <div class="store-builder-header">
+        <h2>Store Customization</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" onclick="saveStoreSettings()" style="padding:7px 14px;font-size:12px"><i class="fas fa-save"></i><span class="btn-text">Save</span></button>
+          <button class="btn-outline" onclick="refreshStorePreview()" style="padding:7px 14px;font-size:12px"><i class="fas fa-sync-alt"></i><span class="btn-text">Refresh</span></button>
+          <a id="store-live-link" href="#" target="_blank" class="btn" style="padding:7px 14px;font-size:12px;text-decoration:none"><i class="fas fa-external-link-alt"></i><span class="btn-text">View Live</span></a>
+        </div>
+      </div>
+      <div class="store-builder-body">
+      <!-- LEFT: live preview panel -->
+      <div class="store-panel-preview">
+        <div class="store-preview-bar">
+          <div class="store-preview-url" id="store-preview-url-bar">
+            <i class="fas fa-lock" style="font-size:10px;opacity:0.5;margin-right:4px"></i>
+            <span id="store-preview-url-text">your-store-url</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div id="preview-unsaved-badge" style="display:none;align-items:center;gap:4px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">
+              <i class="fas fa-pencil-alt" style="font-size:9px"></i> Unsaved changes - Save &amp; Refresh preview
+            </div>
+            <span class="store-preview-badge"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;margin-right:4px"></i>Live Preview</span>
+          </div>
+        </div>
+        <div style="position:relative;flex:1;display:flex;flex-direction:column">
+          <div id="store-preview-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-secondary);z-index:10;gap:12px">
+            <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent-cyan);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+            <span style="font-size:12px;color:var(--text-muted)">Loading preview...</span>
+          </div>
+          <iframe id="store-preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms" style="width:100%;flex:1;border:none;background:#fff" onload="document.getElementById('store-preview-loading').style.display='none'"></iframe>
+        </div>
+      </div>
+
+      <!-- RIGHT: settings panel -->
+      <div class="store-panel-settings">
+      <div class="store-panel-inner">
         <h3 style="margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:10px">General Information</h3>
         <div class="form-group">
           <label>Store Name</label>
@@ -48,9 +81,13 @@ export const storeView = `
           <input type="text" id="st-h-caption" placeholder="Defaults to Store Description">
         </div>
         <div class="form-group">
-          <label>Hero Image URL</label>
-          <input type="text" id="st-h-img" placeholder="https://example.com/banner.jpg">
-          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Provide a URL for the large banner background. Unsplash URLs work great.</p>
+          <label>Hero Image</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="st-h-img" placeholder="https://images.unsplash.com/..." style="flex:1">
+            <button class="btn-outline" onclick="document.getElementById('hero-input').click()" style="padding:0 12px" title="Upload Hero Image"><i class="fas fa-upload"></i></button>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Provide a URL or upload a high-quality banner (Standard: 16:9 or 21:9 aspect ratio).</p>
+          <input type="file" id="hero-input" accept="image/*" style="display:none" onchange="uploadHero(event)">
         </div>
 
         <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Design & Theme</h3>
@@ -140,6 +177,99 @@ export const storeView = `
           </div>
         </div>
 
+        <div class="form-group">
+          <label>Show Publication Date on Cards</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="toggle-switch" id="st-show-date-toggle" onclick="toggleStoreOption('show-date')">
+              <div class="toggle-knob"></div>
+            </div>
+            <span style="font-size:13px;color:var(--text-secondary)">Show the month &amp; year each book was published</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Hero Size</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <button class="btn-outline hero-size-opt active" id="hs-standard" onclick="selectHeroSize('standard')" style="padding:10px 6px;justify-content:center;font-size:13px">Standard</button>
+            <button class="btn-outline hero-size-opt" id="hs-compact" onclick="selectHeroSize('compact')" style="padding:10px 6px;justify-content:center;font-size:13px">Compact</button>
+            <button class="btn-outline hero-size-opt" id="hs-tall" onclick="selectHeroSize('tall')" style="padding:10px 6px;justify-content:center;font-size:13px">Tall</button>
+            <button class="btn-outline hero-size-opt" id="hs-fullscreen" onclick="selectHeroSize('fullscreen')" style="padding:10px 6px;justify-content:center;font-size:13px">Full</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Background Style</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <button class="btn-outline bg-style-opt active" id="bgs-clean" onclick="selectBgStyle('clean')" style="padding:10px 6px;justify-content:center;font-size:13px">Clean</button>
+            <button class="btn-outline bg-style-opt" id="bgs-dots" onclick="selectBgStyle('dots')" style="padding:10px 6px;justify-content:center;font-size:13px">Dots</button>
+            <button class="btn-outline bg-style-opt" id="bgs-grid" onclick="selectBgStyle('grid')" style="padding:10px 6px;justify-content:center;font-size:13px">Grid</button>
+            <button class="btn-outline bg-style-opt" id="bgs-lines" onclick="selectBgStyle('lines')" style="padding:10px 6px;justify-content:center;font-size:13px">Lines</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Card Corner Radius</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <button class="btn-outline corner-opt" id="cr-sharp" onclick="selectCorner('sharp')" style="padding:10px;justify-content:center;font-size:13px">Sharp</button>
+            <button class="btn-outline corner-opt active" id="cr-standard" onclick="selectCorner('standard')" style="padding:10px;justify-content:center;font-size:13px">Standard</button>
+            <button class="btn-outline corner-opt" id="cr-rounded" onclick="selectCorner('rounded')" style="padding:10px;justify-content:center;font-size:13px">Rounded</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Section Heading (Optional)</label>
+          <input type="text" id="st-section-heading" placeholder="e.g. Browse the Collection, Latest Releases...">
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Displays a styled heading above your book grid. Leave blank to hide.</p>
+        </div>
+
+        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Announcement Banner</h3>
+        <div class="form-group">
+          <label>Banner Text</label>
+          <input type="text" id="st-banner-text" placeholder="e.g. New collection just dropped!">
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Appears as a dismissable bar above the header. Leave blank to disable.</p>
+        </div>
+        <div style="display:flex;gap:16px">
+          <div class="form-group" style="flex:1">
+            <label>Banner Link (Optional)</label>
+            <input type="text" id="st-banner-link" placeholder="https://...">
+          </div>
+          <div class="form-group" style="flex:0 0 auto">
+            <label>Banner Color</label>
+            <input type="color" id="st-banner-color" value="#c45d3e" style="width:64px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;background:var(--bg-elevated)">
+          </div>
+        </div>
+
+        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Hero Call-to-Action</h3>
+        <div style="display:flex;gap:16px">
+          <div class="form-group" style="flex:1">
+            <label>CTA Button Text</label>
+            <input type="text" id="st-cta-text" placeholder="e.g. Shop Now, View Collection">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>CTA Button Link</label>
+            <input type="text" id="st-cta-link" placeholder="https://...">
+          </div>
+        </div>
+
+        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Social Links</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label><i class="fab fa-instagram" style="color:#e1306c;margin-right:6px"></i>Instagram URL</label>
+            <input type="text" id="st-social-instagram" placeholder="https://instagram.com/...">
+          </div>
+          <div class="form-group">
+            <label><i class="fab fa-x-twitter" style="margin-right:6px"></i>X / Twitter URL</label>
+            <input type="text" id="st-social-x" placeholder="https://x.com/...">
+          </div>
+          <div class="form-group">
+            <label><i class="fab fa-youtube" style="color:#ff0000;margin-right:6px"></i>YouTube URL</label>
+            <input type="text" id="st-social-youtube" placeholder="https://youtube.com/...">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-globe" style="margin-right:6px"></i>Website URL</label>
+            <input type="text" id="st-social-website" placeholder="https://...">
+          </div>
+        </div>
         <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Access Control</h3>
         <div class="form-group">
           <label>Private Store Mode <span style="font-size:10px;background:var(--accent-purple);color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px">PRO+</span></label>
@@ -154,23 +284,110 @@ export const storeView = `
           </p>
         </div>
 
-        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Legal & Contact</h3>
+        <h3 style="margin:30px 0 20px;border-bottom:1px solid var(--border);padding-bottom:10px">Legal &amp; Copyright</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin:-8px 0 20px">Write using <strong>Markdown</strong> &mdash; headings, bold, bullets and links are rendered on your store pages.</p>
+
         <div class="form-group">
-          <label>Privacy Policy Content</label>
-          <textarea id="st-privacy" rows="4" placeholder="Enter full Privacy Policy text..."></textarea>
+          <label>About Us</label>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" onclick="mdCmd('st-about','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-about','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-about','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-about','h3')" title="Heading 3">H3</button>
+              <span class="md-sep"></span>
+              <button type="button" onclick="mdCmd('st-about','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-about','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-about','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-about','link')" title="Link">&#128279;</button>
+              <span class="md-sep"></span>
+              <button type="button" class="md-tab active" id="st-about-wb" onclick="mdSwitch('st-about','write')">Write</button>
+              <button type="button" class="md-tab" id="st-about-pb" onclick="mdSwitch('st-about','preview')">Preview</button>
+            </div>
+            <div class="md-body">
+              <textarea id="st-about" class="md-textarea" rows="8" placeholder="Tell your readers more about yourself or your collection..."></textarea>
+              <div id="st-about-pv" class="md-preview" style="display:none"></div>
+            </div>
+          </div>
         </div>
+
         <div class="form-group">
-          <label>Terms & Conditions Content</label>
-          <textarea id="st-terms" rows="4" placeholder="Enter full Terms text..."></textarea>
+          <label>Privacy Policy</label>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" onclick="mdCmd('st-privacy','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-privacy','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-privacy','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-privacy','h3')" title="Heading 3">H3</button>
+              <span class="md-sep"></span>
+              <button type="button" onclick="mdCmd('st-privacy','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-privacy','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-privacy','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-privacy','link')" title="Link">&#128279;</button>
+              <span class="md-sep"></span>
+              <button type="button" class="md-tab active" id="st-privacy-wb" onclick="mdSwitch('st-privacy','write')">Write</button>
+              <button type="button" class="md-tab" id="st-privacy-pb" onclick="mdSwitch('st-privacy','preview')">Preview</button>
+            </div>
+            <div class="md-body">
+              <textarea id="st-privacy" class="md-textarea" rows="8" placeholder="Write your Privacy Policy in Markdown..."></textarea>
+              <div id="st-privacy-pv" class="md-preview" style="display:none"></div>
+            </div>
+          </div>
         </div>
+
         <div class="form-group">
-          <label>Contact Information</label>
-          <textarea id="st-contact" rows="3" placeholder="Enter contact details (Address, Email, Phone)..."></textarea>
+          <label>Terms &amp; Conditions</label>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" onclick="mdCmd('st-terms','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-terms','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-terms','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-terms','h3')" title="Heading 3">H3</button>
+              <span class="md-sep"></span>
+              <button type="button" onclick="mdCmd('st-terms','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-terms','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-terms','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-terms','link')" title="Link">&#128279;</button>
+              <span class="md-sep"></span>
+              <button type="button" class="md-tab active" id="st-terms-wb" onclick="mdSwitch('st-terms','write')">Write</button>
+              <button type="button" class="md-tab" id="st-terms-pb" onclick="mdSwitch('st-terms','preview')">Preview</button>
+            </div>
+            <div class="md-body">
+              <textarea id="st-terms" class="md-textarea" rows="8" placeholder="Write your Terms &amp; Conditions in Markdown..."></textarea>
+              <div id="st-terms-pv" class="md-preview" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Copyrights Information</label>
+          <div class="md-editor">
+            <div class="md-toolbar">
+              <button type="button" onclick="mdCmd('st-copyright','bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="mdCmd('st-copyright','italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="mdCmd('st-copyright','h2')" title="Heading 2">H2</button>
+              <button type="button" onclick="mdCmd('st-copyright','h3')" title="Heading 3">H3</button>
+              <span class="md-sep"></span>
+              <button type="button" onclick="mdCmd('st-copyright','ul')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="mdCmd('st-copyright','ol')" title="Ordered list">1. List</button>
+              <button type="button" onclick="mdCmd('st-copyright','hr')" title="Divider">&mdash;</button>
+              <button type="button" onclick="mdCmd('st-copyright','link')" title="Link">&#128279;</button>
+              <span class="md-sep"></span>
+              <button type="button" class="md-tab active" id="st-copyright-wb" onclick="mdSwitch('st-copyright','write')">Write</button>
+              <button type="button" class="md-tab" id="st-copyright-pb" onclick="mdSwitch('st-copyright','preview')">Preview</button>
+            </div>
+            <div class="md-body">
+              <textarea id="st-copyright" class="md-textarea" rows="6" placeholder="Write your Copyright or Footer details in Markdown..."></textarea>
+              <div id="st-copyright-pv" class="md-preview" style="display:none"></div>
+            </div>
+          </div>
         </div>
 
         <div id="store-msg" class="msg"></div>
-        <button onclick="saveStoreSettings()" class="btn">Save Changes</button>
-      </div>
+        <button onclick="saveStoreSettings()" class="btn" style="width:100%">Save Changes</button>
+      </div><!-- /store-panel-inner -->
+      </div><!-- /store-panel-settings -->
+      </div><!-- /store-builder-body -->
     </div>
     
       <!-- Crop Logo Modal -->
