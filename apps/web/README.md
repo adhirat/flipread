@@ -36,41 +36,39 @@ A modern, edge-native platform for selling and reading digital books (PDF/EPUB),
 
 ---
 
-## 🔧 Local Setup
+### 1. Installation
 
-### 1. Clone & Install
+From the monorepo root:
 
 ```bash
-git clone https://github.com/adhirat/shopublish.git
-cd shopublish
 npm install
 ```
 
 ### 2. Configure Secrets
 
-`.dev.vars` contains local development secrets (Stripe test keys, JWT). This file is **gitignored** — create it from the template:
+`apps/web/.dev.vars` contains local development secrets (Stripe test keys, JWT). This file is **gitignored** — create it from the template:
 
 ```bash
-# .dev.vars
+# apps/web/.dev.vars
 JWT_SECRET=your-local-jwt-secret
 STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
 
-> Get Stripe test keys from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
-
 ### 3. Set Up Local Database
 
-```bash
-npm run db:migrate
-```
+From the monorepo root:
 
-Creates the local D1 database in `.wrangler/state/v3/d1/`.
+```bash
+npm run web:db:migrate:local
+```
 
 ### 4. Start Dev Server
 
+From the monorepo root:
+
 ```bash
-npm run dev
+npm run web:dev
 ```
 
 - App: **http://localhost:8787**
@@ -80,13 +78,13 @@ npm run dev
 
 ## 🌐 Environments
 
-|            | Production                                           | Staging                                                              |
-| ---------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
+|            | Production                                               | Staging                                                                  |
+| ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------ |
 | **URL**    | [shopublish.adhirat.com](https://shopublish.adhirat.com) | [staging.shopublish.adhirat.com](https://staging.shopublish.adhirat.com) |
-| **Branch** | `main`                                               | `staging`                                                            |
-| **D1**     | `shopublish-db`                                        | `shopublish-db-staging`                                                |
-| **KV**     | `KV`                                                 | `KV` (staging ID)                                                    |
-| **R2**     | `shopublish-files`                                     | `shopublish-files-staging`                                             |
+| **Branch** | `main`                                                   | `staging`                                                                |
+| **D1**     | `shopublish-db`                                          | `shopublish-db-staging`                                                  |
+| **KV**     | `KV`                                                     | `KV` (staging ID)                                                        |
+| **R2**     | `shopublish-files`                                       | `shopublish-files-staging`                                               |
 
 ### CI/CD
 

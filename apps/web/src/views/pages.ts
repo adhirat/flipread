@@ -477,7 +477,7 @@ export function contactPage(appUrl: string): string {
 </table>
 
 <h3>Can I use a custom domain?</h3>
-<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>shopublish.adhirat.workers.dev</code> and configure it in your dashboard.</p>
+<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>shopublish.com</code> and configure it in your dashboard.</p>
 
 <h3>How do I cancel my subscription?</h3>
 <p>Go to <strong>Dashboard → Settings → Subscription</strong> and click "Cancel Plan". Your access continues until the end of the current billing period. We offer a 14-day refund policy on first-time subscriptions.</p>

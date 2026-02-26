@@ -10,6 +10,7 @@
     "web:deploy:prod": "npm run deploy:prod --workspace=@shopublish/web",
     "web:db:migrate:local": "npm run db:migrate:local --workspace=@shopublish/web",
     "web:db:migrate:staging": "npm run db:migrate:staging --workspace=@shopublish/web",
-    "web:db:migrate:prod": "npm run db:migrate:prod --workspace=@shopublish/web"
+    "web:db:migrate:prod": "npm run db:migrate:prod --workspace=@shopublish/web",
+    "web:tsc:check": "npm run tsc:check --workspace=@shopublish/web"
   }
 }

@@ -32,7 +32,7 @@ app.use('*', async (c, next) => {
   const appHostname = new URL(c.env.APP_URL).hostname;
 
   // If not on main domain or localhost, check for custom domain
-  if (hostname !== appHostname && hostname !== 'localhost' && !hostname.endsWith('.workers.dev')) {
+  if (hostname !== appHostname && hostname !== 'localhost' && !hostname.endsWith('.shopublish.com')) {
     // 1. Check for Book Domain
     const book = await c.env.DB.prepare(
       `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_handle, u.store_logo_key
