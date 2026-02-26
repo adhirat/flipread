@@ -118,10 +118,10 @@ CREATE INDEX IF NOT EXISTS idx_store_inquiries_owner ON store_inquiries(store_ow
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
+  parent_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+  image_url TEXT DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-ALTER TABLE categories ADD COLUMN parent_id TEXT REFERENCES categories(id) ON DELETE SET NULL;
-ALTER TABLE categories ADD COLUMN image_url TEXT DEFAULT '';
 
 -- Products table
 CREATE TABLE IF NOT EXISTS products (

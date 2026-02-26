@@ -21,6 +21,10 @@ id = "fbea1b597d2f4ebd8f6ab8d2ee6da2dc"
 
 # Environment variables (non-sensitive only)
 # Secrets (JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) are set via `wrangler secret put`
+# Cloudflare Email Routing Binding
+[[send_email]]
+name = "EMAIL"
+
 [vars]
 APP_URL = "https://shopublish.com"
 
@@ -29,9 +33,6 @@ MAX_UPLOAD_SIZE_BASIC = "10485760"
 MAX_UPLOAD_SIZE_PRO = "52428800"
 MAX_UPLOAD_SIZE_BUSINESS = "209715200"
 
-# Cloudflare Email Routing Binding
-[[send_email]]
-name = "EMAIL"
 # Stripe price IDs (not sensitive — safe to store here)
 STRIPE_PRICE_BASIC_MONTHLY = "price_1T1PzhAeXVAKDgLYmvCApHZ5"
 STRIPE_PRICE_BASIC_YEARLY = "price_1T0fl6AeXVAKDgLYAzbkM0cE"
