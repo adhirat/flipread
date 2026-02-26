@@ -365,18 +365,18 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName}</title>
-<meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on FlipRead.`)}">
+<meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on ShoPublish.`)}">
 <link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
 <link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
 <meta property="og:title" content="${safeName}">
-<meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on FlipRead.`)}">
+<meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on ShoPublish.`)}">
 <meta property="og:image" content="${user.store_logo_url || appUrl + '/logo.png'}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=${font.import}&display=swap" rel="stylesheet">
 <script>
-(function(){var t=localStorage.getItem('flipread-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
+(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
 </script>
 <style>
 /* ====== COLOR SYSTEM ====== */
@@ -1377,7 +1377,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 </footer>
 
 <script>
-document.getElementById('theme-toggle').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('flipread-theme',d?'light':'dark')};
+document.getElementById('theme-toggle').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('shopublish-theme',d?'light':'dark')};
 
 // Mobile drawer toggle
 (function(){
@@ -1495,7 +1495,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 <link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script>
-(function(){var t=localStorage.getItem('flipread-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
+(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
 </script>
 <style>
 :root, [data-theme="light"] {
@@ -1683,7 +1683,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   <div class="footer-copy-sm">&copy; ${new Date().getFullYear()} ${esc(storeName)}. All rights reserved.</div>
 </footer>
 <script>
-document.getElementById('tt').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('flipread-theme',d?'light':'dark')};
+document.getElementById('tt').onclick=function(){var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('shopublish-theme',d?'light':'dark')};
 
 // Mobile drawer toggle
 (function(){
@@ -1802,7 +1802,7 @@ function mdToHtml(md: string): string {
 }
 
 function notFoundPage(msg = 'Store not found'): string {
-  return `<!DOCTYPE html><html><head><title>Not Found — FlipRead</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to FlipRead</a></body></html>`;
+  return `<!DOCTYPE html><html><head><title>Not Found — ShoPublish</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to ShoPublish</a></body></html>`;
 }
 
 function esc(s: string): string {

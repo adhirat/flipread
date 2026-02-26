@@ -1,7 +1,7 @@
 import { getViewerBase } from './viewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function videoViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+export function videoViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'ShoPublish'): string {
     const safeTitle = escapeHtml(title);
     const accent = (settings.accent_color as string) || '#4f46e5';
     const albumFiles = settings.album_files as {name: string, key: string, type: string}[] | undefined;

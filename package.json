@@ -1,14 +1,14 @@
 {
-  "name": "flipread",
+  "name": "shopublish",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --env=\"\"",
-    "db:migrate": "wrangler d1 execute flipread-db --local --file=./src/db/schema.sql",
-    "db:migrate:staging": "wrangler d1 execute flipread-db-staging --remote --file=./src/db/schema.sql",
-    "db:migrate:prod": "wrangler d1 execute flipread-db --remote --file=./src/db/schema.sql"
+    "db:migrate": "wrangler d1 execute shopublish-db --local --file=./src/db/schema.sql",
+    "db:migrate:staging": "wrangler d1 execute shopublish-db-staging --remote --file=./src/db/schema.sql",
+    "db:migrate:prod": "wrangler d1 execute shopublish-db --remote --file=./src/db/schema.sql"
   },
   "dependencies": {
     "hono": "^4.4.0",

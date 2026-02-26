@@ -123,7 +123,7 @@ function updateUI() {
   document.getElementById('limit-text').textContent = 'Upload Limit: ' + (limits[currentUser.plan] || '5 MB');
 
   // Highlight active theme button
-  const savedTheme = localStorage.getItem('flipread-theme') || 'light';
+  const savedTheme = localStorage.getItem('shopublish-theme') || 'light';
   document.querySelectorAll('[id^="theme-btn-"]').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById('theme-btn-' + savedTheme);
   if(activeBtn) activeBtn.classList.add('active');
@@ -990,7 +990,7 @@ function copyText(t, btn) {
 }
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('flipread-theme', t);
+  localStorage.setItem('shopublish-theme', t);
   updateThemeIcons(t);
   
   // Update settings buttons
@@ -1497,14 +1497,14 @@ function renderSharedBooks() {
 }
 
 // Books View Toggle & Search/Filter
-let bookViewMode = localStorage.getItem('flipread-book-view') || 'grid';
+let bookViewMode = localStorage.getItem('shopublish-book-view') || 'grid';
 let bookSearchTerm = '';
 let bookTypeFilter = '';
 let bookSort = 'newest';
 
 function setBookView(mode) {
   bookViewMode = mode;
-  localStorage.setItem('flipread-book-view', mode);
+  localStorage.setItem('shopublish-book-view', mode);
   document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('bv-' + mode);
   if(btn) btn.classList.add('active');
@@ -1530,7 +1530,7 @@ function getFilteredBooks() {
 }
 
 // Init
-const savedTheme = localStorage.getItem('flipread-theme') || 'light';
+const savedTheme = localStorage.getItem('shopublish-theme') || 'light';
 setTheme(savedTheme);
 const params = new URLSearchParams(window.location.search);
 if (params.get('mode') === 'register') {
@@ -1993,11 +1993,11 @@ function closeSidebar() {
 function toggleCollapse() {
   const sb = document.getElementById('main-sidebar');
   const isCollapsed = sb.classList.toggle('collapsed');
-  localStorage.setItem('flipread-sidebar-collapsed', isCollapsed);
+  localStorage.setItem('shopublish-sidebar-collapsed', isCollapsed);
 }
 
 // Init collapse state
-if(localStorage.getItem('flipread-sidebar-collapsed') === 'true' && window.innerWidth > 768) {
+if(localStorage.getItem('shopublish-sidebar-collapsed') === 'true' && window.innerWidth > 768) {
   document.getElementById('main-sidebar').classList.add('collapsed');
 }
 

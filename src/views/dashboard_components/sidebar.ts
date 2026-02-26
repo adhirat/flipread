@@ -4,8 +4,8 @@ export const sidebar = `
       <i class="fas fa-bars"></i>
     </button>
     <a href="/" class="logo" style="margin:0">
-      <img src="/logo.png" alt="FlipRead" style="height:24px;width:auto">
-      <span style="font-size:18px">FlipRead</span>
+      <img src="/logo.png" alt="ShoPublish" style="height:24px;width:auto">
+      <span style="font-size:18px">ShoPublish</span>
     </a>
     <button class="theme-toggle-btn" onclick="toggleDashTheme()" title="Toggle theme" style="background:none;border:none;font-size:18px;color:var(--text-secondary);cursor:pointer;padding:5px">
       <i class="fas fa-moon" id="dash-theme-icon"></i>
@@ -20,8 +20,8 @@ export const sidebar = `
     </button>
     <div class="sidebar-header">
        <a href="/" class="logo" style="margin:0">
-         <img src="/logo.png" alt="FlipRead">
-         <span>FlipRead</span>
+         <img src="/logo.png" alt="ShoPublish">
+         <span>ShoPublish</span>
        </a>
     </div>
     

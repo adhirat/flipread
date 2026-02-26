@@ -4,7 +4,7 @@ export const integrationsView = `
       <div class="view-header">
         <div>
           <h2>Integrations</h2>
-          <p class="text-secondary">Connect FlipRead with your favorite tools and platforms.</p>
+          <p class="text-secondary">Connect ShoPublish with your favorite tools and platforms.</p>
         </div>
       </div>
 

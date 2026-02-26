@@ -52,14 +52,14 @@ export const settingsView = `
           </div>
           
           <div class="form-group" id="branding-section" style="display:none">
-            <label>FlipRead Branding</label>
+            <label>ShoPublish Branding</label>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--bg-elevated);border-radius:12px">
-              <span style="font-size:14px;color:var(--text-secondary)">Show "Powered by FlipRead"</span>
+              <span style="font-size:14px;color:var(--text-secondary)">Show "Powered by ShoPublish"</span>
               <div class="toggle-switch active" id="branding-toggle" onclick="toggleBranding()">
                 <div class="toggle-knob"></div>
               </div>
             </div>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Disable to remove FlipRead branding from your viewer and store.</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Disable to remove ShoPublish branding from your viewer and store.</p>
           </div>
         </div>
 
@@ -89,7 +89,7 @@ export const settingsView = `
           <div id="support-status" style="margin-bottom:20px;padding:12px;background:var(--bg-elevated);border-radius:12px;font-size:13px;color:var(--text-secondary)">
             Standard Support Plan
           </div>
-          <button onclick="window.location.href='mailto:support@flipread.com'" class="btn-outline" style="width:100%;justify-content:center">Contact Support</button>
+          <button onclick="window.location.href='mailto:support@shopublish.com'" class="btn-outline" style="width:100%;justify-content:center">Contact Support</button>
         </div>
 
         <!-- Security & Danger Zone -->

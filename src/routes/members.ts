@@ -365,7 +365,7 @@ members.post('/forgot', async (c) => {
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
           <h2 style="color: #4f46e5; margin-bottom: 20px;">Your Access Key</h2>
-          <p>You requested your access key for a FlipRead store. Here it is:</p>
+          <p>You requested your access key for a ShoPublish store. Here it is:</p>
           <div style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 18px; text-align: center; margin: 20px 0; border: 1px dashed #cbd5e1; font-weight: bold;">
             ${member.access_key}
           </div>

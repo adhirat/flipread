@@ -4,8 +4,8 @@ export const authView = `
   <div class="auth-box">
     <div style="text-align:center;margin-bottom:32px">
       <a href="/" class="logo" style="justify-content:center;margin-bottom:12px">
-        <img src="/logo.png" alt="FlipRead" style="height:32px;width:auto">
-        <span>FlipRead</span>
+        <img src="/logo.png" alt="ShoPublish" style="height:32px;width:auto">
+        <span>ShoPublish</span>
       </a>
       <h2 style="font-size:24px" id="auth-title">Welcome Back</h2>
       <p id="auth-subtitle" style="font-size:14px;color:var(--text-secondary);margin-top:8px"></p>

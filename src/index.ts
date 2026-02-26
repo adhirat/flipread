@@ -1,4 +1,4 @@
-// FlipRead — Main Worker Entry Point
+// ShoPublish — Main Worker Entry Point
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -175,11 +175,11 @@ function landingPage(appUrl: string): string {
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>FlipRead — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
+<title>ShoPublish — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
 <meta name="description" content="Upload PDFs or EPUBs and generate shareable flipbook links. Free to start.">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:title" content="FlipRead — Your Digital Flipbook Library">
+<meta property="og:title" content="ShoPublish — Your Digital Flipbook Library">
 <meta property="og:description" content="Convert any PDF or EPUB into a professional, interactive flipbook in seconds.">
 <meta property="og:image" content="${appUrl}/logo.png">
 <meta property="og:url" content="${appUrl}">
@@ -313,8 +313,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <body>
 <nav>
 <a href="/" class="logo">
-  <img src="/logo.png" alt="FlipRead Logo">
-  <span>FlipRead</span>
+  <img src="/logo.png" alt="ShoPublish Logo">
+  <span>ShoPublish</span>
 </a>
 <div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -333,8 +333,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <div class="mobile-menu" id="mobile-menu">
 <div class="mobile-menu-header">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="FlipRead Logo">
-  <span>FlipRead</span>
+  <img src="/logo.png" alt="ShoPublish Logo">
+  <span>ShoPublish</span>
 </a>
 <button class="close-btn" onclick="toggleMenu()">✕</button>
 </div>
@@ -435,11 +435,11 @@ const html=document.documentElement;
 const current=html.getAttribute('data-theme');
 const next=current==='dark'?'light':'dark';
 html.setAttribute('data-theme',next);
-localStorage.setItem('flipread-theme',next);
+localStorage.setItem('shopublish-theme',next);
 document.getElementById('theme-icon').className=next==='dark'?'fas fa-sun':'fas fa-moon';
 }
 function loadTheme(){
-const saved=localStorage.getItem('flipread-theme')||'light';
+const saved=localStorage.getItem('shopublish-theme')||'light';
 document.documentElement.setAttribute('data-theme',saved);
 document.getElementById('theme-icon').className=saved==='dark'?'fas fa-sun':'fas fa-moon';
 }
@@ -464,8 +464,8 @@ toggleBilling(); // Initialize on load
 <div class="footer-grid">
 <div class="footer-brand">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="FlipRead Logo">
-  <span>FlipRead</span>
+  <img src="/logo.png" alt="ShoPublish Logo">
+  <span>ShoPublish</span>
 </a>
 <p>Transform your PDFs and EPUBs into beautiful, interactive flipbooks. Share your content with the world — instantly.</p>
 <div class="footer-social">
@@ -496,7 +496,7 @@ toggleBilling(); // Initialize on load
 </div>
 </div>
 <div class="footer-bottom">
-<span>© 2026 <a href="/">FlipRead</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
+<span>© 2026 <a href="/">ShoPublish</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
 <span>Made with <span style="color:var(--accent-magenta)">♥</span> </span>
 </div>
 </footer>

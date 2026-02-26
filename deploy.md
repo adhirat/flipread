@@ -1,4 +1,4 @@
-# FlipRead — Deploy Commands
+# ShoPublish — Deploy Commands
 
 Quick reference for deploying from your local terminal.
 
@@ -6,7 +6,7 @@ Quick reference for deploying from your local terminal.
 
 ## 🟡 Staging
 
-**URL:** `https://staging.flipread.adhirat.com`
+**URL:** `https://staging.shopublish.com`
 
 ### Deploy via Git (triggers GitHub Actions)
 
@@ -27,7 +27,7 @@ npx wrangler deploy --env staging
 ```bash
 npm run db:migrate:staging
 # or
-npx wrangler d1 execute flipread-db-staging --remote --file=./src/db/schema.sql
+npx wrangler d1 execute shopublish-db-staging --remote --file=./src/db/schema.sql
 ```
 
 ### Set secrets
@@ -48,7 +48,7 @@ npx wrangler tail --env staging
 
 ## 🟢 Production
 
-**URL:** `https://flipread.adhirat.com`
+**URL:** `https://shopublish.com`
 
 ### Deploy via Git (triggers GitHub Actions)
 
@@ -69,7 +69,7 @@ npx wrangler deploy --env=""
 ```bash
 npm run db:migrate:prod
 # or
-npx wrangler d1 execute flipread-db --remote --file=./src/db/schema.sql
+npx wrangler d1 execute shopublish-db --remote --file=./src/db/schema.sql
 ```
 
 ### Set secrets
@@ -118,7 +118,7 @@ Local secrets are in `.dev.vars` (gitignored).
 ## 🛡️ Recommended Workflow
 
 1. Develop locally → `npm run dev`
-2. Push to **staging** → verify at `staging.flipread.adhirat.com`
-3. Merge staging → **main** → live at `flipread.adhirat.com`
+2. Push to **staging** → verify at `staging.shopublish.com`
+3. Merge staging → **main** → live at `shopublish.com`
 
 > **Tip:** Always run migrations on staging first before production.

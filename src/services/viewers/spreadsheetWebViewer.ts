@@ -1,6 +1,6 @@
 import { getWebViewerBase } from './webViewerBase';
 
-export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'FlipRead'): string {
+export function spreadsheetWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'ShoPublish'): string {
     return getWebViewerBase({
         title,
         fileUrl,

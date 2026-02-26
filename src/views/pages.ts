@@ -1,15 +1,15 @@
-// FlipRead — Static Pages (Privacy, Terms, Contact, Documentation)
+// ShoPublish — Static Pages (Privacy, Terms, Contact, Documentation)
 
 function pageShell(title: string, description: string, appUrl: string, content: string): string {
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${title} — FlipRead</title>
+<title>${title} — ShoPublish</title>
 <meta name="description" content="${description}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:title" content="${title} — FlipRead">
+<meta property="og:title" content="${title} — ShoPublish">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${appUrl}/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -147,8 +147,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <body>
 <nav>
 <a href="/" class="logo">
-  <img src="/logo.png" alt="FlipRead Logo">
-  <span>FlipRead</span>
+  <img src="/logo.png" alt="ShoPublish Logo">
+  <span>ShoPublish</span>
 </a>
 <div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -175,8 +175,8 @@ ${content}
 <div class="footer-grid">
 <div class="footer-brand">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="FlipRead Logo">
-  <span>FlipRead</span>
+  <img src="/logo.png" alt="ShoPublish Logo">
+  <span>ShoPublish</span>
 </a>
 <p>Transform your PDFs and EPUBs into beautiful, interactive flipbooks. Share your content with the world — instantly.</p>
 <div class="footer-social">
@@ -207,7 +207,7 @@ ${content}
 </div>
 </div>
 <div class="footer-bottom">
-<span>© 2026 <a href="/">FlipRead</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
+<span>© 2026 <a href="/">ShoPublish</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
 <span>Made with <span style="color:var(--accent-magenta)">♥</span> on Cloudflare Workers</span>
 </div>
 </footer>
@@ -218,11 +218,11 @@ const html=document.documentElement;
 const current=html.getAttribute('data-theme');
 const next=current==='dark'?'light':'dark';
 html.setAttribute('data-theme',next);
-localStorage.setItem('flipread-theme',next);
+localStorage.setItem('shopublish-theme',next);
 document.getElementById('theme-icon').className=next==='dark'?'fas fa-sun':'fas fa-moon';
 }
 (function(){
-const saved=localStorage.getItem('flipread-theme')||'light';
+const saved=localStorage.getItem('shopublish-theme')||'light';
 document.documentElement.setAttribute('data-theme',saved);
 document.getElementById('theme-icon').className=saved==='dark'?'fas fa-sun':'fas fa-moon';
 })();
@@ -235,7 +235,7 @@ document.getElementById('theme-icon').className=saved==='dark'?'fas fa-sun':'fas
 export function privacyPage(appUrl: string): string {
   return pageShell(
     'Privacy Policy',
-    'Learn how FlipRead collects, uses, and protects your personal information.',
+    'Learn how ShoPublish collects, uses, and protects your personal information.',
     appUrl,
     `
 <h1 class="page-title">Privacy Policy</h1>
@@ -243,7 +243,7 @@ export function privacyPage(appUrl: string): string {
 <div class="page-content">
 
 <div class="highlight-box">
-<p>FlipRead is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information when you use our platform.</p>
+<p>ShoPublish is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information when you use our platform.</p>
 </div>
 
 <h2>1. Information We Collect</h2>
@@ -268,7 +268,7 @@ export function privacyPage(appUrl: string): string {
 <h2>2. How We Use Your Information</h2>
 <p>We use the information we collect to:</p>
 <ul>
-<li>Provide and maintain the FlipRead platform</li>
+<li>Provide and maintain the ShoPublish platform</li>
 <li>Process your subscription payments via Stripe</li>
 <li>Display analytics and activity logs on your dashboard</li>
 <li>Send essential account notifications (password resets, billing alerts)</li>
@@ -306,7 +306,7 @@ export function privacyPage(appUrl: string): string {
 </ul>
 
 <h2>6. Cookies</h2>
-<p>FlipRead uses minimal cookies:</p>
+<p>ShoPublish uses minimal cookies:</p>
 <ul>
 <li><strong>Authentication token</strong> — a secure JWT stored in a cookie to keep you logged in</li>
 <li><strong>Theme preference</strong> — stored in localStorage to remember your light/dark mode choice</li>
@@ -314,10 +314,10 @@ export function privacyPage(appUrl: string): string {
 <p>We do not use third-party tracking cookies or advertising cookies.</p>
 
 <h2>7. Children's Privacy</h2>
-<p>FlipRead is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please <a href="/contact">contact us</a> for removal.</p>
+<p>ShoPublish is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please <a href="/contact">contact us</a> for removal.</p>
 
 <h2>8. Changes to This Policy</h2>
-<p>We may update this Privacy Policy from time to time. We will notify you of material changes via email or a prominent notice on the platform. Continued use of FlipRead after changes constitutes acceptance.</p>
+<p>We may update this Privacy Policy from time to time. We will notify you of material changes via email or a prominent notice on the platform. Continued use of ShoPublish after changes constitutes acceptance.</p>
 
 <h2>9. Contact</h2>
 <p>For privacy-related inquiries, please reach out at <a href="mailto:privacy@adhirat.com">privacy@adhirat.com</a> or visit our <a href="/contact">Contact page</a>.</p>
@@ -331,7 +331,7 @@ export function privacyPage(appUrl: string): string {
 export function termsPage(appUrl: string): string {
   return pageShell(
     'Terms & Conditions',
-    'The terms governing your use of the FlipRead platform.',
+    'The terms governing your use of the ShoPublish platform.',
     appUrl,
     `
 <h1 class="page-title">Terms & Conditions</h1>
@@ -339,14 +339,14 @@ export function termsPage(appUrl: string): string {
 <div class="page-content">
 
 <div class="highlight-box">
-<p>By accessing or using FlipRead, you agree to be bound by these Terms. If you do not agree, please do not use the platform.</p>
+<p>By accessing or using ShoPublish, you agree to be bound by these Terms. If you do not agree, please do not use the platform.</p>
 </div>
 
 <h2>1. Acceptance of Terms</h2>
-<p>These Terms of Service ("Terms") govern your access to and use of the FlipRead platform operated by Adhirat ("we", "us", "our"). By creating an account or using any part of the service, you agree to these Terms.</p>
+<p>These Terms of Service ("Terms") govern your access to and use of the ShoPublish platform operated by Adhirat ("we", "us", "our"). By creating an account or using any part of the service, you agree to these Terms.</p>
 
 <h2>2. Account Registration</h2>
-<p>To use FlipRead, you must:</p>
+<p>To use ShoPublish, you must:</p>
 <ul>
 <li>Be at least 13 years of age</li>
 <li>Provide accurate and complete registration information</li>
@@ -356,7 +356,7 @@ export function termsPage(appUrl: string): string {
 <p>You are responsible for all activity that occurs under your account.</p>
 
 <h2>3. Subscription Plans & Payments</h2>
-<p>FlipRead offers Free, Basic, Pro, and Business subscription tiers. Paid plans are billed monthly or annually through Stripe.</p>
+<p>ShoPublish offers Free, Basic, Pro, and Business subscription tiers. Paid plans are billed monthly or annually through Stripe.</p>
 <ul>
 <li><strong>Free trial</strong> — No credit card required. Limited to 1 book, 5 MB uploads, and 500 monthly views.</li>
 <li><strong>Upgrades</strong> — Take effect immediately. You will be charged a prorated amount for the remaining billing period.</li>
@@ -373,12 +373,12 @@ export function termsPage(appUrl: string): string {
 <li>Use the platform for illegal, fraudulent, or abusive purposes</li>
 <li>Attempt to gain unauthorized access to other users' accounts or data</li>
 <li>Use automated tools to scrape, crawl, or overload the platform</li>
-<li>Resell, redistribute, or sublicense your FlipRead account</li>
+<li>Resell, redistribute, or sublicense your ShoPublish account</li>
 </ul>
 <p>We reserve the right to suspend or terminate accounts that violate these rules.</p>
 
 <h2>5. Content Ownership</h2>
-<p>You retain full ownership of all content you upload to FlipRead. By uploading content, you grant us a limited license to:</p>
+<p>You retain full ownership of all content you upload to ShoPublish. By uploading content, you grant us a limited license to:</p>
 <ul>
 <li>Store and serve your content to authorized viewers</li>
 <li>Generate thumbnails and previews for your bookstore</li>
@@ -390,18 +390,18 @@ export function termsPage(appUrl: string): string {
 <p>We aim for 99.9% uptime but do not guarantee uninterrupted service. We may perform maintenance, deploy updates, or experience outages. We will make reasonable efforts to notify users of planned downtime.</p>
 
 <h2>7. Data & Privacy</h2>
-<p>Your use of FlipRead is also governed by our <a href="/privacy">Privacy Policy</a>, which describes how we collect, use, and protect your data.</p>
+<p>Your use of ShoPublish is also governed by our <a href="/privacy">Privacy Policy</a>, which describes how we collect, use, and protect your data.</p>
 
 <h2>8. Limitation of Liability</h2>
 <p>To the maximum extent permitted by law:</p>
 <ul>
-<li>FlipRead is provided "as is" without warranties of any kind</li>
+<li>ShoPublish is provided "as is" without warranties of any kind</li>
 <li>We are not liable for any indirect, incidental, or consequential damages</li>
 <li>Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim</li>
 </ul>
 
 <h2>9. Intellectual Property</h2>
-<p>The FlipRead name, logo, design, and underlying technology are the property of Adhirat. You may not copy, modify, or redistribute any part of the platform without prior written consent.</p>
+<p>The ShoPublish name, logo, design, and underlying technology are the property of Adhirat. You may not copy, modify, or redistribute any part of the platform without prior written consent.</p>
 
 <h2>10. Termination</h2>
 <p>We may suspend or terminate your account if you violate these Terms. Upon termination:</p>
@@ -430,7 +430,7 @@ export function termsPage(appUrl: string): string {
 export function contactPage(appUrl: string): string {
   return pageShell(
     'Contact',
-    'Get in touch with the FlipRead team for support, partnerships, or general inquiries.',
+    'Get in touch with the ShoPublish team for support, partnerships, or general inquiries.',
     appUrl,
     `
 <h1 class="page-title">Contact Us</h1>
@@ -441,7 +441,7 @@ export function contactPage(appUrl: string): string {
 <div class="contact-card">
 <i class="fas fa-envelope"></i>
 <h3>General Inquiries</h3>
-<p>Questions about FlipRead</p>
+<p>Questions about ShoPublish</p>
 <a href="mailto:hello@adhirat.com">hello@adhirat.com</a>
 </div>
 <div class="contact-card">
@@ -464,7 +464,7 @@ export function contactPage(appUrl: string): string {
 <p>Click "Forgot Password" on the login page at <a href="/dashboard">/dashboard</a>. You'll receive a password reset link via email.</p>
 
 <h3>What file formats are supported?</h3>
-<p>FlipRead supports <strong>PDF</strong>, <strong>EPUB</strong>, <strong>DOCX</strong>, <strong>PPTX</strong>, <strong>XLSX/CSV</strong>, plain text, and common image formats (PNG, JPG, GIF, SVG, WebP). Each format is rendered with its own optimized viewer.</p>
+<p>ShoPublish supports <strong>PDF</strong>, <strong>EPUB</strong>, <strong>DOCX</strong>, <strong>PPTX</strong>, <strong>XLSX/CSV</strong>, plain text, and common image formats (PNG, JPG, GIF, SVG, WebP). Each format is rendered with its own optimized viewer.</p>
 
 <h3>What's the maximum file size I can upload?</h3>
 <p>Upload limits depend on your plan:</p>
@@ -477,7 +477,7 @@ export function contactPage(appUrl: string): string {
 </table>
 
 <h3>Can I use a custom domain?</h3>
-<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>flipread.adhirat.workers.dev</code> and configure it in your dashboard.</p>
+<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>shopublish.adhirat.workers.dev</code> and configure it in your dashboard.</p>
 
 <h3>How do I cancel my subscription?</h3>
 <p>Go to <strong>Dashboard → Settings → Subscription</strong> and click "Cancel Plan". Your access continues until the end of the current billing period. We offer a 14-day refund policy on first-time subscriptions.</p>
@@ -511,15 +511,15 @@ export function contactPage(appUrl: string): string {
 export function docsPage(appUrl: string): string {
   return pageShell(
     'Documentation',
-    'Learn how to use the FlipRead platform, API, and customization options.',
+    'Learn how to use the ShoPublish platform, API, and customization options.',
     appUrl,
     `
 <h1 class="page-title">Documentation</h1>
-<p class="page-subtitle">Everything you need to get started with FlipRead.</p>
+<p class="page-subtitle">Everything you need to get started with ShoPublish.</p>
 <div class="page-content">
 
 <h2>Getting Started</h2>
-<p>FlipRead lets you upload PDFs, EPUBs, and other documents and instantly generate shareable flipbook links. Here's how to get up and running in minutes:</p>
+<p>ShoPublish lets you upload PDFs, EPUBs, and other documents and instantly generate shareable flipbook links. Here's how to get up and running in minutes:</p>
 <ol>
 <li><strong>Create an account</strong> — <a href="/dashboard?mode=register">Sign up for free</a> with your email or Google account.</li>
 <li><strong>Upload a book</strong> — Click "Upload" on your dashboard to add a PDF, EPUB, or other supported file.</li>
@@ -540,7 +540,7 @@ export function docsPage(appUrl: string): string {
 </table>
 
 <h2>Your Bookstore</h2>
-<p>Every FlipRead user gets a public bookstore at <code>${appUrl}/store/your-handle</code>. You can customize it with:</p>
+<p>Every ShoPublish user gets a public bookstore at <code>${appUrl}/store/your-handle</code>. You can customize it with:</p>
 <ul>
 <li><strong>Store name & logo</strong> — Brand your bookstore</li>
 <li><strong>Description</strong> — Tell visitors what your store is about</li>
@@ -562,7 +562,7 @@ export function docsPage(appUrl: string): string {
 </table>
 
 <h2>API Reference</h2>
-<p>FlipRead provides a REST API for Business plan users. Full interactive documentation is available at <a href="/api/swagger">Swagger UI</a>.</p>
+<p>ShoPublish provides a REST API for Business plan users. Full interactive documentation is available at <a href="/api/swagger">Swagger UI</a>.</p>
 
 <h3>Authentication</h3>
 <p>All API requests require an API key sent in the <code>Authorization</code> header:</p>

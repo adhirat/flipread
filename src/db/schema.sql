@@ -1,4 +1,4 @@
--- FlipRead D1 Schema
+-- ShoPublish D1 Schema
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

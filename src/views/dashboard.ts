@@ -25,10 +25,10 @@ export function dashboardPage(appUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlipRead Dashboard</title>
+  <title>ShoPublish Dashboard</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <meta property="og:title" content="FlipRead Dashboard">
+  <meta property="og:title" content="ShoPublish Dashboard">
   <meta property="og:description" content="Manage your premium flipbooks and bookstore.">
   <meta property="og:image" content="${appUrl}/logo.png">
   <meta name="twitter:card" content="summary_large_image">

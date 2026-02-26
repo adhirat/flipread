@@ -1,4 +1,4 @@
-# FlipRead
+# ShoPublish
 
 A modern, edge-native platform for selling and reading digital books (PDF/EPUB), built on Cloudflare's global network.
 
@@ -41,8 +41,8 @@ A modern, edge-native platform for selling and reading digital books (PDF/EPUB),
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/adhirat/flipread.git
-cd flipread
+git clone https://github.com/adhirat/shopublish.git
+cd shopublish
 npm install
 ```
 
@@ -82,11 +82,11 @@ npm run dev
 
 |            | Production                                           | Staging                                                              |
 | ---------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| **URL**    | [flipread.adhirat.com](https://flipread.adhirat.com) | [staging.flipread.adhirat.com](https://staging.flipread.adhirat.com) |
+| **URL**    | [shopublish.adhirat.com](https://shopublish.adhirat.com) | [staging.shopublish.adhirat.com](https://staging.shopublish.adhirat.com) |
 | **Branch** | `main`                                               | `staging`                                                            |
-| **D1**     | `flipread-db`                                        | `flipread-db-staging`                                                |
+| **D1**     | `shopublish-db`                                        | `shopublish-db-staging`                                                |
 | **KV**     | `KV`                                                 | `KV` (staging ID)                                                    |
-| **R2**     | `flipread-files`                                     | `flipread-files-staging`                                             |
+| **R2**     | `shopublish-files`                                     | `shopublish-files-staging`                                             |
 
 ### CI/CD
 
@@ -126,7 +126,7 @@ npx wrangler secret put STRIPE_WEBHOOK_SECRET
 ## 📁 Project Structure
 
 ```
-flipread/
+shopublish/
 ├── src/
 │   ├── index.ts           # Main application entry point
 │   ├── routes/            # API route handlers

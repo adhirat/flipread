@@ -42,7 +42,7 @@ export function getViewerBase(options: ViewerOptions): string {
         showWebViewLink = true,
         footerHtml = '',
         showTTS = false,
-        storeName = 'FlipRead',
+        storeName = 'ShoPublish',
         showHighlights = true,
         showFullMode = false,
         showNightShift = false
@@ -56,7 +56,7 @@ export function getViewerBase(options: ViewerOptions): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${safeTitle} - FlipRead</title>
+    <title>${safeTitle} - ShoPublish</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
@@ -758,7 +758,7 @@ export function getViewerBase(options: ViewerOptions): string {
         window.shareBook = async () => {
             const url = window.location.href;
             const sName = '${storeName.replace(/'/g, "\\'")}';
-            const text = 'Hi There,\\n\\nI\\'ve been exploring "' + TITLE + '" on the ' + sName + ' library published using FlipRead and found it quite insightful.\\n\\n' + url + '\\n\\nThanks';
+            const text = 'Hi There,\\n\\nI\\'ve been exploring "' + TITLE + '" on the ' + sName + ' library published using ShoPublish and found it quite insightful.\\n\\n' + url + '\\n\\nThanks';
             
             if (navigator.share) {
                 try {

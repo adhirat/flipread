@@ -10,7 +10,7 @@ export interface EmailOptions {
 }
 
 export async function sendEmail(env: Env, options: EmailOptions): Promise<boolean> {
-  const { to, subject, html, from = 'FlipRead <noreply@adhirat.com>', text } = options;
+  const { to, subject, html, from = 'ShoPublish <noreply@adhirat.com>', text } = options;
 
   // 1. Try Cloudflare Email Routing (send_email binding) if available
   // Note: This requires the binding to be set in wrangler.toml and the domain verified
@@ -41,7 +41,7 @@ export async function sendEmail(env: Env, options: EmailOptions): Promise<boolea
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to, name: to }] }],
-        from: { email: from.match(/<(.+)>/)?.[1] || from, name: from.match(/(.*)</)?.[1]?.trim() || 'FlipRead' },
+        from: { email: from.match(/<(.+)>/)?.[1] || from, name: from.match(/(.*)</)?.[1]?.trim() || 'ShoPublish' },
         subject,
         content: [
           { type: 'text/plain', value: text || html.replace(/<[^>]*>/g, '') },

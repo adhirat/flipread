@@ -150,7 +150,7 @@ export const getSidebarScripts = (fileUrl: string, showHighlights: boolean) => `
         } catch(e) {}
         
         let content = "--- " + document.title.toUpperCase() + " ---\\n";
-        content += "Exported from FlipRead\\n";
+        content += "Exported from ShoPublish\\n";
         content += "Date: " + new Date().toLocaleString() + "\\n";
         content += "------------------------------------------\\n\\n";
         
@@ -178,7 +178,7 @@ export const getSidebarScripts = (fileUrl: string, showHighlights: boolean) => `
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "FlipRead-Export-" + document.title.replace(/[^a-z0-9]/gi, '_') + ".txt";
+        a.download = "ShoPublish-Export-" + document.title.replace(/[^a-z0-9]/gi, '_') + ".txt";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
