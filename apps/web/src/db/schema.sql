@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS books (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('pdf', 'epub', 'docx', 'odt', 'ods', 'odp', 'pptx', 'xlsx', 'csv', 'tsv', 'txt', 'md', 'rtf', 'html', 'image', 'audio', 'video')),
+  type TEXT NOT NULL CHECK(type IN ('pdf', 'epub', 'doc', 'docx', 'odt', 'ods', 'odp', 'ppt', 'pptx', 'xlsx', 'csv', 'tsv', 'txt', 'md', 'rtf', 'html', 'image', 'audio', 'video')),
   file_key TEXT NOT NULL, -- R2 object key
   cover_url TEXT DEFAULT '',
   cover_key TEXT DEFAULT '',
@@ -202,3 +202,42 @@ CREATE TABLE IF NOT EXISTS order_items (
   unit_price REAL NOT NULL,
   total_price REAL NOT NULL
 );
+
+-- Activity logs table
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id TEXT,
+    details TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_user_date ON activity_logs(user_id, created_at DESC);
+
+-- API Keys Table
+CREATE TABLE IF NOT EXISTS api_keys (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    key_value TEXT NOT NULL,
+    name TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Analytics Events Table
+CREATE TABLE IF NOT EXISTS analytics_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id TEXT NOT NULL,
+    event_type TEXT NOT NULL DEFAULT 'view',
+    country TEXT,
+    device_type TEXT,
+    referrer TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_book_date ON analytics_events(book_id, created_at);

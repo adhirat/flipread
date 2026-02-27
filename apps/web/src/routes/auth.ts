@@ -12,73 +12,102 @@ const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // POST /api/auth/register
 auth.post('/register', async (c) => {
-  const { email, password, name } = await c.req.json<{
-    email: string; password: string; name: string;
-  }>();
+  try {
+    const { email, password, name } = await c.req.json<{
+      email: string; password: string; name: string;
+    }>();
 
-  if (!email || !password || password.length < 8) {
-    return c.json({ error: 'Email and password (min 8 chars) required' }, 400);
+    if (!email || !password || password.length < 8) {
+      return c.json({ error: 'Email and password (min 8 chars) required' }, 400);
+    }
+
+    if (!c.env.DB) {
+      console.error('Database binding DB is missing');
+      return c.json({ error: 'Server configuration error: Database missing' }, 500);
+    }
+
+    // Check existing
+    const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?')
+      .bind(email.toLowerCase().trim())
+      .first();
+    
+    if (existing) {
+      return c.json({ error: 'Email already registered' }, 409);
+    }
+
+    const id = generateId();
+    const passwordHash = await hashPassword(password);
+    const storeHandle = (name || 'user').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + id.slice(0, 4);
+
+    await c.env.DB.prepare(
+      'INSERT INTO users (id, email, name, store_handle, password_hash, plan) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(id, email.toLowerCase().trim(), name || '', storeHandle, passwordHash, 'free').run();
+
+    const token = await createToken(id, c.env.JWT_SECRET);
+
+    // Set cookie
+    c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
+
+    // Log activity — non-blocking
+    logActivity(c, id, 'register', 'user', id, { email });
+
+    return c.json({ user: { id, email, name, plan: 'free' }, token });
+  } catch (err: any) {
+    console.error('Registration Error:', err);
+    return c.json({ 
+      error: 'Registration failed', 
+      message: err.message,
+      stack: c.env.APP_URL.includes('localhost') ? err.stack : undefined
+    }, 500);
   }
-
-  // Check existing
-  const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?')
-    .bind(email.toLowerCase().trim())
-    .first();
-  if (existing) {
-    return c.json({ error: 'Email already registered' }, 409);
-  }
-
-  const id = generateId();
-  const passwordHash = await hashPassword(password);
-  const storeHandle = (name || 'user').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + id.slice(0, 4);
-
-  await c.env.DB.prepare(
-    'INSERT INTO users (id, email, name, store_handle, password_hash, plan) VALUES (?, ?, ?, ?, ?, ?)'
-  ).bind(id, email.toLowerCase().trim(), name || '', storeHandle, passwordHash, 'free').run();
-
-  const token = await createToken(id, c.env.JWT_SECRET);
-
-  // Set cookie
-  c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
-
-  // Log activity
-  await logActivity(c, id, 'register', 'user', id, { email });
-
-  return c.json({ user: { id, email, name, plan: 'free' }, token });
 });
 
 // POST /api/auth/login
 auth.post('/login', async (c) => {
-  const { email, password } = await c.req.json<{ email: string; password: string }>();
+  try {
+    const { email, password } = await c.req.json<{ email: string; password: string }>();
 
-  if (!email || !password) {
-    return c.json({ error: 'Email and password required' }, 400);
+    if (!email || !password) {
+      return c.json({ error: 'Email and password required' }, 400);
+    }
+
+    if (!c.env.DB) {
+      console.error('Database binding DB is missing');
+      return c.json({ error: 'Server configuration error: Database missing' }, 500);
+    }
+
+    const user = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
+      .bind(email.toLowerCase().trim())
+      .first<User>();
+
+    if (!user || !user.password_hash) {
+      return c.json({ error: 'Invalid credentials' }, 401);
+    }
+
+    const valid = await verifyPassword(password, user.password_hash);
+    if (!valid) {
+      return c.json({ error: 'Invalid credentials' }, 401);
+    }
+
+    const token = await createToken(user.id, c.env.JWT_SECRET);
+
+    c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
+
+    // Log activity — non-blocking
+    logActivity(c, user.id, 'login', 'user', user.id);
+
+    return c.json({
+      user: { id: user.id, email: user.email, name: user.name, store_handle: user.store_handle, plan: user.plan },
+      token,
+    });
+  } catch (err: any) {
+    console.error('Login Error:', err);
+    return c.json({ 
+      error: 'Login failed', 
+      message: err.message,
+      stack: c.env.APP_URL.includes('localhost') ? err.stack : undefined
+    }, 500);
   }
-
-  const user = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
-    .bind(email.toLowerCase().trim())
-    .first<User>();
-
-  if (!user || !user.password_hash) {
-    return c.json({ error: 'Invalid credentials' }, 401);
-  }
-
-  const valid = await verifyPassword(password, user.password_hash);
-  if (!valid) {
-    return c.json({ error: 'Invalid credentials' }, 401);
-  }
-
-  const token = await createToken(user.id, c.env.JWT_SECRET);
-
-  c.header('Set-Cookie', `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}`);
-
-  // Log activity
-  await logActivity(c, user.id, 'login', 'user', user.id);
-
-  return c.json({
-    user: { id: user.id, email: user.email, name: user.name, store_handle: user.store_handle, plan: user.plan },
-    token,
-  });
 });
 
 // POST /api/auth/logout

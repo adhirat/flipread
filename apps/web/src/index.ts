@@ -1,52 +1,80 @@
 // ShoPublish — Main Worker Entry Point
 
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { serveStatic } from 'hono/cloudflare-workers';
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { serveStatic } from "hono/cloudflare-workers";
 // @ts-ignore
-import manifest from '__STATIC_CONTENT_MANIFEST';
-import type { Env } from './lib/types';
-import authRoutes from './routes/auth';
-import docRoutes from './routes/docs';
-import billingRoutes from './routes/billing';
-import userRoutes from './routes/user';
-import viewerRoutes, { viewerPage } from './routes/viewer';
-import storeRoutes, { bookstorePage, contentPage, getUserByCustomDomain } from './routes/store';
-import { memberAccessPage, memberRegisterPage, memberForgotPage } from './services/viewerTemplates';
-import memberRoutes from './routes/members';
-import { dashboardPage } from './views/dashboard';
-import { privacyPage, termsPage, contactPage, docsPage, notFoundPage, errorPage } from './views/pages';
-import swagger from './routes/swagger';
-import categoriesRoutes from './routes/categories';
-import productsRoutes from './routes/products';
-import promotionsRoutes from './routes/promotions';
-import ordersRoutes from './routes/orders';
-import type { Book, Variables } from './lib/types';
+import manifest from "__STATIC_CONTENT_MANIFEST";
+import type { Env } from "./lib/types";
+import authRoutes from "./routes/auth";
+import docRoutes from "./routes/docs";
+import billingRoutes from "./routes/billing";
+import userRoutes from "./routes/user";
+import viewerRoutes, { viewerPage } from "./routes/viewer";
+import storeRoutes, {
+  bookstorePage,
+  contentPage,
+  getUserByCustomDomain,
+} from "./routes/store";
+import {
+  memberAccessPage,
+  memberRegisterPage,
+  memberForgotPage,
+} from "./services/viewerTemplates";
+import memberRoutes from "./routes/members";
+import { dashboardPage } from "./views/dashboard";
+import {
+  privacyPage,
+  termsPage,
+  contactPage,
+  docsPage,
+  notFoundPage,
+  errorPage,
+} from "./views/pages";
+import swagger from "./routes/swagger";
+import categoriesRoutes from "./routes/categories";
+import productsRoutes from "./routes/products";
+import promotionsRoutes from "./routes/promotions";
+import ordersRoutes from "./routes/orders";
+import type { Book, Variables } from "./lib/types";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Custom Domain Middleware
-app.use('*', async (c, next) => {
+app.use("*", async (c, next) => {
   const url = new URL(c.req.url);
   const hostname = url.hostname;
   const appHostname = new URL(c.env.APP_URL).hostname;
 
   // If not on main domain or localhost, check for custom domain
-  if (hostname !== appHostname && hostname !== 'localhost' && !hostname.endsWith('.shopublish.com')) {
+  if (
+    hostname !== appHostname &&
+    hostname !== "localhost" &&
+    !hostname.endsWith(".shopublish.com")
+  ) {
     // 1. Check for Book Domain
     const book = await c.env.DB.prepare(
       `SELECT b.*, u.name as author_name, u.plan as author_plan, u.store_handle, u.store_logo_key
        FROM books b JOIN users u ON b.user_id = u.id
-       WHERE LOWER(b.custom_domain) = ?`
-    ).bind(hostname.toLowerCase()).first<Book & { author_name: string; author_plan: string; store_handle?: string; store_logo_key?: string }>();
+       WHERE LOWER(b.custom_domain) = ?`,
+    )
+      .bind(hostname.toLowerCase())
+      .first<
+        Book & {
+          author_name: string;
+          author_plan: string;
+          store_handle?: string;
+          store_logo_key?: string;
+        }
+      >();
 
     if (book) {
-      c.set('book', book);
+      c.set("book", book);
     } else {
       // 2. Check for Store Domain
       const user = await getUserByCustomDomain(c.env.DB, hostname);
       if (user) {
-        c.set('storeUser', user);
+        c.set("storeUser", user);
       }
     }
   }
@@ -54,89 +82,101 @@ app.use('*', async (c, next) => {
 });
 
 // Global middleware
-app.use('/*', cors({
-  origin: (origin) => origin || '*',
-  credentials: true,
-  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  "/*",
+  cors({
+    origin: (origin) => origin || "*",
+    credentials: true,
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Health check
-app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.get("/api/health", (c) =>
+  c.json({ status: "ok", timestamp: new Date().toISOString() }),
+);
 
 // Static Assets (for Logo/Icons)
-app.get('/logo.png', serveStatic({ path: './logo.png', manifest }));
-app.get('/favicon.png', serveStatic({ path: './favicon.png', manifest }));
-app.get('/apple-touch-icon.png', serveStatic({ path: './apple-touch-icon.png', manifest }));
+app.get("/logo.png", serveStatic({ path: "./logo.png", manifest }));
+app.get("/favicon.png", serveStatic({ path: "./favicon.png", manifest }));
+app.get(
+  "/apple-touch-icon.png",
+  serveStatic({ path: "./apple-touch-icon.png", manifest }),
+);
 
 // API Routes
-app.route('/api/auth', authRoutes);
-app.route('/api/docs', docRoutes);
-app.route('/api/billing', billingRoutes);
-app.route('/api/user', userRoutes);
-app.route('/api/members', memberRoutes);
-app.route('/api/swagger', swagger);
-app.route('/api/categories', categoriesRoutes);
-app.route('/api/products', productsRoutes);
-app.route('/api/promotions', promotionsRoutes);
-app.route('/api/orders', ordersRoutes);
+app.route("/api/auth", authRoutes);
+app.route("/api/docs", docRoutes);
+app.route("/api/billing", billingRoutes);
+app.route("/api/user", userRoutes);
+app.route("/api/members", memberRoutes);
+app.route("/api/swagger", swagger);
+app.route("/api/categories", categoriesRoutes);
+app.route("/api/products", productsRoutes);
+app.route("/api/promotions", promotionsRoutes);
+app.route("/api/orders", ordersRoutes);
 
 // Public Routes
-app.route('/read', viewerRoutes);
-app.route('/store', storeRoutes);
+app.route("/read", viewerRoutes);
+app.route("/store", storeRoutes);
 
 // Dashboard (Move higher to avoid regex collision)
-app.get('/dashboard', (c) => {
+app.get("/dashboard", (c) => {
   return c.html(dashboardPage(c.env.APP_URL));
 });
 
 // Static pages
-app.get('/privacy', (c) => c.html(privacyPage(c.env.APP_URL)));
-app.get('/terms', (c) => c.html(termsPage(c.env.APP_URL)));
-app.get('/contact', (c) => c.html(contactPage(c.env.APP_URL)));
-app.get('/docs', (c) => c.html(docsPage(c.env.APP_URL)));
+app.get("/privacy", (c) => c.html(privacyPage(c.env.APP_URL)));
+app.get("/terms", (c) => c.html(termsPage(c.env.APP_URL)));
+app.get("/contact", (c) => c.html(contactPage(c.env.APP_URL)));
+app.get("/docs", (c) => c.html(docsPage(c.env.APP_URL)));
 
 // Landing page, Custom Store Root, or Custom Book Root
-app.get('/', async (c) => {
-  const book = c.get('book');
+app.get("/", async (c) => {
+  const book = c.get("book");
   if (book) {
     // Render the viewer directly for the book
     return c.html(viewerPage(book as any, c.env.APP_URL));
   }
 
-  const storeUser = c.get('storeUser');
+  const storeUser = c.get("storeUser");
   if (storeUser) {
     const booksResult = await c.env.DB.prepare(
       `SELECT id, title, slug, type, cover_url, view_count, created_at
-       FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
-    ).bind(storeUser.id).all<Book>();
+       FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`,
+    )
+      .bind(storeUser.id)
+      .all<Book>();
     const books = booksResult.results || [];
-    const settings = JSON.parse(storeUser.store_settings || '{}');
-    return c.html(bookstorePage(storeUser, books, settings, c.env.APP_URL, true));
+    const settings = JSON.parse(storeUser.store_settings || "{}");
+    return c.html(
+      bookstorePage(storeUser, books, settings, c.env.APP_URL, true),
+    );
   }
   return c.html(landingPage(c.env.APP_URL));
 });
 
 // Custom Store Pages (Privacy, Terms, Contact)
-app.get('/p/:page(privacy|terms|contact)', async (c) => {
-  const storeUser = c.get('storeUser');
+app.get("/p/:page(privacy|terms|contact)", async (c) => {
+  const storeUser = c.get("storeUser");
   if (!storeUser) return c.notFound();
 
-  const page = c.req.param('page');
-  const settings = JSON.parse(storeUser.store_settings || '{}');
-  
-  let content = '';
-  let title = '';
-  
-  if (page === 'privacy') {
+  const page = c.req.param("page");
+  const settings = JSON.parse(storeUser.store_settings || "{}");
+
+  let content = "";
+  let title = "";
+
+  if (page === "privacy") {
     content = settings.privacy_policy_content;
-    title = 'Privacy Policy';
-  } else if (page === 'terms') {
+    title = "Privacy Policy";
+  } else if (page === "terms") {
     content = settings.terms_content;
-    title = 'Terms & Conditions';
-  } else if (page === 'contact') {
+    title = "Terms & Conditions";
+  } else if (page === "contact") {
     content = settings.contact_info_content;
-    title = 'Contact Information';
+    title = "Contact Information";
   }
 
   if (!content) return c.notFound();
@@ -144,31 +184,41 @@ app.get('/p/:page(privacy|terms|contact)', async (c) => {
 });
 
 // Custom Domain Member Routes
-app.get('/login', async (c) => {
-  const storeUser = c.get('storeUser');
-  if (!storeUser) return c.redirect('/dashboard');
-  let html = memberAccessPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+app.get("/login", async (c) => {
+  const storeUser = c.get("storeUser");
+  if (!storeUser) return c.redirect("/dashboard");
+  let html = memberAccessPage(
+    storeUser.store_name || storeUser.name,
+    storeUser.store_logo_url,
+    "/",
+  );
   html = html.replace(/__OWNER_ID__/g, storeUser.id);
   return c.html(html);
 });
 
-app.get('/register', async (c) => {
-  const storeUser = c.get('storeUser');
-  if (!storeUser) return c.redirect('/dashboard');
-  let html = memberRegisterPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+app.get("/register", async (c) => {
+  const storeUser = c.get("storeUser");
+  if (!storeUser) return c.redirect("/dashboard");
+  let html = memberRegisterPage(
+    storeUser.store_name || storeUser.name,
+    storeUser.store_logo_url,
+    "/",
+  );
   html = html.replace(/__OWNER_ID__/g, storeUser.id);
   return c.html(html);
 });
 
-app.get('/forgot-password', async (c) => {
-  const storeUser = c.get('storeUser');
-  if (!storeUser) return c.redirect('/dashboard');
-  let html = memberForgotPage(storeUser.store_name || storeUser.name, storeUser.store_logo_url, '/');
+app.get("/forgot-password", async (c) => {
+  const storeUser = c.get("storeUser");
+  if (!storeUser) return c.redirect("/dashboard");
+  let html = memberForgotPage(
+    storeUser.store_name || storeUser.name,
+    storeUser.store_logo_url,
+    "/",
+  );
   html = html.replace(/__OWNER_ID__/g, storeUser.id);
   return c.html(html);
 });
-
-
 
 function landingPage(appUrl: string): string {
   return `<!DOCTYPE html>
@@ -508,7 +558,20 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
-  console.error('Unhandled Server Error: ', err);
+  console.error("Unhandled Server Error: ", err);
+
+  const isApi = c.req.path.startsWith("/api/");
+  if (isApi) {
+    return c.json(
+      {
+        error: "Internal Server Error",
+        message: err.message,
+        stack: c.env.APP_URL.includes("localhost") ? err.stack : undefined,
+      },
+      500,
+    );
+  }
+
   return c.html(errorPage(c.env.APP_URL), 500);
 });
 
