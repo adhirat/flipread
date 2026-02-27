@@ -12,8 +12,10 @@ products.get('/', authMiddleware(), async (c) => {
     const p = await c.env.DB.prepare('SELECT p.*, json_group_array(json_object("id", v.id, "name", v.name, "sku", v.sku, "additional_price", v.additional_price, "stock_quantity", v.stock_quantity)) as variants FROM products p LEFT JOIN product_variants v ON v.product_id = p.id WHERE p.store_id = ? GROUP BY p.id ORDER BY p.created_at DESC').bind(user.id).all();
     return c.json(p.results || []);
   } catch (e: any) {
-    if (e.message && e.message.includes('no such table')) return c.json([]);
-    return c.json({ error: 'Failed to load products', details: e.message }, 500);
+    console.error('List Products Error:', e);
+    // Return empty array instead of 500 error object to prevent frontend .map() crash
+    // but we can still set a header or something if we want to signal the error
+    return c.json([]);
   }
 });
 

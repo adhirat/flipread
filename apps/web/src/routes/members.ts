@@ -23,16 +23,24 @@ members.use('/*', async (c, next) => {
 
 // GET /api/members — List members for current user's store
 members.get('/', async (c) => {
-  const user = c.get('user');
-  const { archived } = c.req.query();
-  
-  const query = archived === 'true' 
-    ? `SELECT * FROM store_members WHERE store_owner_id = ? AND is_archived = 1 ORDER BY created_at DESC`
-    : `SELECT * FROM store_members WHERE store_owner_id = ? AND is_archived = 0 ORDER BY created_at DESC`;
+  try {
+    const user = c.get('user');
+    const { archived } = c.req.query();
+    
+    const query = archived === 'true' 
+      ? `SELECT * FROM store_members WHERE store_owner_id = ? AND is_archived = 1 ORDER BY created_at DESC`
+      : `SELECT * FROM store_members WHERE store_owner_id = ? AND is_archived = 0 ORDER BY created_at DESC`;
 
-  const results = await c.env.DB.prepare(query).bind(user.id).all<StoreMember>();
+    const results = await c.env.DB.prepare(query).bind(user.id).all<StoreMember>();
 
-  return c.json({ members: results.results || [] });
+    return c.json({ members: results.results || [] });
+  } catch (err: any) {
+    console.error('List Members Error:', err);
+    return c.json({ 
+      error: 'Failed to load members', 
+      message: err.message 
+    }, 500);
+  }
 });
 
 // POST /api/members — Add a new member
