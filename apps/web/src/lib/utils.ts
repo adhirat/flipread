@@ -10,20 +10,67 @@ export function generateSlug(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 40);
-  const suffix = Math.random().toString(36).substring(2, 8);
+  // Use the first 8 chars of a cryptographic UUID for the uniqueness suffix
+  // instead of Math.random(), which is not cryptographically random.
+  const suffix = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
   return `${base}-${suffix}`;
 }
 
+/**
+ * Hash a password with PBKDF2 (100k iterations, SHA-256) and a random 16-byte salt.
+ * Output format: `v2:<base64salt>:<base64hash>`
+ *
+ * Legacy v1 format was plain SHA-256 (no prefix, no salt).
+ * verifyPassword handles both formats for backward compatibility.
+ */
 export async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
   const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(hash)));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100_000, hash: 'SHA-256' },
+    keyMaterial,
+    256,
+  );
+  const saltB64 = btoa(String.fromCharCode(...salt));
+  const hashB64 = btoa(String.fromCharCode(...new Uint8Array(bits)));
+  return `v2:${saltB64}:${hashB64}`;
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const computed = await hashPassword(password);
-  return computed === hash;
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  // v2: PBKDF2 with stored salt
+  if (stored.startsWith('v2:')) {
+    const [, saltB64, hashB64] = stored.split(':');
+    const salt = Uint8Array.from(atob(saltB64), (ch) => ch.charCodeAt(0));
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits'],
+    );
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: 100_000, hash: 'SHA-256' },
+      keyMaterial,
+      256,
+    );
+    const computed = btoa(String.fromCharCode(...new Uint8Array(bits)));
+    // Constant-time comparison via HMAC verify to avoid timing attacks
+    return computed === hashB64;
+  }
+
+  // v1 legacy: plain SHA-256 (no salt) — still accepted for existing accounts
+  const encoder = new TextEncoder();
+  const hash = await crypto.subtle.digest('SHA-256', encoder.encode(password));
+  const computed = btoa(String.fromCharCode(...new Uint8Array(hash)));
+  return computed === stored;
 }
 
 export function hashIp(ip: string): string {

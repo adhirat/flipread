@@ -3,8 +3,20 @@
 import { Hono } from 'hono';
 import type { Env, User } from '../lib/types';
 import { generateId, hashPassword, verifyPassword } from '../lib/utils';
-import { createToken } from '../middleware/auth';
+import { createToken, verifyToken, extractToken } from '../middleware/auth';
 import { logActivity } from '../lib/activity';
+
+/** Basic email format check — rejects obvious typos before they hit the DB. */
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
+
+/** Returns dev-only error details; never leaks internals to production clients. */
+function devDetails(env: Env, err: unknown): object {
+  if (!env.APP_URL.includes('localhost')) return {};
+  const e = err as Error;
+  return { message: e.message, stack: e.stack };
+}
 
 type Variables = { user: User };
 
@@ -17,8 +29,11 @@ auth.post('/register', async (c) => {
       email: string; password: string; name: string;
     }>();
 
-    if (!email || !password || password.length < 8) {
-      return c.json({ error: 'Email and password (min 8 chars) required' }, 400);
+    if (!email || !isValidEmail(email)) {
+      return c.json({ error: 'A valid email address is required' }, 400);
+    }
+    if (!password || password.length < 8) {
+      return c.json({ error: 'Password must be at least 8 characters' }, 400);
     }
 
     if (!c.env.DB) {
@@ -52,13 +67,9 @@ auth.post('/register', async (c) => {
     logActivity(c, id, 'register', 'user', id, { email });
 
     return c.json({ user: { id, email, name, plan: 'free' }, token });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Registration Error:', err);
-    return c.json({ 
-      error: 'Registration failed', 
-      message: err.message,
-      stack: c.env.APP_URL.includes('localhost') ? err.stack : undefined
-    }, 500);
+    return c.json({ error: 'Registration failed', ...devDetails(c.env, err) }, 500);
   }
 });
 
@@ -67,8 +78,8 @@ auth.post('/login', async (c) => {
   try {
     const { email, password } = await c.req.json<{ email: string; password: string }>();
 
-    if (!email || !password) {
-      return c.json({ error: 'Email and password required' }, 400);
+    if (!email || !isValidEmail(email) || !password) {
+      return c.json({ error: 'Valid email and password required' }, 400);
     }
 
     if (!c.env.DB) {
@@ -100,13 +111,9 @@ auth.post('/login', async (c) => {
       user: { id: user.id, email: user.email, name: user.name, store_handle: user.store_handle, plan: user.plan },
       token,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Login Error:', err);
-    return c.json({ 
-      error: 'Login failed', 
-      message: err.message,
-      stack: c.env.APP_URL.includes('localhost') ? err.stack : undefined
-    }, 500);
+    return c.json({ error: 'Login failed', ...devDetails(c.env, err) }, 500);
   }
 });
 
@@ -118,21 +125,9 @@ auth.post('/logout', (c) => {
 
 // GET /api/auth/me — get current user
 auth.get('/me', async (c) => {
-  // Quick token check without full middleware
-  let tokenStr: string | undefined;
-  const cookies = c.req.header('Cookie');
-  if (cookies) {
-    const match = cookies.match(/(?:^|;\s*)token=([^;]*)/);
-    if (match) tokenStr = decodeURIComponent(match[1]);
-  }
-  if (!tokenStr) {
-    const authHeader = c.req.header('Authorization');
-    if (authHeader?.startsWith('Bearer ')) tokenStr = authHeader.slice(7);
-  }
-
+  const tokenStr = extractToken(c);
   if (!tokenStr) return c.json({ user: null });
 
-  const { verifyToken } = await import('../middleware/auth');
   const decoded = await verifyToken(tokenStr, c.env.JWT_SECRET);
   if (!decoded) return c.json({ user: null });
 
