@@ -1,173 +1,100 @@
-# FlipRead
+# ShoPublish Monorepo 🚀
 
-A modern, edge-native platform for selling and reading digital books (PDF/EPUB), built on Cloudflare's global network.
-
-## 🚀 Features
-
-- **Premium Viewers** — High-performance PDF and EPUB viewers with professional streaming support
-- **Large File Support** — Optimized rendering for GB-sized PDFs with intelligent memory management and Range Requests
-- **Custom Storefronts** — Personalized branded stores with custom domains, logos, themes, and layouts
-- **Tiered Subscriptions** — Free, Basic, Pro, and Business plans with tailored limits and features
-- **Secure Access** — Password protection, private store modes, and secure member access
-- **Team Collaboration** — Invite members to your store with role-based access (Pro/Business)
-- **Detailed Analytics** — Track views, geographic data, and user activity logs
-- **Developer API** — Full REST API with Swagger documentation for external integrations
-- **Activity Logging** — Comprehensive audit logs for all user actions
-- **Edge Performance** — Built on Cloudflare Workers, D1, R2, and KV for low-latency global access
-
-## 🛠️ Tech Stack
-
-| Layer         | Technology                                                                               |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| **Runtime**   | [Cloudflare Workers](https://workers.cloudflare.com/)                                    |
-| **Framework** | [Hono](https://hono.dev/)                                                                |
-| **Database**  | [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite at the edge)              |
-| **Storage**   | [Cloudflare R2](https://developers.cloudflare.com/r2/) (Object storage for books/covers) |
-| **Cache**     | [Cloudflare KV](https://developers.cloudflare.com/kv/) (Sessions & data caching)         |
-| **Payments**  | [Stripe](https://stripe.com/)                                                            |
-| **Docs**      | [Swagger UI](https://swagger.io/)                                                        |
-| **Language**  | TypeScript                                                                               |
-
-## 📋 Prerequisites
-
-- [Node.js](https://nodejs.org/) 18+ and npm
-- [Cloudflare account](https://dash.cloudflare.com/sign-up)
-- [Stripe account](https://dashboard.stripe.com/register) (for payment features)
+Welcome to the **ShoPublish** monorepo. This project is a comprehensive digital publishing ecosystem that allows creators to turn documents into interactive flipbooks and manage a professional digital bookstore.
 
 ---
 
-## 🔧 Local Setup
+## 📂 Project Structure
 
-### 1. Clone & Install
+This is a monorepo managed with **NPM Workspaces**.
+
+- **[`apps/web`](./apps/web)**: The core platform built on **Cloudflare Workers**.
+  - **Framework**: Hono (SSR / API)
+  - **Database**: Cloudflare D1 (Serverless SQL)
+  - **Storage**: Cloudflare R2
+  - **Payments**: Stripe Integration
+- **[`apps/mobile`](./apps/mobile)**: Companion mobile application.
+  - **Framework**: Flutter (Android/iOS)
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- Node.js (v20 or later)
+- Flutter SDK
+- Cloudflare Wrangler CLI (`npm install -g wrangler`)
+
+### Installation
+
+From the root directory:
 
 ```bash
-git clone https://github.com/adhirat/flipread.git
-cd flipread
 npm install
 ```
 
-### 2. Configure Secrets
+### Running Locally
 
-`.dev.vars` contains local development secrets (Stripe test keys, JWT). This file is **gitignored** — create it from the template:
-
-```bash
-# .dev.vars
-JWT_SECRET=your-local-jwt-secret
-STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-```
-
-> Get Stripe test keys from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
-
-### 3. Set Up Local Database
-
-```bash
-npm run db:migrate
-```
-
-Creates the local D1 database in `.wrangler/state/v3/d1/`.
-
-### 4. Start Dev Server
-
-```bash
-npm run dev
-```
-
-- App: **http://localhost:8787**
-- Swagger Docs: **http://localhost:8787/api/swagger**
+| Service        | Command                         | URL                     |
+| :------------- | :------------------------------ | :---------------------- |
+| **Web App**    | `npm run web:dev`               | `http://localhost:8787` |
+| **Mobile App** | `cd apps/mobile && flutter run` | N/A                     |
 
 ---
 
-## 🌐 Environments
+## 🚀 Deployment & Environments
 
-|            | Production                                           | Staging                                                              |
-| ---------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| **URL**    | [flipread.adhirat.com](https://flipread.adhirat.com) | [staging.flipread.adhirat.com](https://staging.flipread.adhirat.com) |
-| **Branch** | `main`                                               | `staging`                                                            |
-| **D1**     | `flipread-db`                                        | `flipread-db-staging`                                                |
-| **KV**     | `KV`                                                 | `KV` (staging ID)                                                    |
-| **R2**     | `flipread-files`                                     | `flipread-files-staging`                                             |
+We use a three-stage deployment strategy for the web application.
 
-### CI/CD
+### Web Deployment
 
-Deployments are automated via GitHub Actions (`.github/workflows/deploy.yml`):
+| Environment    | Branch    | Command                        | Database                |
+| :------------- | :-------- | :----------------------------- | :---------------------- |
+| **Local**      | N/A       | `npm run web:db:migrate:local` | Local D1                |
+| **Staging**    | `staging` | `npm run web:deploy:staging`   | `shopublish-db-staging` |
+| **Production** | `main`    | `npm run web:deploy:prod`      | `shopublish-db`         |
 
-- `git push origin main` → deploys to **Production**
-- `git push origin staging` → deploys to **Staging**
-- Pull requests run type checking only (no deploy)
+### Database Migrations
 
-### Required GitHub Secrets
+Always run migrations before deploying code changes that affect the schema:
 
-| Secret                  | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID                    |
-| `CLOUDFLARE_API_TOKEN`  | API token with "Edit Workers" permission |
-
-### Cloudflare Secrets
-
-Set separately for each environment via `wrangler secret put`:
-
-```bash
-# Staging
-npx wrangler secret put JWT_SECRET --env staging
-npx wrangler secret put STRIPE_SECRET_KEY --env staging
-npx wrangler secret put STRIPE_WEBHOOK_SECRET --env staging
-
-# Production
-npx wrangler secret put JWT_SECRET
-npx wrangler secret put STRIPE_SECRET_KEY
-npx wrangler secret put STRIPE_WEBHOOK_SECRET
-```
-
-> **Full deploy command reference:** See [deploy.md](./deploy.md)
+- Local: `npm run web:db:migrate:local`
+- Staging: `npm run web:db:migrate:staging`
+- Production: `npm run web:db:migrate:prod`
 
 ---
 
-## 📁 Project Structure
+## 🤖 CI/CD Integration
 
-```
-flipread/
-├── src/
-│   ├── index.ts           # Main application entry point
-│   ├── routes/            # API route handlers
-│   │   ├── auth.ts        # Authentication & sessions
-│   │   ├── books.ts       # Book management
-│   │   ├── user.ts        # User profile & settings
-│   │   ├── store.ts       # Public storefront
-│   │   ├── viewer.ts      # Book viewer & asset serving
-│   │   ├── members.ts     # Team member management
-│   │   ├── docs.ts        # Swagger API docs
-│   │   └── swagger.ts     # Swagger UI setup
-│   ├── db/                # Database schema & migrations
-│   ├── lib/               # Shared utilities & types
-│   ├── services/          # Business logic services
-│   ├── views/             # HTML templates & dashboard
-│   └── middleware/        # Auth & logging middleware
-├── public/                # Static assets (images, styles)
-├── wrangler.toml          # Cloudflare configuration
-├── deploy.md              # Deploy command reference
-└── package.json
-```
+The repository is integrated with automated workflows for testing and deployment.
 
-## 🎯 Subscription Plans
+### GitHub Actions
 
-| Plan         | Upload Limit | Monthly Views | Store Features                                              | Team       |
-| ------------ | ------------ | ------------- | ----------------------------------------------------------- | ---------- |
-| **Free**     | 5 MB         | 500           | Basic Store                                                 | —          |
-| **Basic**    | 10 MB        | 2,000         | Custom Backgrounds                                          | —          |
-| **Pro**      | 50 MB        | 50,000        | Custom Domain, Password Protection, Analytics, Private Mode | 50 Members |
-| **Business** | 200 MB       | Unlimited     | API Access, Priority Support, Raw Data Export               | Unlimited  |
+- **Web CI/CD**: Automatically builds, type-checks, and deploys pushes to `main` (Production) and `staging` (Staging).
+- **Mobile CI**: Runs Flutter analysis, unit tests, and smoke builds on every pull request to ensure code quality.
 
-## 🔐 Security
+### Codemagic
 
-- **JWT Authentication** — Secure, stateless session management
-- **Role-Based Access** — Granular permissions for store members
-- **Activity Logging** — Full audit trail of all sensitive actions
-- **Secure Uploads** — File type validation and sanitized filenames
-- **Secret Management** — Environment-based configuration for API keys
+- **Mobile CD**: Fully configured via [`codemagic.yaml`](./codemagic.yaml).
+- Handles Android (APK/AAB) and iOS (IPA) release builds automatically on pushes to `main` and `staging`.
 
-## 🗺️ Roadmap
+---
 
-- [ ] Drag-and-drop sorting for books in the store
-- [ ] Advanced analytics charts (graphs over time)
-- [ ] Custom domain DNS verification automation
+## 📜 Available Scripts (Root)
+
+| Script                   | Description                                        |
+| :----------------------- | :------------------------------------------------- |
+| `web:dev`                | Start the web development server.                  |
+| `web:deploy:staging`     | Deploy the web app to the staging environment.     |
+| `web:deploy:prod`        | Deploy the web app to production.                  |
+| `web:db:migrate:local`   | Run migrations on your local development database. |
+| `web:db:migrate:staging` | Run migrations on the remote staging database.     |
+| `web:db:migrate:prod`    | Run migrations on the remote production database.  |
+
+---
+
+## 🌍 Useful Links
+
+- **Staging URL**: [https://staging.shopublish.com](https://staging.shopublish.com)
+- **API Reference**: [Swagger UI / API Docs](https://staging.shopublish.com/api/swagger)

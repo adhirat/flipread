@@ -1,10 +1,14 @@
-name: Deploy Worker
+name: Deploy Web
 on:
   push:
     branches:
       - main
       - staging
-  pull_request:
+    paths:
+      - "apps/web/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy.yml"
 
 jobs:
   deploy:
@@ -12,19 +16,31 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
+
       - name: Install dependencies
         run: npm ci
+
       - name: Type Check
-        run: npx tsc --noEmit
-      - name: Deploy
-        if: github.event_name == 'push'
+        run: npm run tsc:check --workspace=@shopublish/web
+
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/staging'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy ${{ github.ref_name == 'staging' && '--env staging' || '--env=""' }}
+          command: deploy --env staging
+          workingDirectory: "apps/web"
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+          workingDirectory: "apps/web"

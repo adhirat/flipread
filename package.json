@@ -1,22 +1,16 @@
 {
-  "name": "flipread",
-  "version": "1.0.0",
+  "name": "shopublish-monorepo",
   "private": true,
-  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --env=\"\"",
-    "db:migrate": "wrangler d1 execute flipread-db --local --file=./src/db/schema.sql",
-    "db:migrate:staging": "wrangler d1 execute flipread-db-staging --remote --file=./src/db/schema.sql",
-    "db:migrate:prod": "wrangler d1 execute flipread-db --remote --file=./src/db/schema.sql"
-  },
-  "dependencies": {
-    "hono": "^4.4.0",
-    "stripe": "^14.0.0"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240512.0",
-    "typescript": "^5.4.0",
-    "wrangler": "^4.65.0"
+    "web:dev": "npm run dev --workspace=@shopublish/web",
+    "web:deploy:staging": "npm run deploy:staging --workspace=@shopublish/web",
+    "web:deploy:prod": "npm run deploy:prod --workspace=@shopublish/web",
+    "web:db:migrate:local": "npm run db:migrate:local --workspace=@shopublish/web",
+    "web:db:migrate:staging": "npm run db:migrate:staging --workspace=@shopublish/web",
+    "web:db:migrate:prod": "npm run db:migrate:prod --workspace=@shopublish/web",
+    "web:tsc:check": "npm run tsc:check --workspace=@shopublish/web"
   }
 }

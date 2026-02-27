@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EBOOK Viewer | Responsive Flip</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 1. Environment */
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center, #f3f0e8 0%, #e2dac9 100%);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #1a1a1a;
+            font-family: sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* 2. 3D Scene Container */
+        #scene-container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 3500px;
+            overflow: hidden;
+            padding: 0;
+            transition: top 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), bottom 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* 3. The Book Object */
+        #book-transform {
+            position: relative;
+            /* Border Effect: Use 98% instead of 100% to show background border */
+            width: 98%;
+            height: 98%;
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease;
+            transform-style: preserve-3d;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #book-transform.book-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #book-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-left: 6px solid #e0e0e0;
+            border-right: 6px solid #e0e0e0;
+            border-radius: 2px;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Mobile specific adjustments for book viewer */
+        @media (max-width: 768px) {
+            #book-viewer {
+                border-right: none;
+                border-left: 8px solid #d0d0d0;
+            }
+        }
+
+        /* 4. CLOSED BOOK STATES */
+        .closed-book-base {
+            position: absolute;
+            z-index: 200;
+            width: 45vh;
+            height: 65vh;
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            display: none;
+        }
+
+        #front-cover-layer {
+            display: none;
+        }
+
+        #back-cover-layer {
+            display: none;
+        }
+
+        .cover-visual {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 2px 4px 4px 2px;
+            box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.4), inset 2px 0 5px rgba(255, 255, 255, 0.2);
+            background: #fff;
+            display: block;
+        }
+
+        .closed-book-base::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 30px;
+            transform: translateX(-100%) rotateY(-90deg);
+            transform-origin: right;
+            background: linear-gradient(to right, #666, #333, #666);
+            border-radius: 2px 0 0 2px;
+        }
+
+        .closed-book-base::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            right: 0;
+            width: 25px;
+            transform: translateX(100%) rotateY(90deg);
+            transform-origin: left;
+            background: linear-gradient(to right, #fff, #ddd, #fff);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .closed-book-base:hover {
+            transform: scale(1.02) rotateY(-5deg);
+        }
+
+        /* --- DESKTOP ANIMATIONS --- */
+        .animate-front-open {
+            animation: frontOpen 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            pointer-events: none;
+        }
+
+        .animate-front-close {
+            animation: frontClose 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+        }
+
+        @keyframes frontOpen {
+            0% {
+                transform: rotateY(0deg) translateZ(0);
+                opacity: 1;
+            }
+
+            40% {
+                transform: rotateY(-60deg) translateZ(100px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: rotateY(-180deg) translateZ(200px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes frontClose {
+            0% {
+                transform: rotateY(-180deg) translateZ(200px) scale(1.5);
+                opacity: 0;
+            }
+
+            60% {
+                transform: rotateY(-60deg) translateZ(100px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: rotateY(0deg) translateZ(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-back-appear {
+            animation: backAppear 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+        }
+
+        .animate-back-hide {
+            animation: backHide 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes backAppear {
+            0% {
+                transform: rotateY(180deg) translateZ(200px) scale(1.5);
+                opacity: 0;
+            }
+
+            60% {
+                transform: rotateY(60deg) translateZ(100px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: rotateY(0deg) translateZ(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes backHide {
+            0% {
+                transform: rotateY(0deg) translateZ(0);
+                opacity: 1;
+            }
+
+            40% {
+                transform: rotateY(60deg) translateZ(100px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: rotateY(180deg) translateZ(200px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* 5. Phantom Flip Layer */
+        #flip-layer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background: white;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+            transform-style: preserve-3d;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            background: linear-gradient(to right, #e8e8e8 0%, #ffffff 10%, #ffffff 95%, #d0d0d0 100%);
+        }
+
+        /* DESKTOP FLIP CLASSES */
+        .flipping-next {
+            width: 50%;
+            /* Desktop Spread */
+            display: block !important;
+            right: 0;
+            transform-origin: left;
+            animation: flipRightToLeft 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .flipping-prev {
+            width: 50%;
+            /* Desktop Spread */
+            display: block !important;
+            left: 0;
+            transform-origin: right;
+            animation: flipLeftToRight 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes flipRightToLeft {
+            0% {
+                transform: rotateY(0deg);
+                background: linear-gradient(to left, #fff, #f0f0f0);
+            }
+
+            100% {
+                transform: rotateY(-180deg);
+                background: linear-gradient(to right, #ddd, #fafafa);
+            }
+        }
+
+        @keyframes flipLeftToRight {
+            0% {
+                transform: rotateY(0deg);
+                background: linear-gradient(to right, #fff, #f0f0f0);
+            }
+
+            100% {
+                transform: rotateY(180deg);
+                background: linear-gradient(to left, #ddd, #fafafa);
+            }
+        }
+
+        /* MOBILE FLIP CLASSES */
+        .mobile-flipping-next {
+            width: 100%;
+            left: 0;
+            display: block !important;
+            transform-origin: left;
+            animation: mobileFlipNext 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-flipping-prev {
+            width: 100%;
+            left: 0;
+            display: block !important;
+            transform-origin: left;
+            animation: mobileFlipPrev 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes mobileFlipNext {
+            0% {
+                transform: rotateY(0deg);
+            }
+
+            100% {
+                transform: rotateY(-180deg);
+            }
+        }
+
+        @keyframes mobileFlipPrev {
+            0% {
+                transform: rotateY(-180deg);
+            }
+
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+
+        /* 6. Central Spine Shadow (Hidden on Mobile) */
+        #spine-shadow {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 50;
+            mix-blend-mode: multiply;
+        }
+
+        @media (max-width: 768px) {
+            #spine-shadow {
+                display: none;
+            }
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .book-title-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            padding: 20px;
+            background: #4f46e5;
+            display: none;
+        }
+
+        .book-title-fallback.end-style {
+            background: #333;
+        }
+
+        /* General Modal Styling */
+        .custom-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(28, 28, 28, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            z-index: 600;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transition: all 0.2s ease-out;
+            color: #eee;
+        }
+
+        .custom-modal.open {
+            display: flex;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Backdrop */
+        #modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 550;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #modal-backdrop.open {
+            display: block;
+            opacity: 1;
+        }
+
+        /* TOC Modal Specifics */
+        #toc-modal {
+            width: 400px;
+            max-width: 90vw;
+            height: auto;
+            max-height: 90vh;
+        }
+
+        #toc-list {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        #toc-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #toc-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .toc-item {
+            padding: 12px;
+            color: #aaa;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        .toc-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding-left: 16px;
+        }
+
+        /* Background Settings Modal */
+        #background-modal {
+            width: 340px;
+            padding: 0;
+        }
+
+        .bg-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .bg-swatch:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        /* End Controls */
+        #end-controls {
+            position: absolute;
+            bottom: 10%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            z-index: 250;
+        }
+
+        #end-controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .end-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .end-btn:hover {
+            background: white;
+            color: black;
+        }
+
+        /* Nav Zones */
+        .nav-zone {
+            position: fixed;
+            top: 50px;
+            bottom: 60px;
+            width: 15%;
+            z-index: 90;
+            cursor: pointer;
+        }
+
+        .nav-zone-left {
+            left: 0;
+        }
+
+        .nav-zone-right {
+            right: 0;
+        }
+
+        /* Auto-hide Logic */
+        .auto-hide {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .auto-hide:hover {
+            opacity: 1;
+        }
+
+        .force-visible {
+            opacity: 1 !important;
+        }
+
+        /* Transparent Mode Overrides */
+        .transparent-mode {
+            background-color: transparent !important;
+            backdrop-filter: none !important;
+            border-color: transparent !important;
+            color: #111827 !important;
+        }
+
+        .transparent-mode h1 {
+            color: #111827 !important;
+        }
+
+        .transparent-mode button,
+        .transparent-mode svg,
+        .transparent-mode span {
+            color: #374151 !important;
+        }
+
+        .transparent-mode button:hover {
+            color: #000000 !important;
+            background-color: rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .transparent-mode .zoom-pill {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-overlay" class="loading-screen">
+        <div class="w-12 h-12 border-4 border-white border-b-transparent rounded-full animate-spin mb-4"></div>
+        <p id="loading-status" class="text-white font-mono uppercase tracking-widest text-sm">Loading...</p>
+    </div>
+
+    <!-- 1. COMPACT HEADER BAR -->
+    <header
+        class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center bg-black/60 backdrop-blur-md text-white h-12 px-4 transition-opacity duration-300 border-b border-white/5"
+        id="ui-header">
+
+        <!-- Left: Menu & Title -->
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTOC()"
+                class="hover:bg-white/20 p-1.5 rounded-md transition text-white/80 hover:text-white" title="Contents">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <h1 class="font-bold text-sm tracking-wide hidden sm:block opacity-90">EBOOK VIEWER</h1>
+        </div>
+
+        <!-- Right: Tools -->
+        <div class="flex items-center gap-2">
+            <input type="file" id="epub-upload" accept=".epub" class="hidden" onchange="loadBook(event)">
+            <button onclick="document.getElementById('epub-upload').click()"
+                class="hover:bg-white/20 p-2 rounded-md transition text-white/80 hover:text-white" title="Open File">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </button>
+
+            <button onclick="toggleBackgroundModal()"
+                class="hover:bg-white/20 p-2 rounded-md transition text-white/80 hover:text-white"
+                title="Background Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+            </button>
+
+            <!-- Zoom Pill -->
+            <div
+                class="flex items-center bg-black/40 rounded-full px-2 py-0.5 gap-2 border border-white/10 mx-2 zoom-pill">
+                <button onclick="zoomOut()" class="hover:text-white text-white/60 px-1 font-bold">-</button>
+                <span id="zoom-val" class="text-[10px] font-mono w-8 text-center opacity-80">100%</span>
+                <button onclick="zoomIn()" class="hover:text-white text-white/60 px-1 font-bold">+</button>
+            </div>
+
+            <!-- View Mode Toggle -->
+            <button onclick="toggleViewMode()" id="view-mode-btn"
+                class="hover:bg-white/20 p-2 rounded-md transition text-sm text-white/80 hover:text-white hidden sm:block"
+                title="Fit/Full Screen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                    <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                    <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                    <path d="M16 21h3a2 2 0 0 1 2 2v-3" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Invisible Click Zones -->
+    <div class="nav-zone nav-zone-left" onclick="turnPage('prev')"></div>
+    <div class="nav-zone nav-zone-right" onclick="turnPage('next')"></div>
+
+    <!-- Modal Backdrop -->
+    <div id="modal-backdrop" onclick="closeAllModals()"></div>
+
+    <!-- TOC Modal -->
+    <div id="toc-modal" class="custom-modal">
+        <div class="flex justify-between items-center p-3 border-b border-white/10 bg-black/30 rounded-t-lg">
+            <h2 class="font-bold text-xs uppercase tracking-wide text-white/80">Table of Contents</h2>
+            <button onclick="toggleTOC()" class="text-white/60 hover:text-white">✕</button>
+        </div>
+        <div id="toc-list"></div>
+    </div>
+
+    <!-- Background Settings Modal -->
+    <div id="background-modal" class="custom-modal">
+        <div class="flex justify-between items-center p-4 border-b border-white/10 rounded-t-lg">
+            <h2 class="font-bold text-sm text-white">Background Settings</h2>
+            <button onclick="toggleBackgroundModal()" class="text-white/60 hover:text-white">✕</button>
+        </div>
+        <div class="p-5 flex flex-col gap-6">
+            <!-- Dark Themes -->
+            <div>
+                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">Dark Themes</h3>
+                <div class="flex gap-3">
+                    <div class="bg-swatch bg-gray-900" onclick="changeBackground('#111827')"></div>
+                    <div class="bg-swatch bg-gray-700" onclick="changeBackground('#374151')"></div>
+                    <div class="bg-swatch bg-[#3e2723]" onclick="changeBackground('#3e2723')"></div>
+                    <div class="bg-swatch bg-[#1a237e]" onclick="changeBackground('#1a237e')"></div>
+                    <div class="bg-swatch bg-black" onclick="changeBackground('#000000')"></div>
+                </div>
+            </div>
+            <!-- Light Themes -->
+            <div>
+                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">Light Themes</h3>
+                <div class="flex gap-3">
+                    <div class="bg-swatch bg-white" onclick="changeBackground('#ffffff')"></div>
+                    <div class="bg-swatch bg-gray-200" onclick="changeBackground('#e5e7eb')"></div>
+                    <div class="bg-swatch bg-[#d7ccc8]" onclick="changeBackground('#d7ccc8')"></div>
+                    <div class="bg-swatch bg-[#fff9c4]" onclick="changeBackground('#fff9c4')"></div>
+                    <div class="bg-swatch bg-[#e3f2fd]" onclick="changeBackground('#e3f2fd')"></div>
+                </div>
+            </div>
+            <!-- Custom Image -->
+            <div>
+                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">Custom Image</h3>
+                <input type="file" id="bg-upload" accept="image/*" class="hidden"
+                    onchange="handleCustomBackground(event)">
+                <button onclick="document.getElementById('bg-upload').click()"
+                    class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition">
+                    Upload Image
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Scene -->
+    <div id="scene-container">
+        <!-- FRONT COVER -->
+        <div id="front-cover-layer" class="closed-book-base" onclick="openBookFromFront()">
+            <div class="book-title-fallback" id="front-fallback">Click to Open</div>
+            <img id="front-image" class="cover-visual" src="" alt="Cover"
+                onerror="this.style.display='none'; document.getElementById('front-fallback').style.display='flex';">
+        </div>
+
+        <!-- BACK COVER -->
+        <div id="back-cover-layer" class="closed-book-base">
+            <div class="book-title-fallback end-style" id="back-fallback" style="display:flex">
+                <span class="text-3xl mb-2">The End</span>
+                <span class="text-xs opacity-70 font-normal">Click options below</span>
+            </div>
+            <img id="back-image" class="cover-visual" src="" style="display:none">
+
+            <div id="end-controls">
+                <button class="end-btn" onclick="openBookFromBack()">Flip Open</button>
+                <button class="end-btn" onclick="restartBook()">Start Over</button>
+            </div>
+        </div>
+
+        <!-- OPEN BOOK -->
+        <div id="book-transform">
+            <div id="book-viewer"></div>
+            <div id="spine-shadow"></div>
+            <div id="flip-layer"></div>
+        </div>
+    </div>
+
+    <!-- 2. COMPACT FOOTER BAR -->
+    <footer
+        class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md text-white h-12 px-4 gap-20 transition-opacity duration-300 border-t border-white/5"
+        id="ui-footer">
+
+        <button onclick="turnPage('prev')"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/30 flex items-center justify-center transition shrink-0 text-white/80 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+            </svg>
+        </button>
+
+        <button onclick="turnPage('next')"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/30 flex items-center justify-center transition shrink-0 text-white/80 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6" />
+            </svg>
+        </button>
+
+    </footer>
+
+    <script>
+        let book, rendition;
+        let isAnimating = false;
+        let currentZoom = 100;
+        let bookState = 'front_closed';
+        let navigationData = null;
+        let firstContentIndex = 0;
+        let viewMode = 'fit';
+        let cachedBookData = null;
+        let cachedTitle = "New Book";
+
+        const isMobile = () => window.innerWidth < 768;
+
+        const frontCoverLayer = document.getElementById('front-cover-layer');
+        const backCoverLayer = document.getElementById('back-cover-layer');
+        const transformContainer = document.getElementById('book-transform');
+        const flipLayer = document.getElementById('flip-layer');
+        const loader = document.getElementById('loading-overlay');
+        const status = document.getElementById('loading-status');
+        const frontImg = document.getElementById('front-image');
+        const frontFallback = document.getElementById('front-fallback');
+        const uiHeader = document.getElementById('ui-header');
+        const uiFooter = document.getElementById('ui-footer');
+        const tocModal = document.getElementById('toc-modal');
+        const tocList = document.getElementById('toc-list');
+        const bgModal = document.getElementById('background-modal');
+        const endControls = document.getElementById('end-controls');
+        const bookViewer = document.getElementById('book-viewer');
+        const sceneContainer = document.getElementById('scene-container');
+        const viewModeBtn = document.getElementById('view-mode-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+
+        function mountBook(bookData, title = "New Book", startCfi = null) {
+            cachedBookData = bookData;
+            cachedTitle = title;
+
+            if (book) book.destroy();
+
+            uiHeader.classList.remove('auto-hide', 'force-visible', 'transparent-mode');
+            uiFooter.classList.remove('auto-hide', 'force-visible', 'transparent-mode');
+
+            loader.style.display = 'flex';
+            status.innerText = "Processing Book...";
+            resetState();
+
+            try {
+                book = ePub(bookData);
+            } catch (e) {
+                console.error("Failed to parse EPUB", e);
+                status.innerText = "Invalid File";
+                setTimeout(() => loader.style.display = 'none', 1000);
+                return;
+            }
+
+            book.ready.then(() => {
+                book.coverUrl().then(url => {
+                    if (url) {
+                        frontImg.src = url;
+                        frontImg.style.display = 'block';
+                        frontFallback.style.display = 'none';
+                    } else {
+                        throw new Error("No cover");
+                    }
+                }).catch(() => {
+                    frontImg.style.display = 'none';
+                    frontFallback.style.display = 'flex';
+                    frontFallback.innerText = title;
+                });
+
+                frontCoverLayer.style.display = 'block';
+                status.innerText = "Formatting...";
+
+                const spreadMode = isMobile() ? "none" : "always";
+
+                rendition = book.renderTo("book-viewer", {
+                    width: "100%", height: "100%",
+                    spread: spreadMode,
+                    minSpreadWidth: 0,
+                    flow: "paginated", manager: "default"
+                });
+
+                rendition.display(startCfi || undefined).then(() => {
+                    if (!startCfi) {
+                        const current = rendition.currentLocation();
+                        if (current && current.start && current.start.index === 0) {
+                            firstContentIndex = 1;
+                        } else {
+                            firstContentIndex = 0;
+                        }
+                    }
+
+                    registerStyles();
+
+                    // No longer generating locations or page numbers
+
+                    book.loaded.navigation.then(nav => {
+                        navigationData = nav;
+                        generateTOC();
+                    });
+
+                    // Empty handler since we removed page numbers
+                    rendition.on("relocated", handleRelocation);
+
+                    loader.style.display = 'none';
+                    applyViewMode();
+                });
+            }).catch(err => {
+                console.error("Book Ready Error", err);
+                status.innerText = "Error Loading Book";
+                setTimeout(() => loader.style.display = 'none', 2000);
+            });
+        }
+
+        function loadBook(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => mountBook(e.target.result, file.name.replace('.epub', ''));
+            reader.readAsArrayBuffer(file);
+        }
+
+        function toggleBackgroundModal() {
+            if (bgModal.classList.contains('open')) {
+                closeAllModals();
+            } else {
+                closeAllModals();
+                bgModal.classList.add('open');
+                modalBackdrop.classList.add('open');
+            }
+        }
+
+        function changeBackground(color) {
+            document.body.style.background = color;
+            document.body.style.backgroundImage = 'none';
+        }
+
+        function handleCustomBackground(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.body.style.background = `url(${e.target.result})`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleViewMode() {
+            viewMode = viewMode === 'fullscreen' ? 'fit' : 'fullscreen';
+            applyViewMode();
+        }
+
+        function applyViewMode() {
+            if (viewMode === 'fit') {
+                viewModeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 1 2 2v-3"/></svg>';
+
+                sceneContainer.style.top = '50px';
+                sceneContainer.style.bottom = '50px';
+
+                uiHeader.classList.add('transparent-mode', 'force-visible');
+                uiFooter.classList.add('transparent-mode', 'force-visible');
+                uiHeader.classList.remove('auto-hide');
+                uiFooter.classList.remove('auto-hide');
+            } else {
+                viewModeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+
+                sceneContainer.style.top = '0';
+                sceneContainer.style.bottom = '0';
+
+                uiHeader.classList.remove('transparent-mode', 'force-visible');
+                uiFooter.classList.remove('transparent-mode', 'force-visible');
+
+                if (book) {
+                    uiHeader.classList.add('auto-hide');
+                    uiFooter.classList.add('auto-hide');
+                }
+            }
+
+            setTimeout(() => {
+                if (rendition) rendition.resize();
+            }, 500);
+        }
+
+        function resetState() {
+            bookState = 'front_closed';
+            frontCoverLayer.style.display = 'none';
+            backCoverLayer.style.display = 'none';
+            frontCoverLayer.classList.remove('animate-front-open', 'animate-front-close');
+            backCoverLayer.classList.remove('animate-back-appear', 'animate-back-hide');
+            transformContainer.classList.remove('book-open');
+            endControls.classList.remove('visible');
+        }
+
+        // --- TRANSITIONS ---
+        function openBookFromFront() {
+            if (bookState !== 'front_closed') return;
+            bookState = 'open';
+
+            bookViewer.style.opacity = '0';
+            rendition.display(firstContentIndex).then(() => {
+                bookViewer.style.opacity = '1';
+            });
+
+            frontCoverLayer.classList.remove('animate-front-close');
+            frontCoverLayer.classList.add('animate-front-open');
+
+            setTimeout(() => { transformContainer.classList.add('book-open'); }, 300);
+            setTimeout(() => { frontCoverLayer.style.display = 'none'; }, 1000);
+        }
+
+        function closeBookToFront() {
+            if (bookState !== 'open') return;
+            bookState = 'front_closed';
+
+            closeAllModals();
+
+            frontCoverLayer.style.display = 'block';
+            transformContainer.classList.remove('book-open');
+            frontCoverLayer.classList.remove('animate-front-open');
+            frontCoverLayer.classList.add('animate-front-close');
+        }
+
+        function closeBookToBack() {
+            if (bookState !== 'open') return;
+            bookState = 'back_closed';
+
+            backCoverLayer.style.display = 'block';
+            transformContainer.classList.remove('book-open');
+            backCoverLayer.classList.remove('animate-back-hide');
+            backCoverLayer.classList.add('animate-back-appear');
+
+            setTimeout(() => { endControls.classList.add('visible'); }, 1000);
+        }
+
+        function openBookFromBack() {
+            if (bookState !== 'back_closed') return;
+            bookState = 'open';
+
+            endControls.classList.remove('visible');
+            backCoverLayer.classList.remove('animate-back-appear');
+            backCoverLayer.classList.add('animate-back-hide');
+
+            setTimeout(() => { transformContainer.classList.add('book-open'); }, 300);
+            setTimeout(() => { backCoverLayer.style.display = 'none'; }, 1000);
+        }
+
+        function restartBook() {
+            rendition.display(firstContentIndex);
+            if (bookState === 'back_closed') {
+                backCoverLayer.style.display = 'none';
+                backCoverLayer.classList.remove('animate-back-appear');
+                endControls.classList.remove('visible');
+                transformContainer.classList.add('book-open');
+                bookState = 'open';
+                setTimeout(() => { closeBookToFront(); }, 50);
+            } else {
+                closeBookToFront();
+            }
+        }
+
+        function handleRelocation(location) {
+            // UI updates for page numbers/progress removed as per request
+        }
+
+        function turnPage(direction) {
+            if (bookState === 'front_closed' && direction === 'next') { openBookFromFront(); return; }
+            if (bookState === 'back_closed' && direction === 'prev') { openBookFromBack(); return; }
+
+            if (isAnimating || !rendition || bookState !== 'open') return;
+
+            const current = rendition.currentLocation();
+            if (!current) return;
+
+            if (direction === 'prev') {
+                if (current.start && current.start.index <= firstContentIndex && current.start.displayed.page <= 1) {
+                    closeBookToFront(); return;
+                }
+            }
+
+            if (direction === 'next') {
+                if (current.atEnd) {
+                    closeBookToBack(); return;
+                }
+            }
+
+            isAnimating = true;
+
+            const mobile = isMobile();
+
+            if (direction === 'next') {
+                if (mobile) {
+                    bookViewer.style.transition = 'transform 0.15s ease-in, opacity 0.15s ease-in';
+                    bookViewer.style.transform = 'translateX(-120%)';
+                    bookViewer.style.opacity = '0.8';
+
+                    setTimeout(() => {
+                        rendition.next().then(() => {
+                            bookViewer.style.transition = 'none';
+                            bookViewer.style.transform = 'translateX(120%)';
+                            void bookViewer.offsetWidth;
+
+                            bookViewer.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
+                            bookViewer.style.transform = 'translateX(0)';
+                            bookViewer.style.opacity = '1';
+                            isAnimating = false;
+                        });
+                    }, 150);
+                } else {
+                    bookViewer.style.transition = 'transform 0.15s ease-in';
+                    bookViewer.style.transform = 'rotateY(90deg)';
+
+                    setTimeout(() => {
+                        rendition.next().then(() => {
+                            bookViewer.style.transition = 'none';
+                            bookViewer.style.transform = 'rotateY(-90deg)';
+                            void bookViewer.offsetWidth;
+
+                            bookViewer.style.transition = 'transform 0.15s ease-out';
+                            bookViewer.style.transform = 'rotateY(0)';
+                            isAnimating = false;
+                        });
+                    }, 150);
+                }
+            } else {
+                if (mobile) {
+                    bookViewer.style.transition = 'transform 0.15s ease-in, opacity 0.15s ease-in';
+                    bookViewer.style.transform = 'translateX(120%)';
+                    bookViewer.style.opacity = '0.8';
+
+                    setTimeout(() => {
+                        rendition.prev().then(() => {
+                            bookViewer.style.transition = 'none';
+                            bookViewer.style.transform = 'translateX(-120%)';
+                            void bookViewer.offsetWidth;
+
+                            bookViewer.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
+                            bookViewer.style.transform = 'translateX(0)';
+                            bookViewer.style.opacity = '1';
+                            isAnimating = false;
+                        });
+                    }, 150);
+                } else {
+                    bookViewer.style.transition = 'transform 0.15s ease-in';
+                    bookViewer.style.transform = 'rotateY(-90deg)';
+
+                    setTimeout(() => {
+                        rendition.prev().then(() => {
+                            bookViewer.style.transition = 'none';
+                            bookViewer.style.transform = 'rotateY(90deg)';
+                            void bookViewer.offsetWidth;
+
+                            bookViewer.style.transition = 'transform 0.15s ease-out';
+                            bookViewer.style.transform = 'rotateY(0)';
+                            isAnimating = false;
+                        });
+                    }, 150);
+                }
+            }
+        }
+
+        function generateTOC() {
+            tocList.innerHTML = '';
+            if (!navigationData || !navigationData.toc) return;
+
+            const processItems = (items, level = 0) => {
+                items.forEach(chapter => {
+                    const item = document.createElement('div');
+                    item.className = 'toc-item';
+                    item.style.paddingLeft = (12 + level * 15) + 'px';
+                    item.innerText = chapter.label.trim();
+                    item.onclick = () => {
+                        rendition.display(chapter.href);
+                        toggleTOC();
+                        if (bookState === 'front_closed') openBookFromFront();
+                        if (bookState === 'back_closed') openBookFromBack();
+                    };
+                    tocList.appendChild(item);
+                    if (chapter.subitems && chapter.subitems.length > 0) {
+                        processItems(chapter.subitems, level + 1);
+                    }
+                });
+            };
+            processItems(navigationData.toc);
+        }
+
+        function toggleTOC() {
+            if (tocModal.classList.contains('open')) {
+                closeAllModals();
+            } else {
+                if (bookState === 'front_closed') {
+                    openBookFromFront();
+                } else if (bookState === 'back_closed') {
+                    openBookFromBack();
+                }
+
+                closeAllModals();
+                tocModal.classList.add('open');
+                modalBackdrop.classList.add('open');
+            }
+        }
+
+        function closeAllModals() {
+            tocModal.classList.remove('open');
+            bgModal.classList.remove('open');
+            modalBackdrop.classList.remove('open');
+        }
+
+        function toggleTheme() {
+            console.log("Theme toggle clicked");
+        }
+
+        function registerStyles() {
+            rendition.hooks.content.register(contents => {
+                contents.addStylesheetRules({
+                    "body": {
+                        "font-family": "Georgia, Times, serif !important",
+                        "line-height": "1.6 !important",
+                        "padding": "25px 20px 20px 20px !important"
+                    },
+                    "img": { "max-width": "100%", "height": "auto" }
+                });
+            });
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (cachedBookData) {
+                    const currentLoc = rendition && rendition.currentLocation();
+                    const currentCfi = (currentLoc && currentLoc.start) ? currentLoc.start.cfi : null;
+                    mountBook(cachedBookData, cachedTitle, currentCfi);
+                } else if (rendition) {
+                    rendition.resize();
+                }
+            }, 500);
+        });
+
+        function zoomIn() { currentZoom += 10; applyZoom(); }
+        function zoomOut() { if (currentZoom > 50) currentZoom -= 10; applyZoom(); }
+        function applyZoom() {
+            rendition.themes.fontSize(currentZoom + "%");
+            document.getElementById('zoom-val').innerText = currentZoom + "%";
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight") turnPage('next');
+            if (e.key === "ArrowLeft") turnPage('prev');
+        });
+        window.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) { e.preventDefault(); e.deltaY < 0 ? zoomIn() : zoomOut(); }
+        }, { passive: false });
+
+        (function autoLoad() {
+            fetch('flip.epub')
+                .then(response => {
+                    if (!response.ok) throw new Error("File not found");
+                    return response.arrayBuffer();
+                })
+                .then(buffer => mountBook(buffer, "Flip Demo"))
+                .catch(e => {
+                    console.log("Auto-load skipped:", e);
+                    uiHeader.classList.remove('auto-hide', 'force-visible');
+                    uiFooter.classList.remove('auto-hide', 'force-visible');
+                    loader.style.display = 'none';
+                });
+        })();
+
+    </script>
+</body>
+
+</html>
