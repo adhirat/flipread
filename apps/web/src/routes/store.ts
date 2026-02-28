@@ -1542,7 +1542,10 @@ ${showSearch || uniqueCategories.length > 0 ? `(function(){
       var matchQ = !q || title.indexOf(q)!==-1 || cats.indexOf(q)!==-1;
       var matchCat = !activeCat || cats.split(',').indexOf(activeCat)!==-1;
       cards[i].style.display = (matchQ && matchCat) ? '' : 'none';
-      if(matchQ && matchCat) cards[i].style.animation = 'none'; // Fix animation on refilter
+      if(matchQ && matchCat) {
+        cards[i].style.animation = 'none'; // Fix animation on refilter
+        cards[i].style.opacity = '1';
+      }
     }
   }
   if(input) input.oninput=filterCards;
