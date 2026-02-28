@@ -96,6 +96,70 @@ store.get('/:username/gallery', async (c) => {
   return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
 });
 
+// GET /store/:username/products - Duplicates Gallery to act as the Products route
+store.get('/:username/products', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+
+  const settings = JSON.parse(user.store_settings || '{}');
+  
+  // Private Store Check
+  if (settings.is_private) {
+    const cookieName = `mk_${user.id}`;
+    const accessKey = getCookie(c, cookieName);
+    let isValid = false;
+    if (accessKey) {
+      const member = await c.env.DB.prepare(
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+      ).bind(user.id, accessKey).first();
+      if (member) isValid = true;
+    }
+    if (!isValid) {
+      let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+      html = html.replace(/__OWNER_ID__/g, user.id);
+      return c.html(html);
+    }
+  }
+
+  const booksResult = await c.env.DB.prepare(
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
+     FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+  ).bind(user.id).all<Book>();
+  const books = booksResult.results || [];
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+});
+
+// GET /store/:username/cart - A placeholder cart view
+store.get('/:username/cart', async (c) => {
+  const username = c.req.param('username');
+  const user = await getUserByUsername(c.env.DB, username);
+  if (!user) return c.html(notFoundPage(), 404);
+
+  const settings = JSON.parse(user.store_settings || '{}');
+  
+  // Private Store Check
+  if (settings.is_private) {
+    const cookieName = `mk_${user.id}`;
+    const accessKey = getCookie(c, cookieName);
+    let isValid = false;
+    if (accessKey) {
+      const member = await c.env.DB.prepare(
+        'SELECT id FROM store_members WHERE store_owner_id = ? AND access_key = ? AND is_active = 1'
+      ).bind(user.id, accessKey).first();
+      if (member) isValid = true;
+    }
+    if (!isValid) {
+      let html = memberAccessPage(user.store_name || user.name, user.store_logo_url);
+      html = html.replace(/__OWNER_ID__/g, user.id);
+      return c.html(html);
+    }
+  }
+
+  // Display empty cart page using the existing contentPage template for simplicity
+  return c.html(contentPage(user, 'Your Cart', 'Your cart is currently empty. <br><br> <a href="/store/' + username + '/products">Browse products</a>.', c.env.APP_URL));
+});
+
 // GET /store/:username/login
 store.get('/:username/login', async (c) => {
   const username = c.req.param('username');
@@ -253,6 +317,8 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
   const privacyUrl = isCustomDomain ? '/privacy' : `/store/${storeHandle}/privacy`;
   const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
+  const productsUrl = isCustomDomain ? '/products' : `/store/${storeHandle}/products`;
+  const cartUrl = isCustomDomain ? '/cart' : `/store/${storeHandle}/cart`;
 
   // Announcement banner
   const bannerText = settings.banner_text || '';
@@ -1282,17 +1348,22 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 
   <nav class="nav-menu">
     <a href="${homeUrl}" class="nav-link">Home</a>
+    <a href="${productsUrl}" class="nav-link">Products</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
+    <a href="${cartUrl}" class="cart-icon-btn" title="Cart" style="position:relative; display:flex; align-items:center; justify-content:center; width:38px; height:38px; color:var(--text-secondary); transition:color 0.2s;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge" id="cart-badge-desk" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
+    </a>
     <a href="${loginUrl}" class="login-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
         <circle cx="12" cy="12" r="10"/>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
         <line x1="9" y1="9" x2="9.01" y2="9"/>
@@ -1300,8 +1371,8 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       </svg>
     </a>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1320,6 +1391,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
   </div>
   <nav class="drawer-nav">
     <a href="${homeUrl}" class="drawer-link">Home</a>
+    <a href="${productsUrl}" class="drawer-link">Products</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
@@ -1434,6 +1506,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const loginUrl = isCustomDomain ? '/login' : `/store/${storeHandle}/login`;
   const privacyUrl = isCustomDomain ? '/privacy' : `/store/${storeHandle}/privacy`;
   const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
+  const productsUrl = isCustomDomain ? '/products' : `/store/${storeHandle}/products`;
+  const cartUrl = isCustomDomain ? '/cart' : `/store/${storeHandle}/cart`;
   const backUrl = homeUrl;
 
   let extraHtml = '';
@@ -1614,17 +1688,22 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 
   <nav class="nav-menu">
     <a href="${homeUrl}" class="nav-link">Home</a>
+    <a href="${productsUrl}" class="nav-link">Products</a>
     <a href="${aboutUrl}" class="nav-link">About Us</a>
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
+    <a href="${cartUrl}" class="cart-icon-btn" title="Cart" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; color:var(--text2); transition:color 0.2s;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge" id="cart-badge-cont" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
+    </a>
     <a href="${loginUrl}" class="login-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
         <circle cx="12" cy="12" r="10"/>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
         <line x1="9" y1="9" x2="9.01" y2="9"/>
@@ -1632,8 +1711,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
       </svg>
     </a>
     <button class="theme-toggle" id="tt" aria-label="Toggle theme" title="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1652,6 +1731,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   </div>
   <nav class="drawer-nav">
     <a href="${homeUrl}" class="drawer-link">Home</a>
+    <a href="${productsUrl}" class="drawer-link">Products</a>
     <a href="${aboutUrl}" class="drawer-link">About Us</a>
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
