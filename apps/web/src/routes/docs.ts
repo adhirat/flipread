@@ -189,6 +189,7 @@ books.patch('/:id', async (c) => {
     password?: string | null;
     custom_domain?: string | null;
     cover_url?: string;
+    categories?: string;
     settings?: Record<string, unknown>;
   }>();
 
@@ -228,6 +229,10 @@ books.patch('/:id', async (c) => {
   if (updates.cover_url !== undefined) {
     sets.push('cover_url = ?');
     values.push(updates.cover_url);
+  }
+  if (updates.categories !== undefined) {
+    sets.push('categories = ?');
+    values.push(updates.categories);
   }
 
   if (sets.length > 0) {

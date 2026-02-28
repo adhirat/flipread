@@ -1,0 +1,2 @@
+ALTER TABLE books ADD COLUMN categories TEXT DEFAULT '[]';
+ALTER TABLE categories ADD COLUMN store_id TEXT REFERENCES users(id) ON DELETE CASCADE;

@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS books (
   password TEXT DEFAULT NULL,
   custom_domain TEXT DEFAULT NULL,
   settings TEXT DEFAULT '{}', -- JSON: background, theme, etc.
+  categories TEXT DEFAULT '[]', -- JSON array of category IDs
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -116,10 +117,12 @@ CREATE INDEX IF NOT EXISTS idx_store_inquiries_owner ON store_inquiries(store_ow
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
-  name TEXT UNIQUE NOT NULL,
+  store_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
   parent_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
   image_url TEXT DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(store_id, name)
 );
 
 -- Products table

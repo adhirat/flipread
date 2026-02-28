@@ -54,7 +54,7 @@ store.get('/:username', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
@@ -89,7 +89,7 @@ store.get('/:username/gallery', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
@@ -123,7 +123,7 @@ store.get('/:username/products', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
@@ -278,7 +278,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const storeName = user.store_name || user.name;
   const safeName = esc(storeName);
   const bookCount = books.length;
-  const showSearch = bookCount > 3;
+  const showSearch = bookCount > 0;
 
   // Hero settings
   const heroImage = user.store_hero_url || settings.hero_image_url || '';
@@ -385,15 +385,22 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     ? `body { background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px); }`
     : '';
 
-  // Corner radius CSS
   const cornerRadiusCSS = cornerRadius === 'sharp'
     ? '.bk-cover { border-radius: 0 !important; } .bk-3d { border-radius: 0; }'
     : cornerRadius === 'rounded'
     ? '.bk-cover { border-radius: 6px 20px 20px 6px !important; }'
     : ''; // standard keeps default
 
+  // Extract unique categories
+  const uniqueCategories = Array.from(new Set(
+    books.flatMap(b => {
+      try { return JSON.parse(b.categories || '[]'); } catch { return []; }
+    })
+  )).filter(Boolean).sort() as string[];
+
   const bookCards = books.map((b, i) => {
     const firstLetter = (b.title || 'B').charAt(0).toUpperCase();
+    const categoriesList = (() => { try { return JSON.parse(b.categories || '[]').join(','); } catch { return ''; } })();
     const delay = Math.min(i, 11) * 0.06 + 0.4;
     const itemSettings = typeof b.settings === 'string' ? JSON.parse(b.settings) : (b.settings || {});
     
@@ -404,7 +411,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     const authorStr = itemSettings.author ? `<div class="bk-author" style="font-size:12px; color:var(--text-secondary); margin-bottom: 4px;">${esc(itemSettings.author)}</div>` : '';
     const descStr = itemSettings.description ? `<div class="bk-desc" style="font-size:12px; color:var(--text-muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${esc(itemSettings.description)}</div>` : '';
 
-    return `<a href="${appUrl}/read/${esc(b.slug)}" class="bk-card" data-title="${esc(b.title.toLowerCase())}" style="animation-delay:${delay.toFixed(2)}s">
+    return `<a href="${appUrl}/read/${esc(b.slug)}" class="bk-card" data-title="${esc(b.title.toLowerCase())}" data-categories="${esc(categoriesList.toLowerCase())}" style="animation-delay:${delay.toFixed(2)}s">
       <div class="bk-3d">
         <div class="bk-spine"></div>
         <div class="bk-cover">
@@ -1257,7 +1264,13 @@ body::before {
 /* ====== BOOK DATE ====== */
 .bk-date { font-size: 11px; color: var(--text-tertiary); }
 
-/* ====== FOOTER ====== */
+.category-filters { display:flex; gap:10px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.category-filters::-webkit-scrollbar { display: none; }
+.category-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s; font-size: 13px; font-weight: 500; }
+.category-btn:hover { background: var(--border); color: var(--text); }
+.category-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ====== HERO ====== */
 .site-footer {
   border-top: 1px solid var(--border);
   padding: 60px 20px;
@@ -1347,15 +1360,15 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home</a>
-    <a href="${productsUrl}" class="nav-link">Products</a>
-    <a href="${aboutUrl}" class="nav-link">About Us</a>
+    <a href="${productsUrl}" class="nav-link">Home</a>
+    <a href="${homeUrl}" class="nav-link">Gallery</a>
+    ${settings.about_us_content ? `<a href="${aboutUrl}" class="nav-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
     <a href="${cartUrl}" class="cart-icon-btn" title="Cart" style="position:relative; display:flex; align-items:center; justify-content:center; width:38px; height:38px; color:var(--text-secondary); transition:color 0.2s;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       <span class="cart-badge" id="cart-badge-desk" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
     </a>
     <a href="${loginUrl}" class="login-btn">
@@ -1363,7 +1376,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
         <circle cx="12" cy="12" r="10"/>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
         <line x1="9" y1="9" x2="9.01" y2="9"/>
@@ -1371,8 +1384,8 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       </svg>
     </a>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1390,13 +1403,13 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home</a>
-    <a href="${productsUrl}" class="drawer-link">Products</a>
-    <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${productsUrl}" class="drawer-link">Home</a>
+    <a href="${homeUrl}" class="drawer-link">Gallery</a>
+    ${settings.about_us_content ? `<a href="${aboutUrl}" class="drawer-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
 </div>
-
+${settings.hide_hero ? '' : `
 <section class="hero ${!heroImage ? 'hero-no-img' : ''}">
   ${heroImage ? `<div class="hero-bg" style="background-image: url('${esc(heroImage)}')"></div>` : ''}
   <div class="hero-content">
@@ -1405,6 +1418,7 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
     ${ctaText && ctaLink ? `<a href="${esc(ctaLink)}" class="hero-cta" target="_blank" rel="noopener">${esc(ctaText)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>` : ''}
   </div>
 </section>
+`}
 
 <div class="container">
   ${showSearch ? `<div class="search-section">
@@ -1413,6 +1427,12 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       <input type="text" id="book-search" placeholder="Search ${bookCount} publications..." autocomplete="off">
     </div>
   </div>` : ''}
+  
+  ${uniqueCategories.length > 0 ? `
+    <div class="category-filters">
+      ${uniqueCategories.map(cat => `<button class="category-btn" data-category="${esc(cat.toLowerCase())}">${esc(cat)}</button>`).join('')}
+    </div>
+  ` : ''}
 
   ${bookCount > 0
     ? `<div class="grid-section">${sectionHeading ? `<div class="section-heading"><h2>${esc(sectionHeading)}</h2><div class="section-heading-divider"></div></div>` : ''}<div class="grid" id="book-grid">${bookCards}</div></div>`
@@ -1478,7 +1498,37 @@ window.addEventListener('scroll', function() {
   }
 });
 
-${showSearch ? `(function(){var input=document.getElementById('book-search');var cards=document.querySelectorAll('.bk-card');if(!input)return;input.oninput=function(){var q=this.value.toLowerCase().trim();for(var i=0;i<cards.length;i++){var title=cards[i].getAttribute('data-title')||'';cards[i].style.display=(!q||title.indexOf(q)!==-1)?'':'none';}};})();` : ''}
+${showSearch || uniqueCategories.length > 0 ? `(function(){
+  var input=document.getElementById('book-search');
+  var catBtns=document.querySelectorAll('.category-btn');
+  var cards=document.querySelectorAll('.bk-card');
+  var activeCat='';
+  function filterCards() {
+    var q = input ? input.value.toLowerCase().trim() : '';
+    for(var i=0;i<cards.length;i++){
+      var title=cards[i].getAttribute('data-title')||'';
+      var cats=cards[i].getAttribute('data-categories')||'';
+      var matchQ = !q || title.indexOf(q)!==-1 || cats.indexOf(q)!==-1;
+      var matchCat = !activeCat || cats.split(',').indexOf(activeCat)!==-1;
+      cards[i].style.display = (matchQ && matchCat) ? '' : 'none';
+      if(matchQ && matchCat) cards[i].style.animation = 'none'; // Fix animation on refilter
+    }
+  }
+  if(input) input.oninput=filterCards;
+  catBtns.forEach(function(btn){
+    btn.onclick = function() {
+      if(this.classList.contains('active')) {
+        this.classList.remove('active');
+        activeCat = '';
+      } else {
+        catBtns.forEach(function(b){b.classList.remove('active')});
+        this.classList.add('active');
+        activeCat = this.getAttribute('data-category');
+      }
+      filterCards();
+    };
+  });
+})();` : ''}
 </script>
 </body></html>`;
 }
@@ -1687,15 +1737,15 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   </div>
 
   <nav class="nav-menu">
-    <a href="${homeUrl}" class="nav-link">Home</a>
-    <a href="${productsUrl}" class="nav-link">Products</a>
-    <a href="${aboutUrl}" class="nav-link">About Us</a>
+    <a href="${productsUrl}" class="nav-link">Home</a>
+    <a href="${homeUrl}" class="nav-link">Gallery</a>
+    ${settings.about_us_content ? `<a href="${aboutUrl}" class="nav-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
 
   <div class="header-actions">
     <a href="${cartUrl}" class="cart-icon-btn" title="Cart" style="position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; color:var(--text2); transition:color 0.2s;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       <span class="cart-badge" id="cart-badge-cont" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
     </a>
     <a href="${loginUrl}" class="login-btn">
@@ -1703,7 +1753,7 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
         <circle cx="12" cy="12" r="10"/>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
         <line x1="9" y1="9" x2="9.01" y2="9"/>
@@ -1711,8 +1761,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
       </svg>
     </a>
     <button class="theme-toggle" id="tt" aria-label="Toggle theme" title="Toggle theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
     <button class="menu-trigger" id="menu-trigger" aria-label="Menu">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1730,9 +1780,9 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${homeUrl}" class="drawer-link">Home</a>
-    <a href="${productsUrl}" class="drawer-link">Products</a>
-    <a href="${aboutUrl}" class="drawer-link">About Us</a>
+    <a href="${productsUrl}" class="drawer-link">Home</a>
+    <a href="${homeUrl}" class="drawer-link">Gallery</a>
+    ${settings.about_us_content ? `<a href="${aboutUrl}" class="drawer-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
 </div>

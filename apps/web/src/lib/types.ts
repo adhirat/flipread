@@ -54,6 +54,7 @@ export interface Book {
   password: string | null;
   custom_domain: string | null;
   settings: string;
+  categories?: string;
   created_at: string;
   updated_at: string;
 }

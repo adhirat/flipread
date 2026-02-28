@@ -10,7 +10,11 @@ export function passwordPage(slug: string, logoUrl: string = ''): string {
 <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
 <meta property="og:title" content="Password Required — SHOPUBLISH">
 <meta property="og:image" content="${logoUrl || '/logo.png'}">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}.c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}h2{margin-bottom:10px;font-size:22px}p{margin-bottom:25px;color:#94a3b8;font-size:14px}input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:14px;margin-bottom:15px;outline:none}input:focus{border-color:#3b82f6}button{width:100%;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;font-size:14px;cursor:pointer}button:hover{background:#2563eb}</style>
+<style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh}.c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);border:1px solid var(--border);text-align:center;max-width:400px;width:90%}h2{margin-bottom:10px;font-size:22px;color:var(--text)}p{margin-bottom:25px;color:var(--text-muted);font-size:14px}input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--input-border);background:var(--card);color:var(--text);font-size:14px;margin-bottom:15px;outline:none}input:focus{border-color:#3b82f6}button{width:100%;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;font-size:14px;cursor:pointer}button:hover{background:#2563eb}</style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head><body><div class="c"><div style="font-size:48px;margin-bottom:20px">🔒</div><h2>Password Required</h2><p>This book is protected. Enter the password to continue.</p>
 <form onsubmit="event.preventDefault();location.href='/read/${slug}?p='+encodeURIComponent(document.getElementById('pw').value)">
 <input type="password" id="pw" placeholder="Enter password" autofocus><button type="submit">Unlock Book</button></form></div></body></html>`;
@@ -27,7 +31,11 @@ export function errorPage(title: string, message: string, logoUrl: string = ''):
 <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
 <meta property="og:title" content="${safeTitle} — SHOPUBLISH">
 <meta property="og:image" content="${logoUrl || '/logo.png'}">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}.c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}h2{margin-bottom:10px;color:#f87171}p{color:#94a3b8;line-height:1.6}a{color:#3b82f6;text-decoration:none;margin-top:20px;display:inline-block}</style>
+<style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh}.c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);border:1px solid var(--border);text-align:center;max-width:400px;width:90%}h2{margin-bottom:10px;color:#ef4444}p{color:var(--text-muted);line-height:1.6}a{color:#3b82f6;text-decoration:none;margin-top:20px;display:inline-block}</style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head><body><div class="c"><div style="font-size:48px;margin-bottom:20px">📖</div><h2>${safeTitle}</h2><p>${safeMsg}</p><a href="/">← Back to SHOPUBLISH</a></div></body></html>`;
 }
 
@@ -41,20 +49,24 @@ export function memberAccessPage(storeName: string, logoUrl: string = '', homeUr
 <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
 <meta property="og:title" content="${safeName} — Login">
 <style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
-  .c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}
-  h2{margin-bottom:10px;font-size:24px;color:#f8fafc}
-  p{margin-bottom:25px;color:#94a3b8;font-size:14px;line-height:1.6}
-  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
+  .c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:400px;width:90%;border:1px solid var(--border)}
+  h2{margin-bottom:10px;font-size:24px;color:var(--text)}
+  p{margin-bottom:25px;color:var(--text-muted);font-size:14px;line-height:1.6}
+  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--input-border);background:var(--card);color:var(--text);font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
   input:focus{border-color:#3b82f6}
   button{width:100%;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;font-size:14px;cursor:pointer;transition:background .2s}
   button:hover{background:#2563eb}
   .msg{margin-top:15px;font-size:13px;padding:10px;border-radius:6px;display:none}
-  .msg.error{background:rgba(239,68,68,0.2);color:#fca5a5}
-  .back{margin-top:20px;display:inline-block;color:#64748b;text-decoration:none;font-size:13px}
-  .back:hover{color:#94a3b8}
+  .msg.error{background:#fee2e2;color:#ef4444}
+  .back{margin-top:20px;display:inline-block;color:var(--link);text-decoration:none;font-size:13px}
+  .back:hover{color:var(--link-hover)}
 </style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head>
 <body>
   <div class="c">
@@ -155,22 +167,26 @@ export function memberRegisterPage(storeName: string, logoUrl: string = '', home
 <title>${safeName} — Join</title>
 <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
 <style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:20px}
-  .c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:100%}
-  h2{margin-bottom:10px;font-size:24px;color:#f8fafc}
-  p{margin-bottom:25px;color:#94a3b8;font-size:14px;line-height:1.6}
-  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:20px}
+  .c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:400px;width:100%;border:1px solid var(--border)}
+  h2{margin-bottom:10px;font-size:24px;color:var(--text)}
+  p{margin-bottom:25px;color:var(--text-muted);font-size:14px;line-height:1.6}
+  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--input-border);background:var(--card);color:var(--text);font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
   input:focus{border-color:#3b82f6}
   button{width:100%;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;font-size:14px;cursor:pointer;transition:background .2s}
   button:hover{background:#2563eb}
   .msg{margin-top:15px;font-size:13px;padding:10px;border-radius:6px;display:none}
-  .msg.error{background:rgba(239,68,68,0.2);color:#fca5a5}
-  .msg.success{background:rgba(34,197,94,0.2);color:#86efac}
+  .msg.error{background:#fee2e2;color:#ef4444}
+  .msg.success{background:#dcfce7;color:#16a34a}
   .links{margin-top:20px;display:flex;flex-direction:column;gap:10px}
-  .link{color:#64748b;text-decoration:none;font-size:13px}
-  .link:hover{color:#94a3b8}
+  .link{color:var(--link);text-decoration:none;font-size:13px}
+  .link:hover{color:var(--link-hover)}
 </style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head>
 <body>
 <div class="c">
@@ -270,21 +286,25 @@ export function memberForgotPage(storeName: string, logoUrl: string = '', homeUr
 <title>${safeName} — Reset Access</title>
 <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
 <style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
-  .c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}
-  h2{margin-bottom:10px;font-size:24px;color:#f8fafc}
-  p{margin-bottom:25px;color:#94a3b8;font-size:14px;line-height:1.6}
-  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
+  .c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:400px;width:90%;border:1px solid var(--border)}
+  h2{margin-bottom:10px;font-size:24px;color:var(--text)}
+  p{margin-bottom:25px;color:var(--text-muted);font-size:14px;line-height:1.6}
+  input{width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--input-border);background:var(--card);color:var(--text);font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
   input:focus{border-color:#3b82f6}
   button{width:100%;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;font-size:14px;cursor:pointer;transition:background .2s}
   button:hover{background:#2563eb}
   .msg{margin-top:15px;font-size:13px;padding:10px;border-radius:6px;display:none}
-  .msg.error{background:rgba(239,68,68,0.2);color:#fca5a5}
-  .msg.success{background:rgba(34,197,94,0.2);color:#86efac}
-  .back{margin-top:20px;display:inline-block;color:#64748b;text-decoration:none;font-size:13px}
-  .back:hover{color:#94a3b8}
+  .msg.error{background:#fee2e2;color:#ef4444}
+  .msg.success{background:#dcfce7;color:#16a34a}
+  .back{margin-top:20px;display:inline-block;color:var(--link);text-decoration:none;font-size:13px}
+  .back:hover{color:var(--link-hover)}
 </style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head>
 <body>
 <div class="c">
@@ -348,14 +368,18 @@ export function verificationSuccessPage(storeName: string, logoUrl: string = '',
 <title>Account Verified — ${safeName}</title>
 <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
 <style>
+  :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
+  [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
+
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
-  .c{background:#1e293b;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;max-width:400px;width:90%}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column}
+  .c{background:var(--card);padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:400px;width:90%;border:1px solid var(--border)}
   h2{margin-bottom:15px;font-size:24px;color:#10b981}
-  p{margin-bottom:25px;color:#94a3b8;font-size:15px;line-height:1.6}
+  p{margin-bottom:25px;color:var(--text-muted);font-size:15px;line-height:1.6}
   .btn{display:inline-block;padding:12px 24px;border-radius:8px;background:#3b82f6;color:#fff;font-weight:600;text-decoration:none;transition:background .2s}
   .btn:hover{background:#2563eb}
 </style>
+<script>(function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}})();</script>
 </head>
 <body>
 <div class="c">
