@@ -2,7 +2,7 @@
 import { getWebViewerBase } from './webViewerBase';
 import { COMMON_READER_SCRIPTS, escapeHtml } from './viewerUtils';
 
-export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'ShoPublish'): string {
+export function epubWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'SHOPUBLISH'): string {
     const accent = (settings.accent_color as string) || '#4f46e5';
 
     return getWebViewerBase({

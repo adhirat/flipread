@@ -365,11 +365,11 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName}</title>
-<meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on ShoPublish.`)}">
+<meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on SHOPUBLISH.`)}">
 <link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
 <link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
 <meta property="og:title" content="${safeName}">
-<meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on ShoPublish.`)}">
+<meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on SHOPUBLISH.`)}">
 <meta property="og:image" content="${user.store_logo_url || appUrl + '/logo.png'}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1802,7 +1802,7 @@ function mdToHtml(md: string): string {
 }
 
 function notFoundPage(msg = 'Store not found'): string {
-  return `<!DOCTYPE html><html><head><title>Not Found — ShoPublish</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to ShoPublish</a></body></html>`;
+  return `<!DOCTYPE html><html><head><title>Not Found — SHOPUBLISH</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to SHOPUBLISH</a></body></html>`;
 }
 
 function esc(s: string): string {

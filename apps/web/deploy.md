@@ -1,4 +1,4 @@
-# ShoPublish — Deploy Commands
+# SHOPUBLISH — Deploy Commands
 
 Quick reference for deploying from your local terminal.
 

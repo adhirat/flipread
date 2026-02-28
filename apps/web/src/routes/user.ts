@@ -288,7 +288,7 @@ user.post('/inquiries/:id/respond', async (c) => {
   // Send email response
   const sendSuccess = await sendEmail(c.env, {
     to: inquiry.email as string,
-    subject: subject || `Re: Inquiry about ${currentUser.store_name || 'ShoPublish Store'}`,
+    subject: subject || `Re: Inquiry about ${currentUser.store_name || 'SHOPUBLISH Store'}`,
     from: `${currentUser.store_name || currentUser.name} <noreply@adhirat.com>`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">

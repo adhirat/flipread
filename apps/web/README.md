@@ -1,4 +1,4 @@
-# ShoPublish
+# SHOPUBLISH
 
 A modern, edge-native platform for selling and reading digital books (PDF/EPUB), built on Cloudflare's global network.
 

@@ -1,136 +1,147 @@
-// ShoPublish — Static Pages (Privacy, Terms, Contact, Documentation)
+// SHOPUBLISH — Static Pages (Privacy, Terms, Contact, Documentation)
 
 function pageShell(title: string, description: string, appUrl: string, content: string): string {
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${title} — ShoPublish</title>
+<title>${title} — SHOPUBLISH</title>
 <meta name="description" content="${description}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:title" content="${title} — ShoPublish">
+<meta property="og:title" content="${title} — SHOPUBLISH">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${appUrl}/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
-  --bg-primary:#ffffff;
-  --bg-secondary:#f8fafc;
-  --bg-card:#ffffff;
-  --bg-elevated:#f1f5f9;
-  --text-primary:#0f172a;
-  --text-secondary:#334155;
-  --text-muted:#64748b;
-  --accent-cyan:#4f46e5;
-  --accent-magenta:#ec4899;
-  --accent-purple:#8b5cf6;
-  --border:rgba(0,0,0,0.06);
-  --glow-cyan:rgba(79, 70, 229, 0.25);
-  --glow-magenta:rgba(236, 72, 153, 0.25);
-  --shadow:rgba(0,0,0,0.08)
+  --color-accent:        #6366f1;
+  --color-accent-hover:  #4f46e5;
+  --color-accent-subtle: #eef2ff;
+  --color-danger:        #ef4444;
+  --color-success:       #10b981;
+  --color-warning:       #f59e0b;
+  --bg-base:             #f9fafb;
+  --bg-surface:          #ffffff;
+  --bg-raised:           #f3f4f6;
+  --text-primary:        #111827;
+  --text-secondary:      #4b5563;
+  --text-muted:          #9ca3af;
+  --border-default:      #e5e7eb;
+  --border-strong:       #d1d5db;
+  --shadow-sm:           0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:           0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:           0 12px 32px rgba(0,0,0,0.10);
+  --radius-sm:           6px;
+  --radius-md:           8px;
+  --radius-lg:           12px;
+  --radius-xl:           16px;
 }
-:root[data-theme="dark"]{
-  --bg-primary:#0a0a0f;
-  --bg-secondary:#12121a;
-  --bg-card:#1a1a24;
-  --bg-elevated:#252538;
-  --text-primary:#fcfcfc;
-  --text-secondary:#a0aec0;
-  --text-muted:#64748b;
-  --accent-cyan:#6366f1;
-  --accent-magenta:#f472b6;
-  --accent-purple:#a78bfa;
-  --border:rgba(255,255,255,0.08);
-  --glow-cyan:rgba(99, 102, 241, 0.4);
-  --glow-magenta:rgba(244, 114, 182, 0.3);
-  --shadow:rgba(0,0,0,0.5)
+[data-theme="dark"] {
+  --bg-base:             #0f172a;
+  --bg-surface:          #1e293b;
+  --bg-raised:           #334155;
+  --text-primary:        #f1f5f9;
+  --text-secondary:      #94a3b8;
+  --text-muted:          #64748b;
+  --border-default:      rgba(255,255,255,0.08);
+  --border-strong:       rgba(255,255,255,0.14);
+  --shadow-sm:           0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:           0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:           0 12px 32px rgba(0,0,0,0.5);
+  --color-accent-subtle: rgba(99,102,241,0.15);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Work Sans',sans-serif;background:var(--bg-primary);color:var(--text-primary);overflow-x:hidden;transition:background 0.3s,color 0.3s}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 1px 1px,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.3;pointer-events:none;z-index:0}
-nav{display:flex;justify-content:space-between;align-items:center;padding:10px 40px;position:fixed;top:0;width:100%;z-index:100;background:var(--bg-secondary);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 4px 30px var(--shadow)}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-base);color:var(--text-primary);overflow-x:hidden;transition:background 0.3s,color 0.3s}
+nav{display:flex;justify-content:space-between;align-items:center;padding:10px 40px;position:fixed;top:0;width:100%;z-index:100;background:var(--bg-surface);border-bottom:1px solid var(--border-default);box-shadow:var(--shadow-sm)}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
 .logo img{height:26px;width:auto}
-.logo span{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
-.nav-right{display:flex;align-items:center;gap:20px}
-.nav-links{display:flex;gap:28px;align-items:center}
-.nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:600;transition:all .3s;letter-spacing:0.5px}
-.nav-links a:hover{color:var(--accent-cyan)}
-.theme-toggle{background:var(--bg-elevated);border:1px solid var(--border);border-radius:50px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:15px;color:var(--text-secondary)}
-.theme-toggle:hover{border-color:var(--accent-cyan);box-shadow:0 0 20px var(--glow-cyan);transform:rotate(180deg)}
-.btn{padding:9px 22px;border-radius:50px;font-weight:700;font-size:13px;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none;text-transform:uppercase;letter-spacing:1px}
-.btn-primary{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;box-shadow:0 8px 30px var(--glow-magenta)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px var(--glow-cyan)}
-.btn-outline{background:transparent;color:var(--text-primary);border:2px solid var(--accent-purple)}
-.btn-outline:hover{border-color:var(--accent-cyan);background:var(--bg-elevated)}
+.logo span{font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--text-primary)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a:not(.btn){color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+.nav-links a:not(.btn):hover{color:var(--color-accent)}
+.theme-toggle{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:var(--radius-md);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px;color:var(--text-secondary)}
+.theme-toggle:hover{border-color:var(--color-accent);box-shadow:var(--shadow-md)}
+.btn{padding:9px 20px;border-radius:var(--radius-md);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none}
+.btn-primary{background:var(--color-accent);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--color-accent-hover);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-outline{background:transparent;color:var(--text-primary);border:1.5px solid var(--border-default)}
+.btn-outline:hover{border-color:var(--color-accent);background:var(--color-accent-subtle);color:var(--color-accent)}
 .menu-btn{display:none;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
+#mobile-menu{display:none;flex-direction:column;background:var(--bg-surface);border-bottom:1px solid var(--border-default);padding:8px 20px 16px;position:fixed;top:57px;width:100%;z-index:99}
+#mobile-menu.open{display:flex}
+#mobile-menu a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:500;padding:10px 0;border-bottom:1px solid var(--border-default)}
+#mobile-menu a:last-child{border-bottom:none;color:var(--color-accent);font-weight:600}
 
 /* Page Content */
-.page-container{max-width:800px;margin:0 auto;padding:120px 40px 80px;position:relative;z-index:1}
+.page-container{max-width:800px;margin:0 auto;padding:120px 40px 80px;position:relative}
 .page-breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);margin-bottom:32px}
-.page-breadcrumb a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
-.page-breadcrumb a:hover{color:var(--accent-magenta)}
-.page-title{font-family:'Rajdhani',sans-serif;font-size:clamp(32px,5vw,48px);font-weight:700;margin-bottom:8px;letter-spacing:-0.5px}
-.page-subtitle{color:var(--text-muted);font-size:15px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
-.page-content h2{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin:40px 0 16px;padding-top:20px;letter-spacing:0.3px;color:var(--text-primary)}
-.page-content h3{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:600;margin:28px 0 12px;color:var(--text-primary)}
+.page-breadcrumb a{color:var(--color-accent);text-decoration:none;transition:opacity .2s}
+.page-breadcrumb a:hover{opacity:0.8}
+.page-title{font-size:clamp(28px,5vw,42px);font-weight:700;margin-bottom:8px;letter-spacing:-0.5px;color:var(--text-primary)}
+.page-subtitle{color:var(--text-muted);font-size:15px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border-default)}
+.page-content h2{font-size:22px;font-weight:700;margin:40px 0 16px;padding-top:20px;color:var(--text-primary)}
+.page-content h3{font-size:17px;font-weight:600;margin:28px 0 12px;color:var(--text-primary)}
 .page-content p{color:var(--text-secondary);font-size:15px;line-height:1.9;margin-bottom:16px}
 .page-content ul,.page-content ol{color:var(--text-secondary);font-size:15px;line-height:1.9;margin:12px 0 20px 24px}
 .page-content li{margin-bottom:8px}
-.page-content a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
-.page-content a:hover{color:var(--accent-magenta)}
+.page-content a{color:var(--color-accent);text-decoration:none;transition:opacity .2s}
+.page-content a:hover{opacity:0.8}
 .page-content strong{color:var(--text-primary);font-weight:600}
-.page-content .highlight-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin:24px 0;border-left:4px solid var(--accent-cyan)}
+.page-content .highlight-box{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:24px 28px;margin:24px 0;border-left:4px solid var(--color-accent)}
 .page-content .highlight-box p{margin-bottom:0}
-.page-content code{background:var(--bg-elevated);padding:2px 8px;border-radius:6px;font-size:14px;font-family:'SF Mono',Consolas,monospace;color:var(--accent-cyan)}
-.page-content pre{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:16px 0 24px;overflow-x:auto}
+.page-content code{background:var(--bg-raised);padding:2px 8px;border-radius:var(--radius-sm);font-size:14px;font-family:'SF Mono',Consolas,monospace;color:var(--color-accent)}
+.page-content pre{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:20px 24px;margin:16px 0 24px;overflow-x:auto}
 .page-content pre code{background:none;padding:0;font-size:13px;line-height:1.7;color:var(--text-secondary)}
 .page-content table{width:100%;border-collapse:collapse;margin:20px 0 28px;font-size:14px}
-.page-content table th,.page-content table td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border)}
-.page-content table th{font-weight:600;color:var(--text-primary);background:var(--bg-secondary);font-family:'Rajdhani',sans-serif;font-size:15px;letter-spacing:0.3px}
+.page-content table th,.page-content table td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border-default)}
+.page-content table th{font-weight:600;color:var(--text-primary);background:var(--bg-raised);font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
 .page-content table td{color:var(--text-secondary)}
-.page-content table tr:hover td{background:var(--bg-secondary)}
+.page-content table tr:hover td{background:var(--bg-raised)}
 
 /* Contact cards */
 .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin:32px 0}
-.contact-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;transition:all .3s}
-.contact-card:hover{border-color:var(--accent-cyan);transform:translateY(-4px);box-shadow:0 12px 40px var(--shadow)}
-.contact-card i{font-size:28px;margin-bottom:14px;display:block;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.contact-card h3{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.contact-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:28px;text-align:center;transition:all .2s;box-shadow:var(--shadow-sm)}
+.contact-card:hover{border-color:var(--color-accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.contact-card i{font-size:24px;margin-bottom:14px;display:block;color:var(--color-accent)}
+.contact-card h3{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text-primary)}
 .contact-card p{color:var(--text-muted);font-size:13px;margin-bottom:14px}
-.contact-card a{color:var(--accent-cyan);font-size:14px;font-weight:600;text-decoration:none;transition:color .3s}
-.contact-card a:hover{color:var(--accent-magenta)}
+.contact-card a{color:var(--color-accent);font-size:14px;font-weight:600;text-decoration:none;transition:opacity .2s}
+.contact-card a:hover{opacity:0.8}
 
 /* API endpoint cards */
-.endpoint{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin:12px 0;display:flex;align-items:center;gap:14px;transition:all .3s}
-.endpoint:hover{border-color:var(--accent-cyan);box-shadow:0 4px 20px var(--shadow)}
-.endpoint .method{font-family:'SF Mono',Consolas,monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:0.5px;flex-shrink:0}
+.endpoint{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:14px 20px;margin:10px 0;display:flex;align-items:center;gap:14px;transition:all .2s}
+.endpoint:hover{border-color:var(--color-accent);box-shadow:var(--shadow-sm)}
+.endpoint .method{font-family:'SF Mono',Consolas,monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-sm);letter-spacing:0.5px;flex-shrink:0}
 .method-get{background:#dcfce7;color:#166534}
 .method-post{background:#dbeafe;color:#1e40af}
 .method-patch{background:#fef9c3;color:#854d0e}
 .method-delete{background:#fecaca;color:#991b1b}
-:root[data-theme="dark"] .method-get{background:#052e16;color:#86efac}
-:root[data-theme="dark"] .method-post{background:#172554;color:#93c5fd}
-:root[data-theme="dark"] .method-patch{background:#422006;color:#fde68a}
-:root[data-theme="dark"] .method-delete{background:#450a0a;color:#fca5a5}
+[data-theme="dark"] .method-get{background:#052e16;color:#86efac}
+[data-theme="dark"] .method-post{background:#172554;color:#93c5fd}
+[data-theme="dark"] .method-patch{background:#422006;color:#fde68a}
+[data-theme="dark"] .method-delete{background:#450a0a;color:#fca5a5}
 .endpoint .path{font-family:'SF Mono',Consolas,monospace;font-size:13px;color:var(--text-primary);font-weight:500}
 .endpoint .desc{color:var(--text-muted);font-size:13px;margin-left:auto}
 
 /* Footer */
-footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;z-index:1;background:var(--bg-secondary)}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto;padding-bottom:50px}
-.footer-brand p{color:var(--text-secondary);font-size:14px;line-height:1.8;margin-top:16px;max-width:280px}
-.footer-col h4{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin-bottom:18px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-primary)}
-.footer-col a{display:block;color:var(--text-muted);text-decoration:none;font-size:14px;padding:5px 0;transition:color .3s}
-.footer-col a:hover{color:var(--accent-cyan)}
-.footer-social{display:flex;gap:14px;margin-top:20px}
-.footer-social a{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);font-size:15px;transition:all .3s;padding:0}
-.footer-social a:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);box-shadow:0 0 15px var(--glow-cyan);transform:translateY(-2px)}
-.footer-bottom{max-width:1200px;margin:0 auto;padding:24px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted)}
-.footer-bottom a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
-.footer-bottom a:hover{color:var(--accent-magenta)}
+footer{padding:60px 40px 0;border-top:1px solid var(--border-default);background:var(--bg-surface)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto;padding-bottom:48px}
+.footer-brand p{color:var(--text-secondary);font-size:14px;line-height:1.8;margin-top:14px;max-width:280px}
+.footer-col h4{font-size:11px;font-weight:700;margin-bottom:16px;letter-spacing:0.7px;text-transform:uppercase;color:var(--text-muted)}
+.footer-col a{display:block;color:var(--text-secondary);text-decoration:none;font-size:14px;padding:4px 0;transition:color .2s}
+.footer-col a:hover{color:var(--color-accent)}
+.footer-social{display:flex;gap:10px;margin-top:18px}
+.footer-social a{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--radius-md);background:var(--bg-raised);border:1px solid var(--border-default);color:var(--text-muted);font-size:14px;transition:all .2s;padding:0}
+.footer-social a:hover{border-color:var(--color-accent);color:var(--color-accent);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.footer-bottom{max-width:1200px;margin:0 auto;padding:20px 0;border-top:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted)}
+.footer-bottom a{color:var(--color-accent);text-decoration:none;transition:opacity .2s}
+.footer-bottom a:hover{opacity:0.8}
+@media(max-width:900px){
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+}
 @media(max-width:768px){
   nav{padding:8px 20px}
   .nav-links{display:none}
@@ -139,7 +150,7 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
   .contact-grid{grid-template-columns:1fr}
   .endpoint{flex-wrap:wrap}
   .endpoint .desc{margin-left:0;width:100%;margin-top:4px}
-  .footer-grid{grid-template-columns:1fr 1fr;gap:30px}
+  .footer-grid{grid-template-columns:1fr;gap:28px}
   .footer-bottom{flex-direction:column;gap:10px;text-align:center}
 }
 </style>
@@ -147,8 +158,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <body>
 <nav>
 <a href="/" class="logo">
-  <img src="/logo.png" alt="ShoPublish Logo">
-  <span>ShoPublish</span>
+  <img src="/logo.png" alt="SHOPUBLISH Logo">
+  <span>SHOPUBLISH</span>
 </a>
 <div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -160,9 +171,16 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <a href="/dashboard" class="btn btn-outline">Login</a>
 <a href="/dashboard?mode=register" class="btn btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
 </div>
-<button class="menu-btn" onclick="document.getElementById('mobile-menu').classList.toggle('active')"><i class="fas fa-bars"></i></button>
+<button class="menu-btn" onclick="document.getElementById('mobile-menu').classList.toggle('open')"><i class="fas fa-bars"></i></button>
 </div>
 </nav>
+
+<div id="mobile-menu">
+<a href="/#features">Features</a>
+<a href="/#pricing">Pricing</a>
+<a href="/dashboard">Login</a>
+<a href="/dashboard?mode=register">Get Started →</a>
+</div>
 
 <div class="page-container">
 <div class="page-breadcrumb">
@@ -175,8 +193,8 @@ ${content}
 <div class="footer-grid">
 <div class="footer-brand">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="ShoPublish Logo">
-  <span>ShoPublish</span>
+  <img src="/logo.png" alt="SHOPUBLISH Logo">
+  <span>SHOPUBLISH</span>
 </a>
 <p>Transform your PDFs and EPUBs into beautiful, interactive flipbooks. Share your content with the world — instantly.</p>
 <div class="footer-social">
@@ -207,8 +225,8 @@ ${content}
 </div>
 </div>
 <div class="footer-bottom">
-<span>© 2026 <a href="/">ShoPublish</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
-<span>Made with <span style="color:var(--accent-magenta)">♥</span> on Cloudflare Workers</span>
+<span>© 2026 <a href="/">SHOPUBLISH</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
+<span>Made with <span style="color:var(--color-danger)">♥</span> on Cloudflare Workers</span>
 </div>
 </footer>
 
@@ -235,7 +253,7 @@ document.getElementById('theme-icon').className=saved==='dark'?'fas fa-sun':'fas
 export function privacyPage(appUrl: string): string {
   return pageShell(
     'Privacy Policy',
-    'Learn how ShoPublish collects, uses, and protects your personal information.',
+    'Learn how SHOPUBLISH collects, uses, and protects your personal information.',
     appUrl,
     `
 <h1 class="page-title">Privacy Policy</h1>
@@ -243,7 +261,7 @@ export function privacyPage(appUrl: string): string {
 <div class="page-content">
 
 <div class="highlight-box">
-<p>ShoPublish is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information when you use our platform.</p>
+<p>SHOPUBLISH is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information when you use our platform.</p>
 </div>
 
 <h2>1. Information We Collect</h2>
@@ -268,7 +286,7 @@ export function privacyPage(appUrl: string): string {
 <h2>2. How We Use Your Information</h2>
 <p>We use the information we collect to:</p>
 <ul>
-<li>Provide and maintain the ShoPublish platform</li>
+<li>Provide and maintain the SHOPUBLISH platform</li>
 <li>Process your subscription payments via Stripe</li>
 <li>Display analytics and activity logs on your dashboard</li>
 <li>Send essential account notifications (password resets, billing alerts)</li>
@@ -306,7 +324,7 @@ export function privacyPage(appUrl: string): string {
 </ul>
 
 <h2>6. Cookies</h2>
-<p>ShoPublish uses minimal cookies:</p>
+<p>SHOPUBLISH uses minimal cookies:</p>
 <ul>
 <li><strong>Authentication token</strong> — a secure JWT stored in a cookie to keep you logged in</li>
 <li><strong>Theme preference</strong> — stored in localStorage to remember your light/dark mode choice</li>
@@ -314,10 +332,10 @@ export function privacyPage(appUrl: string): string {
 <p>We do not use third-party tracking cookies or advertising cookies.</p>
 
 <h2>7. Children's Privacy</h2>
-<p>ShoPublish is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please <a href="/contact">contact us</a> for removal.</p>
+<p>SHOPUBLISH is not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please <a href="/contact">contact us</a> for removal.</p>
 
 <h2>8. Changes to This Policy</h2>
-<p>We may update this Privacy Policy from time to time. We will notify you of material changes via email or a prominent notice on the platform. Continued use of ShoPublish after changes constitutes acceptance.</p>
+<p>We may update this Privacy Policy from time to time. We will notify you of material changes via email or a prominent notice on the platform. Continued use of SHOPUBLISH after changes constitutes acceptance.</p>
 
 <h2>9. Contact</h2>
 <p>For privacy-related inquiries, please reach out at <a href="mailto:privacy@adhirat.com">privacy@adhirat.com</a> or visit our <a href="/contact">Contact page</a>.</p>
@@ -331,7 +349,7 @@ export function privacyPage(appUrl: string): string {
 export function termsPage(appUrl: string): string {
   return pageShell(
     'Terms & Conditions',
-    'The terms governing your use of the ShoPublish platform.',
+    'The terms governing your use of the SHOPUBLISH platform.',
     appUrl,
     `
 <h1 class="page-title">Terms & Conditions</h1>
@@ -339,14 +357,14 @@ export function termsPage(appUrl: string): string {
 <div class="page-content">
 
 <div class="highlight-box">
-<p>By accessing or using ShoPublish, you agree to be bound by these Terms. If you do not agree, please do not use the platform.</p>
+<p>By accessing or using SHOPUBLISH, you agree to be bound by these Terms. If you do not agree, please do not use the platform.</p>
 </div>
 
 <h2>1. Acceptance of Terms</h2>
-<p>These Terms of Service ("Terms") govern your access to and use of the ShoPublish platform operated by Adhirat ("we", "us", "our"). By creating an account or using any part of the service, you agree to these Terms.</p>
+<p>These Terms of Service ("Terms") govern your access to and use of the SHOPUBLISH platform operated by Adhirat ("we", "us", "our"). By creating an account or using any part of the service, you agree to these Terms.</p>
 
 <h2>2. Account Registration</h2>
-<p>To use ShoPublish, you must:</p>
+<p>To use SHOPUBLISH, you must:</p>
 <ul>
 <li>Be at least 13 years of age</li>
 <li>Provide accurate and complete registration information</li>
@@ -356,7 +374,7 @@ export function termsPage(appUrl: string): string {
 <p>You are responsible for all activity that occurs under your account.</p>
 
 <h2>3. Subscription Plans & Payments</h2>
-<p>ShoPublish offers Free, Basic, Pro, and Business subscription tiers. Paid plans are billed monthly or annually through Stripe.</p>
+<p>SHOPUBLISH offers Free, Basic, Pro, and Business subscription tiers. Paid plans are billed monthly or annually through Stripe.</p>
 <ul>
 <li><strong>Free trial</strong> — No credit card required. Limited to 1 book, 5 MB uploads, and 500 monthly views.</li>
 <li><strong>Upgrades</strong> — Take effect immediately. You will be charged a prorated amount for the remaining billing period.</li>
@@ -373,12 +391,12 @@ export function termsPage(appUrl: string): string {
 <li>Use the platform for illegal, fraudulent, or abusive purposes</li>
 <li>Attempt to gain unauthorized access to other users' accounts or data</li>
 <li>Use automated tools to scrape, crawl, or overload the platform</li>
-<li>Resell, redistribute, or sublicense your ShoPublish account</li>
+<li>Resell, redistribute, or sublicense your SHOPUBLISH account</li>
 </ul>
 <p>We reserve the right to suspend or terminate accounts that violate these rules.</p>
 
 <h2>5. Content Ownership</h2>
-<p>You retain full ownership of all content you upload to ShoPublish. By uploading content, you grant us a limited license to:</p>
+<p>You retain full ownership of all content you upload to SHOPUBLISH. By uploading content, you grant us a limited license to:</p>
 <ul>
 <li>Store and serve your content to authorized viewers</li>
 <li>Generate thumbnails and previews for your bookstore</li>
@@ -390,18 +408,18 @@ export function termsPage(appUrl: string): string {
 <p>We aim for 99.9% uptime but do not guarantee uninterrupted service. We may perform maintenance, deploy updates, or experience outages. We will make reasonable efforts to notify users of planned downtime.</p>
 
 <h2>7. Data & Privacy</h2>
-<p>Your use of ShoPublish is also governed by our <a href="/privacy">Privacy Policy</a>, which describes how we collect, use, and protect your data.</p>
+<p>Your use of SHOPUBLISH is also governed by our <a href="/privacy">Privacy Policy</a>, which describes how we collect, use, and protect your data.</p>
 
 <h2>8. Limitation of Liability</h2>
 <p>To the maximum extent permitted by law:</p>
 <ul>
-<li>ShoPublish is provided "as is" without warranties of any kind</li>
+<li>SHOPUBLISH is provided "as is" without warranties of any kind</li>
 <li>We are not liable for any indirect, incidental, or consequential damages</li>
 <li>Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim</li>
 </ul>
 
 <h2>9. Intellectual Property</h2>
-<p>The ShoPublish name, logo, design, and underlying technology are the property of Adhirat. You may not copy, modify, or redistribute any part of the platform without prior written consent.</p>
+<p>The SHOPUBLISH name, logo, design, and underlying technology are the property of Adhirat. You may not copy, modify, or redistribute any part of the platform without prior written consent.</p>
 
 <h2>10. Termination</h2>
 <p>We may suspend or terminate your account if you violate these Terms. Upon termination:</p>
@@ -430,7 +448,7 @@ export function termsPage(appUrl: string): string {
 export function contactPage(appUrl: string): string {
   return pageShell(
     'Contact',
-    'Get in touch with the ShoPublish team for support, partnerships, or general inquiries.',
+    'Get in touch with the SHOPUBLISH team for support, partnerships, or general inquiries.',
     appUrl,
     `
 <h1 class="page-title">Contact Us</h1>
@@ -441,7 +459,7 @@ export function contactPage(appUrl: string): string {
 <div class="contact-card">
 <i class="fas fa-envelope"></i>
 <h3>General Inquiries</h3>
-<p>Questions about ShoPublish</p>
+<p>Questions about SHOPUBLISH</p>
 <a href="mailto:hello@adhirat.com">hello@adhirat.com</a>
 </div>
 <div class="contact-card">
@@ -464,7 +482,7 @@ export function contactPage(appUrl: string): string {
 <p>Click "Forgot Password" on the login page at <a href="/dashboard">/dashboard</a>. You'll receive a password reset link via email.</p>
 
 <h3>What file formats are supported?</h3>
-<p>ShoPublish supports <strong>PDF</strong>, <strong>EPUB</strong>, <strong>DOCX</strong>, <strong>PPTX</strong>, <strong>XLSX/CSV</strong>, plain text, and common image formats (PNG, JPG, GIF, SVG, WebP). Each format is rendered with its own optimized viewer.</p>
+<p>SHOPUBLISH supports <strong>PDF</strong>, <strong>EPUB</strong>, <strong>DOCX</strong>, <strong>PPTX</strong>, <strong>XLSX/CSV</strong>, plain text, and common image formats (PNG, JPG, GIF, SVG, WebP). Each format is rendered with its own optimized viewer.</p>
 
 <h3>What's the maximum file size I can upload?</h3>
 <p>Upload limits depend on your plan:</p>
@@ -477,7 +495,7 @@ export function contactPage(appUrl: string): string {
 </table>
 
 <h3>Can I use a custom domain?</h3>
-<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>shopublish.com</code> and configure it in your dashboard.</p>
+<p>Yes! Pro and Business plans support custom domains for both individual books and your entire bookstore. Set up a CNAME record pointing to <code>SHOPUBLISH.COM</code> and configure it in your dashboard.</p>
 
 <h3>How do I cancel my subscription?</h3>
 <p>Go to <strong>Dashboard → Settings → Subscription</strong> and click "Cancel Plan". Your access continues until the end of the current billing period. We offer a 14-day refund policy on first-time subscriptions.</p>
@@ -511,15 +529,15 @@ export function contactPage(appUrl: string): string {
 export function docsPage(appUrl: string): string {
   return pageShell(
     'Documentation',
-    'Learn how to use the ShoPublish platform, API, and customization options.',
+    'Learn how to use the SHOPUBLISH platform, API, and customization options.',
     appUrl,
     `
 <h1 class="page-title">Documentation</h1>
-<p class="page-subtitle">Everything you need to get started with ShoPublish.</p>
+<p class="page-subtitle">Everything you need to get started with SHOPUBLISH.</p>
 <div class="page-content">
 
 <h2>Getting Started</h2>
-<p>ShoPublish lets you upload PDFs, EPUBs, and other documents and instantly generate shareable flipbook links. Here's how to get up and running in minutes:</p>
+<p>SHOPUBLISH lets you upload PDFs, EPUBs, and other documents and instantly generate shareable flipbook links. Here's how to get up and running in minutes:</p>
 <ol>
 <li><strong>Create an account</strong> — <a href="/dashboard?mode=register">Sign up for free</a> with your email or Google account.</li>
 <li><strong>Upload a book</strong> — Click "Upload" on your dashboard to add a PDF, EPUB, or other supported file.</li>
@@ -540,7 +558,7 @@ export function docsPage(appUrl: string): string {
 </table>
 
 <h2>Your Bookstore</h2>
-<p>Every ShoPublish user gets a public bookstore at <code>${appUrl}/store/your-handle</code>. You can customize it with:</p>
+<p>Every SHOPUBLISH user gets a public bookstore at <code>${appUrl}/store/your-handle</code>. You can customize it with:</p>
 <ul>
 <li><strong>Store name & logo</strong> — Brand your bookstore</li>
 <li><strong>Description</strong> — Tell visitors what your store is about</li>
@@ -562,7 +580,7 @@ export function docsPage(appUrl: string): string {
 </table>
 
 <h2>API Reference</h2>
-<p>ShoPublish provides a REST API for Business plan users. Full interactive documentation is available at <a href="/api/swagger">Swagger UI</a>.</p>
+<p>SHOPUBLISH provides a REST API for Business plan users. Full interactive documentation is available at <a href="/api/swagger">Swagger UI</a>.</p>
 
 <h3>Authentication</h3>
 <p>All API requests require an API key sent in the <code>Authorization</code> header:</p>
@@ -647,13 +665,13 @@ export function docsPage(appUrl: string): string {
 
 export function notFoundPage(appUrl: string): string {
   const content = `
-    <div style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem;">
-      <h1 style="font-size: 8rem; font-family: Rajdhani, sans-serif; margin: 0; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">404</h1>
-      <h2 style="font-size: 2rem; margin-top: -1rem; margin-bottom: 1rem;">Page Not Found</h2>
-      <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem; font-size: 1.1rem;">
+    <div style="min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem">
+      <h1 style="font-size:8rem;font-weight:800;margin:0;color:var(--color-accent);line-height:1">404</h1>
+      <h2 style="font-size:2rem;margin-top:-0.5rem;margin-bottom:1rem;color:var(--text-primary)">Page Not Found</h2>
+      <p style="color:var(--text-secondary);max-width:500px;margin-bottom:2rem;font-size:1.1rem;line-height:1.7">
         The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
       </p>
-      <a href="/" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; font-weight: 500; font-family: Rajdhani, sans-serif; text-decoration: none; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s;">
+      <a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-default);border-radius:8px;font-weight:500;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:box-shadow 0.2s">
         <i class="fas fa-home"></i> Back to Home
       </a>
     </div>
@@ -663,13 +681,13 @@ export function notFoundPage(appUrl: string): string {
 
 export function errorPage(appUrl: string): string {
   const content = `
-    <div style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem;">
-      <h1 style="font-size: 8rem; font-family: Rajdhani, sans-serif; margin: 0; background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">500</h1>
-      <h2 style="font-size: 2rem; margin-top: -1rem; margin-bottom: 1rem;">Server Error Crash</h2>
-      <p style="color: var(--text-secondary); max-width: 500px; margin-bottom: 2rem; font-size: 1.1rem;">
-        Oh no! Something went terribly wrong on our end. We are looking into this crash right now.
+    <div style="min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem">
+      <h1 style="font-size:8rem;font-weight:800;margin:0;color:var(--color-danger);line-height:1">500</h1>
+      <h2 style="font-size:2rem;margin-top:-0.5rem;margin-bottom:1rem;color:var(--text-primary)">Server Error</h2>
+      <p style="color:var(--text-secondary);max-width:500px;margin-bottom:2rem;font-size:1.1rem;line-height:1.7">
+        Oh no! Something went wrong on our end. We are looking into this right now.
       </p>
-      <a href="/" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; font-weight: 500; font-family: Rajdhani, sans-serif; text-decoration: none; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s;">
+      <a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-default);border-radius:8px;font-weight:500;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:box-shadow 0.2s">
         <i class="fas fa-home"></i> Back to Home
       </a>
     </div>

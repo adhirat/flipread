@@ -88,7 +88,7 @@ export const docsView = `
       <label>Custom Domain (Optional)</label>
       <input type="text" id="edit-domain" placeholder="e.g. docs.mybrand.com">
       <p style="font-size:12px;color:var(--text-muted);margin-top:4px">
-        <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>shopublish.com</code>.
+        <b>Setup:</b> Point your domain's <b>CNAME</b> record to <code>SHOPUBLISH.COM</code>.
       </p>
     </div>
     <div class="form-group">

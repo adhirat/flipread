@@ -28,7 +28,7 @@ export const knowledgeView = `
           
           <section id="kb-getting-started" class="kb-section">
             <h3 style="font-size:24px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">Getting Started</h3>
-            <p>Welcome to ShoPublish! Our platform helps you publish, sell, and share your PDF and EPUB books with a premium reading experience.</p>
+            <p>Welcome to SHOPUBLISH! Our platform helps you publish, sell, and share your PDF and EPUB books with a premium reading experience.</p>
             <div class="kb-card">
               <h4>Create Your First Book</h4>
               <p>Once you've logged in, click the prominent <span class="badge">Upload Book</span> button in the top right. Select your PDF or EPUB file. You can also upload a custom cover image at this stage.</p>
@@ -66,7 +66,7 @@ export const knowledgeView = `
             <ol style="margin-left:20px;line-height:1.8">
               <li>Go to your DNS provider (GoDaddy, Namecheap, Cloudflare, etc.).</li>
               <li>Create a <strong>CNAME</strong> record.</li>
-              <li>Point it to <code>shopublish.com</code>.</li>
+              <li>Point it to <code>SHOPUBLISH.COM</code>.</li>
               <li>Enter your domain in the <strong>Store Settings</strong> > <strong>Custom Domain</strong> field.</li>
               <li>Click Save. It may take up to 24 hours for DNS to propagate.</li>
             </ol>

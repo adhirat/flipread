@@ -1,6 +1,6 @@
-# ShoPublish Mobile 📱
+# SHOPUBLISH Mobile 📱
 
-The mobile companion app for the ShoPublish platform, built with **Flutter**.
+The mobile companion app for the SHOPUBLISH platform, built with **Flutter**.
 
 ## 🚀 Features
 

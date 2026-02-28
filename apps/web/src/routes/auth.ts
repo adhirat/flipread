@@ -162,11 +162,11 @@ auth.post('/forgot-password', async (c) => {
     const { sendEmail } = await import('../services/email');
     const sent = await sendEmail(c.env, {
       to: email,
-      subject: 'Reset your ShoPublish password',
+      subject: 'Reset your SHOPUBLISH password',
       html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
           <h2 style="color:#4f46e5;">Reset Your Password</h2>
           <p>Hi ${user.name || 'there'},</p>
-          <p>We received a request to reset your password for your ShoPublish account. Click the button below to set a new password:</p>
+          <p>We received a request to reset your password for your SHOPUBLISH account. Click the button below to set a new password:</p>
           <a href="${resetUrl}" style="background:#4f46e5;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:20px 0;">Reset Password</a>
           <p style="color:#64748b;font-size:14px;">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
         </div>`

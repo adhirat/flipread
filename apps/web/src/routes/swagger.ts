@@ -6,7 +6,7 @@ const swagger = new Hono();
 const openApiSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'ShoPublish API',
+    title: 'SHOPUBLISH API',
     version: '1.0.0',
     description: 'API for managing flipbooks and user accounts.',
   },
@@ -198,7 +198,7 @@ swagger.get('/', (c) => {
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>ShoPublish API Documentation</title>
+      <title>SHOPUBLISH API Documentation</title>
       <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
     </head>
     <body>

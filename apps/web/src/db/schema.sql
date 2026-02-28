@@ -1,4 +1,4 @@
--- ShoPublish D1 Schema
+-- SHOPUBLISH D1 Schema
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

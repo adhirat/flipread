@@ -1,4 +1,4 @@
-// ShoPublish — Main Worker Entry Point
+// SHOPUBLISH — Main Worker Entry Point
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -225,11 +225,11 @@ function landingPage(appUrl: string): string {
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ShoPublish — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
+<title>SHOPUBLISH — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
 <meta name="description" content="Upload PDFs or EPUBs and generate shareable flipbook links. Free to start.">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:title" content="ShoPublish — Your Digital Flipbook Library">
+<meta property="og:title" content="SHOPUBLISH — Your Digital Flipbook Library">
 <meta property="og:description" content="Convert any PDF or EPUB into a professional, interactive flipbook in seconds.">
 <meta property="og:image" content="${appUrl}/logo.png">
 <meta property="og:url" content="${appUrl}">
@@ -279,8 +279,8 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:10px 4
 .logo img{height:26px;width:auto}
 .logo span{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase}
 .nav-links{display:flex;gap:28px;align-items:center}
-.nav-links a{color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:600;transition:all .3s;position:relative;letter-spacing:0.5px}
-.nav-links a:hover{color:var(--accent-cyan);text-shadow:0 0 20px var(--glow-cyan)}
+.nav-links a:not(.btn){color:var(--text-secondary);text-decoration:none;font-size:14px;font-weight:600;transition:all .3s;position:relative;letter-spacing:0.5px}
+.nav-links a:not(.btn):hover{color:var(--accent-cyan);text-shadow:0 0 20px var(--glow-cyan)}
 .theme-toggle{background:var(--bg-elevated);border:1px solid var(--border);border-radius:50px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:15px;color:var(--text-secondary)}
 .theme-toggle:hover{border-color:var(--accent-cyan);box-shadow:0 0 20px var(--glow-cyan);transform:rotate(180deg)}
 .btn{padding:9px 22px;border-radius:50px;font-weight:700;font-size:13px;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none;text-transform:uppercase;letter-spacing:1px;position:relative;overflow:hidden}
@@ -320,8 +320,7 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:10px 4
 @keyframes rotate{to{transform:rotate(360deg)}}
 .p-card.pop{border-color:var(--accent-cyan);box-shadow:0 0 40px var(--glow-cyan);position:relative}
 .p-card.pop::before{content:'POPULAR';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));color:#fff;font-size:11px;font-weight:700;padding:6px 18px;border-radius:50px;letter-spacing:1.5px;box-shadow:0 4px 20px var(--glow-cyan);z-index:2}
-:root[data-theme="dark"] .btn-primary{color:var(--bg-primary)}
-:root[data-theme="light"] .btn-primary{color:#fff}
+.btn-primary{color:#fff !important}
 .p-card:hover{transform:translateY(-8px);border-color:var(--accent-magenta);box-shadow:0 20px 60px var(--shadow)}
 .p-name{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;letter-spacing:1px}
 .p-price{font-size:48px;font-weight:800;margin:20px 0;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -342,8 +341,9 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 .footer-bottom a{color:var(--accent-cyan);text-decoration:none;transition:color .3s}
 .footer-bottom a:hover{color:var(--accent-magenta)}
 @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:30px}.footer-bottom{flex-direction:column;gap:10px;text-align:center}}
-.nav-right{display:flex;align-items:center;gap:20px}
-.menu-btn{display:none;background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:5px}
+.nav-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.menu-btn{display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:18px;cursor:pointer;padding:6px 10px;transition:all .2s}
+.menu-btn:hover{border-color:var(--accent-cyan)}
 .mobile-menu{position:fixed;top:0;right:-100%;width:280px;height:100%;background:var(--bg-secondary);z-index:200;transition:right 0.3s cubic-bezier(0.16, 1, 0.3, 1);padding:30px;box-shadow:-10px 0 40px var(--shadow);border-left:1px solid var(--border);backdrop-filter:blur(30px)}
 .mobile-menu.active{right:0}
 .mobile-menu-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--border)}
@@ -363,8 +363,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <body>
 <nav>
 <a href="/" class="logo">
-  <img src="/logo.png" alt="ShoPublish Logo">
-  <span>ShoPublish</span>
+  <img src="/logo.png" alt="SHOPUBLISH Logo">
+  <span>SHOPUBLISH</span>
 </a>
 <div class="nav-right">
 <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -383,8 +383,8 @@ footer{padding:80px 40px 0;border-top:1px solid var(--border);position:relative;
 <div class="mobile-menu" id="mobile-menu">
 <div class="mobile-menu-header">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="ShoPublish Logo">
-  <span>ShoPublish</span>
+  <img src="/logo.png" alt="SHOPUBLISH Logo">
+  <span>SHOPUBLISH</span>
 </a>
 <button class="close-btn" onclick="toggleMenu()">✕</button>
 </div>
@@ -514,8 +514,8 @@ toggleBilling(); // Initialize on load
 <div class="footer-grid">
 <div class="footer-brand">
 <a href="/" class="logo">
-  <img src="/logo.png" alt="ShoPublish Logo">
-  <span>ShoPublish</span>
+  <img src="/logo.png" alt="SHOPUBLISH Logo">
+  <span>SHOPUBLISH</span>
 </a>
 <p>Transform your PDFs and EPUBs into beautiful, interactive flipbooks. Share your content with the world — instantly.</p>
 <div class="footer-social">
@@ -546,7 +546,7 @@ toggleBilling(); // Initialize on load
 </div>
 </div>
 <div class="footer-bottom">
-<span>© 2026 <a href="/">ShoPublish</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
+<span>© 2026 <a href="/">SHOPUBLISH</a> by <a href="https://adhirat.com" target="_blank">Adhirat</a>. All rights reserved.</span>
 <span>Made with <span style="color:var(--accent-magenta)">♥</span> </span>
 </div>
 </footer>

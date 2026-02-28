@@ -38,7 +38,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
         settingsHtml = '', 
         dependencies = [], 
         showTTS = false, 
-        storeName = 'ShoPublish', 
+        storeName = 'SHOPUBLISH', 
         showHighlights = true, 
         showZoom = false,
         showNightShift = false,
@@ -59,8 +59,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     <title>${safeTitle} — Web View</title>
     <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
     <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
-    <meta property="og:title" content="${safeTitle} — ShoPublish">
-    <meta property="og:description" content="Read this interactive content on ShoPublish.">
+    <meta property="og:title" content="${safeTitle} — SHOPUBLISH">
+    <meta property="og:description" content="Read this interactive content on SHOPUBLISH.">
     <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">
     <meta name="twitter:card" content="summary_large_image">
     
@@ -642,7 +642,7 @@ export function getWebViewerBase(options: WebViewerOptions): string {
             const title = '${safeTitle}';
             const sName = '${storeName.replace(/'/g, "\\'")}';
             const url = window.location.href;
-            const text = 'Hi There,\\n\\nI\\'ve been exploring "' + title + '" on the ' + sName + ' library published using ShoPublish and found it quite insightful.\\n\\n' + url + '\\n\\nThanks';
+            const text = 'Hi There,\\n\\nI\\'ve been exploring "' + title + '" on the ' + sName + ' library published using SHOPUBLISH and found it quite insightful.\\n\\n' + url + '\\n\\nThanks';
             
             if (navigator.share) {
                 try {

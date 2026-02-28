@@ -1,7 +1,7 @@
 import { getWebViewerBase } from './webViewerBase';
 import { escapeHtml } from './viewerUtils';
 
-export function audioWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'ShoPublish'): string {
+export function audioWebViewerHTML(title: string, fileUrl: string, coverUrl: string, settings: Record<string, any>, showBranding: boolean, logoUrl: string = '', storeUrl: string = '/', storeName: string = 'SHOPUBLISH'): string {
     const albumFiles = settings.album_files as {name: string, key: string, type: string}[] | undefined;
     const isAlbum = albumFiles && albumFiles.length > 0;
     

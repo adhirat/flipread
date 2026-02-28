@@ -1,6 +1,6 @@
-# ShoPublish Monorepo 🚀
+# SHOPUBLISH Monorepo 🚀
 
-Welcome to the **ShoPublish** monorepo. This project is a comprehensive digital publishing ecosystem that allows creators to turn documents into interactive flipbooks and manage a professional digital bookstore.
+Welcome to the **SHOPUBLISH** monorepo. This project is a comprehensive digital publishing ecosystem that allows creators to turn documents into interactive flipbooks and manage a professional digital bookstore.
 
 ---
 
