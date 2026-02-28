@@ -19,6 +19,15 @@ export async function getUserByCustomDomain(db: D1Database, domain: string): Pro
   ).bind(domain.toLowerCase()).first<User>();
 }
 
+export async function getStoreNavInfo(db: D1Database, userId: string): Promise<{hasProducts: boolean, hasGallery: boolean}> {
+  const pCount = await db.prepare('SELECT COUNT(*) as count FROM products WHERE store_id = ? AND status = "active"').bind(userId).first<{count: number}>();
+  const bCount = await db.prepare('SELECT COUNT(*) as count FROM books WHERE user_id = ? AND is_public = 1').bind(userId).first<{count: number}>();
+  return {
+    hasProducts: (pCount?.count || 0) > 0,
+    hasGallery: (bCount?.count || 0) > 0
+  };
+}
+
 import { getCookie } from 'hono/cookie';
 import { memberAccessPage, memberRegisterPage, memberForgotPage } from '../services/viewerTemplates';
 
@@ -48,9 +57,18 @@ store.get('/:username', async (c) => {
     }
   }
 
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  // If no products and no gallery and no landing page, show Contact Us as landing page
+  if (!navData.hasProducts && !navData.hasGallery && !settings.landing_page_content) {
+    const content = settings.contact_us_content || `
+For inquiries, please reach out to us at:
+**Email:** ${user.email}
+    `;
+    return c.html(contentPage(user, 'Contact Us', content, c.env.APP_URL, false, navData));
+  }
   // If landing page content exists, show landing page, otherwise gallery
   if (settings.landing_page_content) {
-    return c.html(contentPage(user, settings.landing_title || 'Welcome', settings.landing_page_content, c.env.APP_URL));
+    return c.html(contentPage(user, settings.landing_title || 'Welcome', settings.landing_page_content, c.env.APP_URL, false, navData));
   }
 
   const booksResult = await c.env.DB.prepare(
@@ -59,7 +77,7 @@ store.get('/:username', async (c) => {
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
 
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/gallery
@@ -93,7 +111,8 @@ store.get('/:username/gallery', async (c) => {
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/products - Duplicates Gallery to act as the Products route
@@ -127,7 +146,8 @@ store.get('/:username/products', async (c) => {
      FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/cart - A placeholder cart view
@@ -157,7 +177,8 @@ store.get('/:username/cart', async (c) => {
   }
 
   // Display empty cart page using the existing contentPage template for simplicity
-  return c.html(contentPage(user, 'Your Cart', 'Your cart is currently empty. <br><br> <a href="/store/' + username + '/products">Browse products</a>.', c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'Your Cart', 'Your cart is currently empty. <br><br> <a href="/store/' + username + '/products">Browse products</a>.', c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/login
@@ -202,7 +223,8 @@ store.get('/:username/about', async (c) => {
   const settings = JSON.parse(user.store_settings || '{}');
   if (!settings.about_us_content) return c.html(notFoundPage('About Us section not found'), 404);
 
-  return c.html(contentPage(user, 'About Us', settings.about_us_content, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'About Us', settings.about_us_content, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/privacy
@@ -214,7 +236,8 @@ store.get('/:username/privacy', async (c) => {
   const settings = JSON.parse(user.store_settings || '{}');
   if (!settings.privacy_policy_content) return c.html(notFoundPage('Privacy Policy not found'), 404);
 
-  return c.html(contentPage(user, 'Privacy Policy', settings.privacy_policy_content, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'Privacy Policy', settings.privacy_policy_content, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/terms
@@ -226,7 +249,8 @@ store.get('/:username/terms', async (c) => {
   const settings = JSON.parse(user.store_settings || '{}');
   if (!settings.terms_content) return c.html(notFoundPage('Terms & Conditions not found'), 404);
 
-  return c.html(contentPage(user, 'Terms & Conditions', settings.terms_content, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'Terms & Conditions', settings.terms_content, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/contact
@@ -239,7 +263,8 @@ store.get('/:username/contact', async (c) => {
   // We use a fallback to empty string if not defined, allowing the form to show anyway
   const content = settings.contact_page_content || ''; 
 
-  return c.html(contentPage(user, 'Contact Us', content, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'Contact Us', content, c.env.APP_URL, false, navData));
 });
 
 // GET /store/:username/copyright
@@ -252,7 +277,8 @@ store.get('/:username/copyright', async (c) => {
   const content = settings.copyright_content || settings.contact_info_content || '';
   if (!content) return c.html(notFoundPage('Copyright Information not found'), 404);
 
-  return c.html(contentPage(user, 'Copyright Information', content, c.env.APP_URL));
+  const navData = await getStoreNavInfo(c.env.DB, user.id);
+  return c.html(contentPage(user, 'Copyright Information', content, c.env.APP_URL, false, navData));
 });
 
 // POST /store/:username/inquiry
@@ -274,7 +300,7 @@ store.post('/:username/inquiry', async (c) => {
   return c.json({ success: true, message: 'Your inquiry has been submitted. We will get back to you soon.' });
 });
 
-export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false): string {
+export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false, navData = {hasProducts:true, hasGallery:true}): string {
   const storeName = user.store_name || user.name;
   const safeName = esc(storeName);
   const bookCount = books.length;
@@ -319,6 +345,10 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
   const productsUrl = isCustomDomain ? '/products' : `/store/${storeHandle}/products`;
   const cartUrl = isCustomDomain ? '/cart' : `/store/${storeHandle}/cart`;
+
+  let landingUrl = productsUrl;
+  if (!navData.hasProducts && navData.hasGallery) landingUrl = homeUrl; // homeUrl = /store/:username (books overview/gallery)
+  if (!navData.hasProducts && !navData.hasGallery) landingUrl = contactUrl;
 
   // Announcement banner
   const bannerText = settings.banner_text || '';
@@ -1355,13 +1385,15 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 
 <header class="site-header">
   <div class="site-brand">
-    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
-    <span class="site-title">${safeName}</span>
+    <a href="${landingUrl}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+      <span class="site-title">${safeName}</span>
+    </a>
   </div>
 
   <nav class="nav-menu">
-    <a href="${productsUrl}" class="nav-link">Home</a>
-    <a href="${homeUrl}" class="nav-link">Gallery</a>
+    ${navData.hasProducts ? `<a href="${productsUrl}" class="nav-link">Home</a>` : ''}
+    ${navData.hasGallery ? `<a href="${homeUrl}" class="nav-link">Gallery</a>` : ''}
     ${settings.about_us_content ? `<a href="${aboutUrl}" class="nav-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
@@ -1372,15 +1404,12 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
       <span class="cart-badge" id="cart-badge-desk" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
     </a>
     <a href="${loginUrl}" class="login-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:6px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-        <line x1="9" y1="9" x2="9.01" y2="9"/>
-        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
     </a>
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
@@ -1397,14 +1426,16 @@ ${bannerText ? `<div class="ann-banner" id="ann-banner" style="animation:slideBa
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-header">
     <div class="site-brand">
-      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
-      <span class="site-title">${safeName}</span>
+      <a href="${landingUrl}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+        ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+        <span class="site-title">${safeName}</span>
+      </a>
     </div>
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${productsUrl}" class="drawer-link">Home</a>
-    <a href="${homeUrl}" class="drawer-link">Gallery</a>
+    ${navData.hasProducts ? `<a href="${productsUrl}" class="drawer-link">Home</a>` : ''}
+    ${navData.hasGallery ? `<a href="${homeUrl}" class="drawer-link">Gallery</a>` : ''}
     ${settings.about_us_content ? `<a href="${aboutUrl}" class="drawer-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
@@ -1533,7 +1564,7 @@ ${showSearch || uniqueCategories.length > 0 ? `(function(){
 </body></html>`;
 }
 
-export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false): string {
+export function contentPage(user: User, title: string, content: string, appUrl: string, isCustomDomain = false, navData = {hasProducts:true, hasGallery:true}): string {
   const storeName = user.store_name || user.name;
   const settings = JSON.parse(user.store_settings || '{}');
   const accentColor = settings.accent_color || '#c45d3e';
@@ -1558,7 +1589,12 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
   const termsUrl = isCustomDomain ? '/terms' : `/store/${storeHandle}/terms`;
   const productsUrl = isCustomDomain ? '/products' : `/store/${storeHandle}/products`;
   const cartUrl = isCustomDomain ? '/cart' : `/store/${storeHandle}/cart`;
-  const backUrl = homeUrl;
+  
+  let landingUrl = productsUrl;
+  if (!navData.hasProducts && navData.hasGallery) landingUrl = homeUrl;
+  if (!navData.hasProducts && !navData.hasGallery) landingUrl = contactUrl;
+
+  const backUrl = landingUrl;
 
   let extraHtml = '';
   if (title === 'Contact Us') {
@@ -1732,13 +1768,15 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 <body>
 <header class="site-header">
   <div class="site-brand">
-    ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
-    <span class="site-title">${esc(storeName)}</span>
+    <a href="${landingUrl}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+      <span class="site-title">${esc(storeName)}</span>
+    </a>
   </div>
 
   <nav class="nav-menu">
-    <a href="${productsUrl}" class="nav-link">Home</a>
-    <a href="${homeUrl}" class="nav-link">Gallery</a>
+    ${navData.hasProducts ? `<a href="${productsUrl}" class="nav-link">Home</a>` : ''}
+    ${navData.hasGallery ? `<a href="${homeUrl}" class="nav-link">Gallery</a>` : ''}
     ${settings.about_us_content ? `<a href="${aboutUrl}" class="nav-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="nav-link">Contact Us</a>
   </nav>
@@ -1749,15 +1787,12 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
       <span class="cart-badge" id="cart-badge-cont" style="position:absolute; top:2px; right:-2px; background:var(--accent); color:#fff; font-size:10px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; outline:2px solid var(--header-bg); display:none;">0</span>
     </a>
     <a href="${loginUrl}" class="login-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:6px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Login
     </a>
     <a href="${loginUrl}" class="login-icon-sm" title="Login">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-        <line x1="9" y1="9" x2="9.01" y2="9"/>
-        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
     </a>
     <button class="theme-toggle" id="tt" aria-label="Toggle theme" title="Toggle theme">
@@ -1774,14 +1809,16 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-header">
     <div class="site-brand">
-      ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
-      <span class="site-title">${esc(storeName)}</span>
+      <a href="${landingUrl}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+        ${user.store_logo_url ? `<img src="${esc(user.store_logo_url)}" class="site-logo" alt="">` : ''}
+        <span class="site-title">${esc(storeName)}</span>
+      </a>
     </div>
     <button class="drawer-close" id="drawer-close">&times;</button>
   </div>
   <nav class="drawer-nav">
-    <a href="${productsUrl}" class="drawer-link">Home</a>
-    <a href="${homeUrl}" class="drawer-link">Gallery</a>
+    ${navData.hasProducts ? `<a href="${productsUrl}" class="drawer-link">Home</a>` : ''}
+    ${navData.hasGallery ? `<a href="${homeUrl}" class="drawer-link">Gallery</a>` : ''}
     ${settings.about_us_content ? `<a href="${aboutUrl}" class="drawer-link">About Us</a>` : ''}
     <a href="${contactUrl}" class="drawer-link">Contact Us</a>
   </nav>
