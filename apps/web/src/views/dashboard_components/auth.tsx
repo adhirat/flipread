@@ -64,7 +64,7 @@ export const authView = () => (
                   <label>Password</label>
                   <input id="auth-pass" placeholder="••••••••" type="password" />
                   <div id="forgot-link-container" style="text-align:right;margin-top:8px">
-                    <a x-on:click="window.setAuthMode('forgot')" style="font-size:12px;color:var(--color-accent);cursor:pointer;font-weight:500">
+                    <a onclick="window.setAuthMode('forgot')" style="font-size:12px;color:var(--color-accent);cursor:pointer;font-weight:500">
                       Forgot password?
                     </a>
                   </div>
@@ -79,19 +79,19 @@ export const authView = () => (
                 </div>
               </div>
 
-              <button x-on:click="window.submitAuth()" class="btn" style="width:100%;padding:11px 18px;font-size:14px;font-weight:600" id="auth-btn">
+              <button onclick="window.submitAuth()" class="btn" style="width:100%;padding:11px 18px;font-size:14px;font-weight:600" id="auth-btn">
                 Sign In
               </button>
 
               <div id="auth-footer" style="text-align:center;margin-top:24px;font-size:14px;color:var(--text-secondary)">
                 <span id="auth-toggle-text">Don't have an account?</span>
-                <a x-on:click="window.toggleAuthMode()" style="color:var(--color-accent);cursor:pointer;font-weight:600;margin-left:4px" id="auth-toggle-link">
+                <a onclick="window.toggleAuthMode()" style="color:var(--color-accent);cursor:pointer;font-weight:600;margin-left:4px" id="auth-toggle-link">
                   Create one free
                 </a>
               </div>
 
               <div id="back-to-login" class="hidden" style="text-align:center;margin-top:20px;font-size:14px">
-                <a x-on:click="window.setAuthMode('login')" style="color:var(--text-secondary);cursor:pointer">
+                <a onclick="window.setAuthMode('login')" style="color:var(--text-secondary);cursor:pointer">
                   &larr; Back to login
                 </a>
               </div>
