@@ -47,30 +47,74 @@ export function dashboardPage(appUrl: string): string {
   <!-- pdf-lib -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <!-- Univer requirements and umd -->
-  <link rel="stylesheet" href="https://unpkg.com/@univerjs/design@0.1.12/lib/index.css">
-  <link rel="stylesheet" href="https://unpkg.com/@univerjs/ui@0.1.12/lib/index.css">
-  <link rel="stylesheet" href="https://unpkg.com/@univerjs/docs-ui@0.1.12/lib/index.css">
-  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-ui@0.1.12/lib/index.css">
-  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-numfmt@0.1.12/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/design@0.1.14/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/ui@0.1.14/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/docs-ui@0.1.14/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-ui@0.1.14/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-numfmt@0.1.14/lib/index.css">
+
+  <!-- Dependencies (React, RxJS, etc) -->
   <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js"></script>
   <script src="https://unpkg.com/clsx@2.0.0/dist/clsx.min.js"></script>
-  <script src="https://unpkg.com/@wendellhu/redi@0.15.2/dist/redi.js"></script>
-  <script src="https://unpkg.com/@univerjs/core@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/design@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/engine-render@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/engine-formula@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/ui@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/docs@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/docs-ui@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/sheets@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/sheets-ui@0.1.12/lib/umd/index.js"></script>
-  <script src="https://unpkg.com/@univerjs/sheets-numfmt@0.1.12/lib/umd/index.js"></script>
-  <!-- Reveal.js -->
+  <script>
+    // Essential shims for UniverJS UMD packages
+    window.rxjs = window.rxjs || window.Rx;
+    window.React = window.React || window.react;
+    window.ReactDOM = window.ReactDOM || window['react-dom'];
+  </script>
+
+  <!-- Univer Core & Essentials (Load sequence is critical) -->
+  <script src="https://unpkg.com/@univerjs/core@0.1.14/lib/umd/index.js"></script>
+  <script>
+    // UniverCore must be available as 'univer' for some plugins and 'Univer' for others
+    window.UniverCore = window.univer || window.Univer || window.UniverCore;
+    window.univer = window.UniverCore;
+    window.Univer = window.UniverCore;
+  </script>
+
+  <script src="https://unpkg.com/@univerjs/design@0.1.14/lib/umd/index.js"></script>
+  <script>window.UniverDesign = window.UniverDesign || window['univer-design'];</script>
+
+  <script src="https://unpkg.com/@univerjs/engine-render@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/engine-formula@0.1.14/lib/umd/index.js"></script>
+  <script>
+    window.UniverEngineRender = window.UniverEngineRender || window['univer-engine-render'];
+    window.UniverEngineFormula = window.UniverEngineFormula || window['univer-engine-formula'];
+  </script>
+
+  <script src="https://unpkg.com/@univerjs/ui@0.1.14/lib/umd/index.js"></script>
+  <script>window.UniverUI = window.UniverUI || window['univer-ui'];</script>
+
+  <!-- Univer Feature Plugins -->
+  <script src="https://unpkg.com/@univerjs/docs@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/docs-ui@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets-ui@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets-formula@0.1.14/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets-numfmt@0.1.14/lib/umd/index.js"></script>
+
+  <script>
+    // Final thorough mapping for initialization scripts
+    window.UniverDocs = window.UniverDocs || window['univer-docs'];
+    window.UniverDocsUI = window.UniverDocsUI || window['univer-docs-ui'];
+    window.UniverSheets = window.UniverSheets || window['univer-sheets'];
+    window.UniverSheetsUI = window.UniverSheetsUI || window['univer-sheets-ui'];
+    window.UniverSheetsFormula = window.UniverSheetsFormula || window['univer-sheets-formula'];
+    window.UniverSheetsNumfmt = window.UniverSheetsNumfmt || window['univer-sheets-numfmt'];
+  </script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css" id="reveal-theme">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+  <!-- Filerobot Image Editor -->
+  <script src="https://scaleflex.cloudimg.io/v7/plugins/filerobot-image-editor/latest/filerobot-image-editor.min.js"></script>
+  <!-- Webcut Video Editor -->
+  <script src="https://cdn.jsdelivr.net/npm/webcut@0.1.0-alpha.6/dist/webcut.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/webcut@0.1.0-alpha.6/dist/webcut.min.css">
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     ${styles}
   </style>

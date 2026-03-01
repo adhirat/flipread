@@ -691,4 +691,47 @@ h4{font-size:13px;font-weight:600;color:var(--text-primary)}
   .stats{grid-template-columns:1fr}
   .book-grid{grid-template-columns:1fr}
 }
+
+/* ── Advanced Editors ────────────────────────────────────── */
+.editor-toolbar {
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.btn-tool {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.btn-tool:hover {
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn-tool i { font-size: 14px; }
+
+.pdf-el {
+  transition: box-shadow 0.2s;
+}
+.pdf-el:hover {
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+.pdf-el:focus {
+  outline: 2px solid var(--color-accent);
+  box-shadow: none;
+}
 `;

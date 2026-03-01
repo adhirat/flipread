@@ -4,10 +4,10 @@ export const sidebar = `
     <button class="mobile-menu-btn" onclick="toggleSidebar()">
       <i class="fas fa-bars"></i>
     </button>
-    <a href="/" class="logo" style="margin:0">
+    <div onclick="switchView('dashboard')" class="logo" style="margin:0;cursor:pointer" title="Go to Dashboard">
       <img src="/logo.png" alt="SHOPUBLISH" style="height:24px;width:auto">
       <span style="font-size:16px">SHOPUBLISH</span>
-    </a>
+    </div>
     <button onclick="toggleDashTheme()" title="Toggle theme" style="background:none;border:none;font-size:16px;color:var(--text-secondary);cursor:pointer;padding:6px">
       <i class="fas fa-moon" id="dash-theme-icon"></i>
     </button>
@@ -26,10 +26,10 @@ export const sidebar = `
 
     <!-- Logo -->
     <div class="sidebar-header">
-      <a href="/" class="logo" style="margin:0">
+      <div href="javascript:void(0)" onclick="switchView('dashboard')" class="logo" style="margin:0;cursor:pointer">
         <img src="/logo.png" alt="SHOPUBLISH">
         <span>SHOPUBLISH</span>
-      </a>
+      </div>
     </div>
 
     <!-- Navigation -->
