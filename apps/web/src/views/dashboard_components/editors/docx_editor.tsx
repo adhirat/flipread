@@ -35,7 +35,7 @@ export const docxView = (
 
         {/* Main Canvas Area */}
         <div style="background:var(--bg-secondary);padding:40px;min-height:700px;display:flex;justify-content:center">
-            <div id="docx-visual-canvas" contenteditable="true" style="padding:80px;background:#fff;width:210mm;min-height:297mm;box-shadow:0 10px 30px rgba(0,0,0,0.1);outline:none;color:#333;font-family:'Times New Roman',serif;font-size:16px;line-height:1.6">
+            <div id="docx-visual-canvas" contentEditable={true} style="padding:80px;background:#fff;width:210mm;min-height:297mm;box-shadow:0 10px 30px rgba(0,0,0,0.1);outline:none;color:#333;font-family:'Times New Roman',serif;font-size:16px;line-height:1.6">
                 <h1>Untitled Document</h1>
                 <p>Start typing your content here or use the toolbar above to style the text.</p>
             </div>
