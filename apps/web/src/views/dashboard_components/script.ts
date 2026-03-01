@@ -17,13 +17,30 @@ let globalCategories = [];
 let authMode = 'login'; // login, register, forgot, reset
 let billingInterval = 'yearly';
 
-// Navigation
+// Navigation — hash-based routing
+const VALID_VIEWS = ['dashboard','composer','docs','utilities','products','orders','categories','promotions','store','members','inquiries','subscription','knowledge','settings','integrations'];
+
 function switchView(view) {
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-  document.getElementById('view-' + view).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('nav-' + view).classList.add('active');
+  if (!VALID_VIEWS.includes(view)) view = 'dashboard';
+  const el = document.getElementById('dash-view');
+  if (el && el._x_dataStack) {
+     el._x_dataStack[0].currentView = view;
+  }
+  // Sync URL hash (don't push duplicate entries)
+  const target = view === 'dashboard' ? '' : view;
+  if (window.location.hash.replace('#', '') !== target) {
+    history.pushState(null, '', view === 'dashboard' ? window.location.pathname : '#' + view);
+  }
 }
+
+// Listen for back/forward browser navigation
+window.addEventListener('popstate', function() {
+  const hash = window.location.hash.replace('#', '');
+  const el = document.getElementById('dash-view');
+  if (el && el._x_dataStack) {
+    el._x_dataStack[0].currentView = (hash && VALID_VIEWS.includes(hash)) ? hash : 'dashboard';
+  }
+});
 
 // Auth Logic
 async function checkAuth() {
@@ -52,6 +69,11 @@ function showDashboard() {
   setBilling('yearly');
   // Init book view mode
   setBookView(bookViewMode);
+  // Restore view from URL hash
+  const hash = window.location.hash.replace('#', '');
+  if (hash && VALID_VIEWS.includes(hash)) {
+    switchView(hash);
+  }
 }
 function updateUI() {
   if(!currentUser) return;

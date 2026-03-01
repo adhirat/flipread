@@ -187,10 +187,10 @@ h4{font-size:13px;font-weight:600;color:var(--text-primary)}
   background:var(--bg-base);
   transition:all 0.25s cubic-bezier(0.4,0,0.2,1)
 }
-.view-section{display:none;animation:fadeIn 0.25s}
+/* Rely on Alpine x-show for visibility. view-section provides transition/animation */
+.view-section{animation:fadeIn 0.25s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.view-section.active{display:block}
-.view-section.active.store-builder{display:flex;flex-direction:column;height:calc(100vh - 0px);overflow:hidden;padding:0}
+.view-section.store-builder{display:flex;flex-direction:column;height:calc(100vh - 0px);overflow:hidden;padding:0}
 
 /* ── Page header ─────────────────────────────────────────── */
 .header{
