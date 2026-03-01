@@ -84,24 +84,26 @@ export const sidebar = `
       <div onclick="switchView('integrations');closeSidebar()" class="nav-item" id="nav-integrations" title="Integrations">
         <i class="fas fa-plug"></i><span>Integrations</span>
       </div>
-
-    </nav>
-
-    <!-- Hidden for JS compat — subscription accessible via settings -->
-    <div id="nav-subscription" style="display:none"></div>
-
-    <!-- Bottom pinned -->
-    <div style="border-top:1px solid var(--border-default);padding-top:8px;margin-top:4px">
       <div onclick="viewMyStore();" class="nav-item" title="View My Store" style="color:var(--color-accent)">
         <i class="fas fa-external-link-alt"></i><span>View My Store</span>
       </div>
+
+      <!-- SYSTEM -->
+      <div class="nav-section-label">Preferences</div>
       <div onclick="switchView('knowledge');closeSidebar()" class="nav-item" id="nav-knowledge" title="Help & Support">
         <i class="fas fa-question-circle"></i><span>Help & Support</span>
       </div>
       <div onclick="toggleDashTheme()" class="nav-item" title="Toggle Theme">
         <i class="fas fa-moon" id="dash-theme-icon-sidebar"></i><span>Theme</span>
       </div>
-    </div>
+
+    </nav>
+
+    <!-- Hidden for JS compat — subscription accessible via settings -->
+    <div id="nav-subscription" style="display:none"></div>
+
+    <!-- Bottom pinned (User Profile only) -->
+    <div style="border-top:1px solid var(--border-default);padding-top:4px;margin-top:auto">
 
     <!-- User profile -->
     <div class="user-profile" onclick="switchView('settings');closeSidebar()" style="cursor:pointer;margin-top:4px" title="Account Settings">
@@ -112,6 +114,7 @@ export const sidebar = `
       </div>
       <i class="fas fa-cog" style="color:var(--text-muted);flex-shrink:0;font-size:13px"></i>
     </div>
+  </div>
 
   </aside>
 

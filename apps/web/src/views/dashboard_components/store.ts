@@ -29,7 +29,7 @@ export const storeView = `
             <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent-cyan);border-radius:50%;animation:spin 0.7s linear infinite"></div>
             <span style="font-size:12px;color:var(--text-muted)">Loading preview...</span>
           </div>
-          <iframe id="store-preview-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms" style="width:100%;flex:1;border:none;background:#fff" onload="document.getElementById('store-preview-loading').style.display='none'"></iframe>
+          <iframe id="store-preview-iframe" src="about:blank" style="width:100%;flex:1;border:none;background:#fff" onload="document.getElementById('store-preview-loading').style.display='none'"></iframe>
         </div>
       </div>
 
@@ -127,13 +127,17 @@ export const storeView = `
           <div style="display:flex;align-items:center;gap:12px">
             <input type="color" id="st-accent" value="#c45d3e" style="width:48px;height:40px;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;background:var(--bg-elevated)">
             <input type="text" id="st-accent-hex" value="#c45d3e" style="width:100px;font-family:monospace" oninput="syncAccentColor(this.value)">
-            <div style="display:flex;gap:6px">
-              <span class="accent-swatch" style="background:#c45d3e" onclick="setAccent('#c45d3e')"></span>
-              <span class="accent-swatch" style="background:#4f46e5" onclick="setAccent('#4f46e5')"></span>
-              <span class="accent-swatch" style="background:#059669" onclick="setAccent('#059669')"></span>
-              <span class="accent-swatch" style="background:#dc2626" onclick="setAccent('#dc2626')"></span>
-              <span class="accent-swatch" style="background:#7c3aed" onclick="setAccent('#7c3aed')"></span>
-              <span class="accent-swatch" style="background:#0891b2" onclick="setAccent('#0891b2')"></span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="accent-swatch" style="background:#c45d3e" onclick="setAccent('#c45d3e')" title="Terracotta"></span>
+              <span class="accent-swatch" style="background:#4f46e5" onclick="setAccent('#4f46e5')" title="Indigo"></span>
+              <span class="accent-swatch" style="background:#0ea5e9" onclick="setAccent('#0ea5e9')" title="Sky Blue"></span>
+              <span class="accent-swatch" style="background:#10b981" onclick="setAccent('#10b981')" title="Emerald"></span>
+              <span class="accent-swatch" style="background:#f59e0b" onclick="setAccent('#f59e0b')" title="Amber"></span>
+              <span class="accent-swatch" style="background:#f43f5e" onclick="setAccent('#f43f5e')" title="Rose"></span>
+              <span class="accent-swatch" style="background:#d946ef" onclick="setAccent('#d946ef')" title="Fuchsia"></span>
+              <span class="accent-swatch" style="background:#8b5cf6" onclick="setAccent('#8b5cf6')" title="Violet"></span>
+              <span class="accent-swatch" style="background:#14b8a6" onclick="setAccent('#14b8a6')" title="Teal"></span>
+              <span class="accent-swatch" style="background:#64748b" onclick="setAccent('#64748b')" title="Slate"></span>
             </div>
           </div>
         </div>
@@ -142,9 +146,14 @@ export const storeView = `
           <label>Font</label>
           <select id="st-font">
             <option value="dm-sans">DM Sans (Default)</option>
-            <option value="inter">Inter</option>
-            <option value="playfair">Playfair Display</option>
-            <option value="space-grotesk">Space Grotesk</option>
+            <option value="inter">Inter (Clean)</option>
+            <option value="playfair">Playfair Display (Elegant)</option>
+            <option value="space-grotesk">Space Grotesk (Modern)</option>
+            <option value="outfit">Outfit (Geometric)</option>
+            <option value="montserrat">Montserrat (Bold)</option>
+            <option value="poppins">Poppins (Friendly)</option>
+            <option value="lora">Lora (Classic Serif)</option>
+            <option value="syne">Syne (Avant-Garde)</option>
           </select>
         </div>
 
@@ -197,15 +206,7 @@ export const storeView = `
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Background Style</label>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-            <button class="btn-outline bg-style-opt active" id="bgs-clean" onclick="selectBgStyle('clean')" style="padding:10px 6px;justify-content:center;font-size:13px">Clean</button>
-            <button class="btn-outline bg-style-opt" id="bgs-dots" onclick="selectBgStyle('dots')" style="padding:10px 6px;justify-content:center;font-size:13px">Dots</button>
-            <button class="btn-outline bg-style-opt" id="bgs-grid" onclick="selectBgStyle('grid')" style="padding:10px 6px;justify-content:center;font-size:13px">Grid</button>
-            <button class="btn-outline bg-style-opt" id="bgs-lines" onclick="selectBgStyle('lines')" style="padding:10px 6px;justify-content:center;font-size:13px">Lines</button>
-          </div>
-        </div>
+
 
         <div class="form-group">
           <label>Card Corner Radius</label>

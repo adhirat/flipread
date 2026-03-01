@@ -4,10 +4,10 @@ export const categoriesView = `
       <div class="view-header">
         <div>
           <h2>Categories</h2>
-          <p class="text-secondary">Manage global categories. Anyone can add new categories, but deletion is disabled.</p>
+          <p class="text-secondary">Manage global categories.</p>
         </div>
         <div style="display:flex;gap:12px">
-            <button class="btn" onclick="showModal('add-category-modal')"><i class="fas fa-plus"></i> New Category</button>
+            <button class="btn" onclick="showCategoryModal()"><i class="fas fa-plus"></i> New Category</button>
         </div>
       </div>
 
@@ -19,14 +19,16 @@ export const categoriesView = `
       </div>
     </div>
 
-    <!-- Add Category Modal -->
-    <div id="add-category-modal" class="modal">
+    <!-- Category Modal -->
+    <div id="category-modal" class="modal">
       <div class="modal-content" style="max-width:400px">
-        <div class="close-btn" onclick="hideModal('add-category-modal')">&times;</div>
-        <h3 style="margin-bottom:24px">Add Global Category</h3>
+        <div class="close-btn" onclick="hideModal('category-modal')">&times;</div>
+        <h3 id="category-modal-title" style="margin-bottom:24px">Add Global Category</h3>
         <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-          Note: Categories are shared globally across all users to unify tagging. Categories cannot be deleted once created.
+          Note: Categories are shared globally across all users to unify tagging.
         </p>
+        <input type="hidden" id="edit-category-id">
+        <input type="hidden" id="edit-category-image-url">
         <div class="form-group">
           <label>Category Title</label>
           <input type="text" id="new-category-name" placeholder="e.g. Fiction, Tutorial, Sci-Fi">
@@ -43,8 +45,10 @@ export const categoriesView = `
         </div>
         <div id="add-category-msg" class="msg" style="display:none;margin-bottom:12px;"></div>
         <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
-          <button onclick="hideModal('add-category-modal')" class="btn-outline" style="border:none">Cancel</button>
-          <button id="submit-category-btn" onclick="createCategory()" class="btn">Create</button>
+          <button id="delete-category-btn" onclick="deleteCategory()" class="btn-outline" style="border:none;color:var(--accent-magenta);display:none;">Delete</button>
+          <div style="flex:1"></div>
+          <button onclick="hideModal('category-modal')" class="btn-outline" style="border:none">Cancel</button>
+          <button id="submit-category-btn" onclick="saveCategory()" class="btn">Save</button>
         </div>
       </div>
     </div>

@@ -42,6 +42,35 @@ export function dashboardPage(appUrl: string): string {
   <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';</script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <!-- docx -->
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+  <!-- pdf-lib -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- Univer requirements and umd -->
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/design@0.1.12/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/ui@0.1.12/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/docs-ui@0.1.12/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-ui@0.1.12/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/@univerjs/sheets-numfmt@0.1.12/lib/index.css">
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js"></script>
+  <script src="https://unpkg.com/clsx@2.0.0/dist/clsx.min.js"></script>
+  <script src="https://unpkg.com/@wendellhu/redi@0.15.2/dist/redi.js"></script>
+  <script src="https://unpkg.com/@univerjs/core@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/design@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/engine-render@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/engine-formula@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/ui@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/docs@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/docs-ui@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets-ui@0.1.12/lib/umd/index.js"></script>
+  <script src="https://unpkg.com/@univerjs/sheets-numfmt@0.1.12/lib/umd/index.js"></script>
+  <!-- Reveal.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css" id="reveal-theme">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
   <style>
     ${styles}
   </style>

@@ -95,7 +95,6 @@ function updateUI() {
 
   // New premium settings
   selectHeroSize(s.hero_size || 'standard', true);
-  selectBgStyle(s.bg_style || 'clean', true);
   selectCorner(s.corner_radius || 'standard', true);
   const showDateToggle = document.getElementById('st-show-date-toggle');
   if(showDateToggle) showDateToggle.classList.toggle('active', !!s.show_date);
@@ -772,7 +771,6 @@ async function saveStoreSettings() {
     // New premium settings
     show_date: document.getElementById('st-show-date-toggle')?.classList.contains('active') ?? false,
     hero_size: document.querySelector('.hero-size-opt.active')?.id.replace('hs-','') || 'standard',
-    bg_style: document.querySelector('.bg-style-opt.active')?.id.replace('bgs-','') || 'clean',
     corner_radius: document.querySelector('.corner-opt.active')?.id.replace('cr-','') || 'standard',
     section_heading: document.getElementById('st-section-heading')?.value || '',
     banner_text: document.getElementById('st-banner-text')?.value || '',
@@ -790,22 +788,31 @@ async function saveStoreSettings() {
     copyright_content: document.getElementById('st-copyright').value
   };
 
+  const payload = { store_name, store_settings };
+  if(store_handle.trim()) payload.store_handle = store_handle.trim();
+
   const res = await fetch(API + '/api/user/store', {
     method: 'PATCH', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ store_name, store_handle, store_settings })
+    body: JSON.stringify(payload)
   });
   if(res.ok) {
     const m = document.getElementById('store-msg');
     m.textContent = 'Saved!'; m.className = 'msg success'; m.style.display = 'block';
     setTimeout(() => m.style.display = 'none', 2000);
     currentUser.store_name = store_name;
-    currentUser.store_handle = store_handle;
+    if(payload.store_handle) currentUser.store_handle = payload.store_handle;
     currentUser.store_settings = JSON.stringify(store_settings);
-    // Refresh UI so the header store-link reflects the new handle immediately
+    // Refresh UI
     updateUI();
     // Refresh the live preview iframe
     setTimeout(refreshStorePreview, 300);
+  } else {
+    const data = await res.json();
+    const m = document.getElementById('store-msg');
+    m.textContent = data.error || 'Failed to save settings. Please check your inputs.';
+    m.className = 'msg error'; m.style.display = 'block';
+    setTimeout(() => m.style.display = 'none', 5000);
   }
 }
 
@@ -1062,11 +1069,7 @@ function selectHeroSize(size, silent) {
   const el = document.getElementById('hs-' + size);
   if(el) el.classList.add('active');
 }
-function selectBgStyle(style, silent) {
-  document.querySelectorAll('.bg-style-opt').forEach(c => c.classList.remove('active'));
-  const el = document.getElementById('bgs-' + style);
-  if(el) el.classList.add('active');
-}
+
 function selectCorner(radius, silent) {
   document.querySelectorAll('.corner-opt').forEach(c => c.classList.remove('active'));
   const el = document.getElementById('cr-' + radius);
@@ -1571,46 +1574,100 @@ function renderCategories() {
     if (c.parent_name) {
       nameToRender = '<span style="color:var(--text-muted);font-size:11px">' + esc(c.parent_name) + ' &rsaquo; </span>' + nameToRender;
     }
-    return \`<span style="background:var(--bg-elevated);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;display:inline-block">\${nameToRender}</span>\`
+    const imgHtml = c.image_url ? \`<img src="\${esc(c.image_url)}" style="width:20px;height:20px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px">\` : '';
+    return \`<span onclick="editCategory('\${esc(c.id)}')" style="background:var(--bg-elevated);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;display:inline-flex;align-items:center;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">\${imgHtml}\${nameToRender}</span>\`;
   }).join('');
 }
 
-async function createCategory() {
+function showCategoryModal() {
+  document.getElementById('edit-category-id').value = '';
+  document.getElementById('edit-category-image-url').value = '';
+  document.getElementById('new-category-name').value = '';
+  document.getElementById('new-category-parent').value = '';
+  document.getElementById('new-category-image').value = '';
+  document.getElementById('category-modal-title').textContent = 'Add Global Category';
+  document.getElementById('delete-category-btn').style.display = 'none';
+  showModal('category-modal');
+}
+
+function editCategory(id) {
+  const c = globalCategories.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('edit-category-id').value = c.id;
+  document.getElementById('new-category-name').value = c.name;
+  document.getElementById('new-category-parent').value = c.parent_id || '';
+  document.getElementById('edit-category-image-url').value = c.image_url || '';
+  document.getElementById('new-category-image').value = '';
+  document.getElementById('category-modal-title').textContent = 'Edit Category';
+  document.getElementById('delete-category-btn').style.display = 'block';
+  showModal('category-modal');
+}
+
+async function saveCategory() {
+  const id = document.getElementById('edit-category-id').value;
   const name = document.getElementById('new-category-name').value;
   const parent_id = document.getElementById('new-category-parent')?.value || null;
   const imageFiles = document.getElementById('new-category-image')?.files;
+  const imageUrl = document.getElementById('edit-category-image-url').value;
   const msg = document.getElementById('add-category-msg');
   const btn = document.getElementById('submit-category-btn');
   const oldText = btn.textContent;
   
   if(!name) { msg.style.display = 'block'; msg.className='msg error'; msg.textContent='Name required.'; return; }
   
-  btn.textContent = 'Creating...'; btn.disabled = true; msg.style.display = 'none';
+  btn.textContent = 'Saving...'; btn.disabled = true; msg.style.display = 'none';
   try {
     const fd = new FormData();
     fd.append('name', name);
     if (parent_id) fd.append('parent_id', parent_id);
     if (imageFiles && imageFiles.length > 0) {
       fd.append('image', imageFiles[0]);
+    } else if (imageUrl) {
+      fd.append('image', imageUrl);
     }
     
-    const res = await fetch(API + '/api/categories', {
-      method: 'POST', credentials: 'include', body: fd
+    let url = API + '/api/categories';
+    let method = 'POST';
+    if (id) {
+      url += '/' + id;
+      method = 'PATCH';
+    }
+
+    const res = await fetch(url, {
+      method: method, credentials: 'include', body: fd
     });
     const data = await res.json();
     if(res.ok) {
-      hideModal('add-category-modal');
-      document.getElementById('new-category-name').value = '';
-      const parentSel = document.getElementById('new-category-parent');
-      if (parentSel) parentSel.value = '';
-      const imgInput = document.getElementById('new-category-image');
-      if (imgInput) imgInput.value = '';
+      hideModal('category-modal');
       await loadCategories();
     } else {
-      msg.style.display = 'block'; msg.className='msg error'; msg.textContent = data.error || 'Failed to create category.';
+      msg.style.display = 'block'; msg.className='msg error'; msg.textContent = data.error || 'Failed to save category.';
     }
   } catch(e) {
     msg.style.display = 'block'; msg.className='msg error'; msg.textContent = 'Network error.';
+  }
+  btn.textContent = oldText; btn.disabled = false;
+}
+
+async function deleteCategory() {
+  const id = document.getElementById('edit-category-id').value;
+  if(!id) return;
+  if(!confirm('Are you sure you want to delete this category? Sub-categories and items using this tag may lose their mapping.')) return;
+  
+  const btn = document.getElementById('delete-category-btn');
+  const oldText = btn.textContent;
+  btn.textContent = 'Deleting...'; btn.disabled = true;
+  
+  try {
+    const res = await fetch(API + '/api/categories/' + id, { method: 'DELETE', credentials: 'include' });
+    if(res.ok) {
+       hideModal('category-modal');
+       await loadCategories();
+    } else {
+       alert('Failed to delete category');
+    }
+  } catch(e) {
+    alert('Network error');
   }
   btn.textContent = oldText; btn.disabled = false;
 }
@@ -2336,5 +2393,287 @@ function convertInquiryToMember() {
   if (nameInput) nameInput.value = activeInquiry.name;
   
   showToast('Member info pre-filled. Review and click Add.');
+}
+
+// --- COMPOSER LOGIC ---
+function switchComposerTab(tab) {
+  document.querySelectorAll('.composer-pane').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('#view-composer .tab').forEach(el => {
+    el.classList.remove('active');
+    el.style.color = 'var(--text-secondary)';
+    el.style.borderBottom = 'none';
+  });
+  
+  document.getElementById('composer-' + tab).style.display = 'block';
+  const activeTab = document.getElementById('tab-composer-' + tab);
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.color = 'var(--text-primary)';
+    activeTab.style.borderBottom = '2px solid var(--accent)';
+  }
+}
+
+async function generateDocx() {
+  if (!window.docx) {
+    alert('DOCX library not loaded yet. Please wait.');
+    return;
+  }
+  const title = document.getElementById('docx-title').value || 'Untitled Document';
+  const content = document.getElementById('docx-content').value || '';
+  
+  const doc = new docx.Document({
+    sections: [{
+      properties: {},
+      children: [
+        new docx.Paragraph({
+          text: title,
+          heading: docx.HeadingLevel.HEADING_1,
+        }),
+        new docx.Paragraph({
+          text: content,
+        }),
+      ],
+    }],
+  });
+  
+  docx.Packer.toBlob(doc).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = title + '.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+async function generatePdf() {
+  if (!window.PDFLib) {
+    alert('PDF library not loaded yet. Please wait.');
+    return;
+  }
+  const heading = document.getElementById('pdf-heading').value || 'Untitled Document';
+  const text = document.getElementById('pdf-body').value || '';
+  
+  const pdfDoc = await PDFLib.PDFDocument.create();
+  const page = pdfDoc.addPage();
+  const { width, height } = page.getSize();
+  const fontSize = 14;
+  
+  page.drawText(heading, {
+    x: 50,
+    y: height - 4 * fontSize,
+    size: 24,
+  });
+  
+  // Very simplistic text wrapping simulation (cut after length)
+  const lines = text.split('\\n');
+  let currentY = height - 8 * fontSize;
+  for (let t of lines) {
+    page.drawText(t, {
+      x: 50,
+      y: currentY,
+      size: fontSize,
+      maxWidth: width - 100,
+      lineHeight: 18,
+    });
+    currentY -= 20;
+  }
+  
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = heading + '.pdf';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+let univerInitialized = false;
+function initUniver() {
+  if (univerInitialized) return;
+  
+  if (!window.UniverCore) {
+     alert('Univer libraries are still loading. Please try again in a moment.');
+     return;
+  }
+  
+  document.getElementById('univer-placeholder').style.display = 'none';
+  document.getElementById('univer-container').style.display = 'block';
+
+  try {
+    const { Univer, LocaleType } = window.UniverCore;
+    const { defaultTheme } = window.UniverDesign;
+    const { UniverRenderEnginePlugin } = window.UniverEngineRender;
+    const { UniverFormulaEnginePlugin } = window.UniverEngineFormula;
+    const { UniverDocsPlugin } = window.UniverDocs;
+    const { UniverDocsUIPlugin } = window.UniverDocsUI;
+    const { UniverUIPlugin } = window.UniverUI;
+    const { UniverSheetsPlugin } = window.UniverSheets;
+    const { UniverSheetsUIPlugin } = window.UniverSheetsUI;
+    const { UniverSheetsNumfmtPlugin } = window.UniverSheetsNumfmt;
+    const { UniverSheetsFormulaPlugin } = window.UniverSheetsFormula;
+
+    const lang = LocaleType?.EN_US || 'en-US';
+
+    const locales = {
+      [lang]: {
+        ...(window.UniverDesign?.enUS || {}),
+        ...(window.UniverUI?.enUS || {}),
+        ...(window.UniverDocsUI?.enUS || {}),
+        ...(window.UniverSheetsUI?.enUS || {}),
+      }
+    };
+
+    const univer = new Univer({
+      theme: defaultTheme,
+      locale: lang,
+      locales: locales,
+    });
+
+    univer.registerPlugin(UniverRenderEnginePlugin);
+    univer.registerPlugin(UniverFormulaEnginePlugin);
+    
+    univer.registerPlugin(UniverUIPlugin, {
+      container: 'univer-container',
+      header: true,
+      footer: true,
+    });
+    
+    univer.registerPlugin(UniverDocsPlugin, {
+      hasScroll: false,
+    });
+    univer.registerPlugin(UniverDocsUIPlugin);
+
+    univer.registerPlugin(UniverSheetsPlugin);
+    univer.registerPlugin(UniverSheetsUIPlugin);
+    univer.registerPlugin(UniverSheetsFormulaPlugin);
+    univer.registerPlugin(UniverSheetsNumfmtPlugin);
+
+    try {
+      univer.createUniverSheet({});
+    } catch {
+      const type = window.UniverCore.UniverInstanceType ? (window.UniverCore.UniverInstanceType.UNIVER_SHEET || 1) : 1;
+      univer.createUnit(type, {});
+    }
+    univerInitialized = true;
+  } catch (err) {
+    console.error('Univer initialization failed:', err);
+    alert('Failed to initialize advanced spreadsheet completely, see console for details.');
+  }
+}
+
+// PPT (Reveal.js) Logic
+let revealInitialized = false;
+
+function previewPpt() {
+  if (!window.Reveal) {
+    alert('Reveal.js library not loaded. Please wait and try again.');
+    return;
+  }
+  
+  const markdown = document.getElementById('ppt-markdown').value || '';
+  if (!markdown) {
+    alert('Please enter some markdown to preview.');
+    return;
+  }
+
+  const slidesContainer = document.getElementById('ppt-slides-container');
+  slidesContainer.innerHTML = ''; // Clear old preview
+  
+  // Section out based on "---"
+  const slides = markdown.split('\\n---\\n');
+  slides.forEach(slideMd => {
+    // A quick-and-dirty markdown-to-html conversion for preview
+    // In a real app we would use marked.js, but replacing # manually for proof-of-concept
+    let htmlContent = slideMd
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/\\*\\*(.*?)\\*\\*/gim, '<strong>$1</strong>')
+      .replace(/\\*(.*?)\\*/gim, '<em>$1</em>')
+      .replace(/\\n/gim, '<br>');
+
+    const section = document.createElement('section');
+    section.innerHTML = htmlContent;
+    slidesContainer.appendChild(section);
+  });
+
+  document.getElementById('ppt-preview-container').style.display = 'block';
+
+  if (!revealInitialized) {
+    window.Reveal.initialize({
+      embedded: true,
+      keyboard: true,
+      center: true,
+      hash: false,
+      controls: true,
+      progress: true
+    }).then(() => {
+	   window.Reveal.layout();
+	});
+    revealInitialized = true;
+  } else {
+    // If already initialized, we need to sync and jump back to the first slide
+    window.Reveal.sync();
+    window.Reveal.slide(0);
+  }
+}
+
+function generatePpt() {
+  const markdown = document.getElementById('ppt-markdown').value || '';
+  if (!markdown) {
+    alert('Please enter some markdown to download.');
+    return;
+  }
+
+  const slides = markdown.split('\\n---\\n');
+  const slideHtmlElements = slides.map(slideMd => {
+    let ht = slideMd
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/\\*\\*(.*?)\\*\\*/gim, '<strong>$1</strong>')
+      .replace(/\\*(.*?)\\*/gim, '<em>$1</em>')
+      .replace(/\\n/gim, '<br>');
+    return '<section>' + ht + '</section>';
+  }).join('\\n');
+
+  const htmlDoc = \`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Presentation</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #000; }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      \${slideHtmlElements}
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"><\\/script>
+  <script>
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true
+    });
+  <\\/script>
+</body>
+</html>\`;
+
+  const blob = new Blob([htmlDoc], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'presentation.html';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 `;

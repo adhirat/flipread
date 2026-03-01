@@ -76,7 +76,10 @@ For inquiries, please reach out to us at:
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
 
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
+  const categoriesResult = await c.env.DB.prepare('SELECT name, image_url FROM categories').all();
+  const globalCats = categoriesResult.results || [];
+
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData, globalCats));
 });
 
 // GET /store/:username/gallery
@@ -110,7 +113,9 @@ store.get('/:username/gallery', async (c) => {
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
   const navData = await getStoreNavInfo(c.env.DB, user.id);
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
+  const categoriesResult = await c.env.DB.prepare('SELECT name, image_url FROM categories').all();
+  const globalCats = categoriesResult.results || [];
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData, globalCats));
 });
 
 // GET /store/:username/products - Duplicates Gallery to act as the Products route
@@ -144,7 +149,9 @@ store.get('/:username/products', async (c) => {
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
   const navData = await getStoreNavInfo(c.env.DB, user.id);
-  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData));
+  const categoriesResult = await c.env.DB.prepare('SELECT name, image_url FROM categories').all();
+  const globalCats = categoriesResult.results || [];
+  return c.html(bookstorePage(user, books, settings, c.env.APP_URL, false, navData, globalCats));
 });
 
 // GET /store/:username/cart - A placeholder cart view
@@ -297,7 +304,7 @@ store.post('/:username/inquiry', async (c) => {
   return c.json({ success: true, message: 'Your inquiry has been submitted. We will get back to you soon.' });
 });
 
-export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false, navData = {hasProducts:true, hasGallery:true}): string {
+export function bookstorePage(user: User, books: Book[], settings: any, appUrl: string, isCustomDomain = false, navData = {hasProducts:true, hasGallery:true}, globalCats: any[] = []): string {
   const storeName = user.store_name || user.name;
   const safeName = esc(storeName);
   const bookCount = books.length;
@@ -317,8 +324,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
   const themePreset = settings.theme_preset || 'default';
 
   // New premium settings
-  const heroSize = settings.hero_size || 'standard';     // compact | standard | tall | fullscreen
-  const bgStyle = settings.bg_style || 'clean';          // clean | dots | grid | lines
+    const heroSize = settings.hero_size || 'standard';     // compact | standard | tall | fullscreen
   const cornerRadius = settings.corner_radius || 'standard'; // sharp | standard | rounded
   const showDate = settings.show_date === true;
   const sectionHeading = settings.section_heading || '';
@@ -362,6 +368,11 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     'inter': { import: 'Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'Inter', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
     'playfair': { import: 'Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600', family: "'DM Sans', system-ui, sans-serif", heading: "'Playfair Display', Georgia, serif" },
     'space-grotesk': { import: 'Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1', family: "'Space Grotesk', system-ui, sans-serif", heading: "'Instrument Serif', Georgia, serif" },
+    'outfit': { import: 'Outfit:wght@400;500;600;700', family: "'Outfit', system-ui, sans-serif", heading: "'Outfit', system-ui, sans-serif" },
+    'montserrat': { import: 'Montserrat:wght@400;500;600;700', family: "'Montserrat', system-ui, sans-serif", heading: "'Montserrat', system-ui, sans-serif" },
+    'poppins': { import: 'Poppins:wght@400;500;600;700', family: "'Poppins', system-ui, sans-serif", heading: "'Poppins', system-ui, sans-serif" },
+    'lora': { import: 'Lora:wght@400;500;600;700&family=DM+Sans:wght@400;500;600', family: "'DM Sans', system-ui, sans-serif", heading: "'Lora', Georgia, serif" },
+    'syne': { import: 'Syne:wght@400;500;600;700;800&family=Inter:wght@400;500', family: "'Inter', system-ui, sans-serif", heading: "'Syne', sans-serif" },
   };
   const font = fontMap[fontChoice] || fontMap['dm-sans'];
 
@@ -403,14 +414,8 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
     ? '.hero { min-height: 100vh; padding: 120px 20px; }'
     : '';
 
-  // Background pattern CSS
-  const bgPatternCSS = bgStyle === 'dots'
-    ? `body { background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 24px 24px; }`
-    : bgStyle === 'grid'
-    ? `body { background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 48px 48px; }`
-    : bgStyle === 'lines'
-    ? `body { background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px); }`
-    : '';
+  // Body background CSS uses accent-subtle
+  const bodyCSS = `body { background: linear-gradient(180deg, var(--bg-primary) 0%, var(--accent-subtle) 100%); background-attachment: fixed; min-height: 100vh; }`;
 
   const cornerRadiusCSS = cornerRadius === 'sharp'
     ? '.bk-cover { border-radius: 0 !important; } .bk-3d { border-radius: 0; }'
@@ -1366,12 +1371,10 @@ body::before {
 /* ====== LAYOUT & CARD OVERRIDES ====== */
 ${gridCSS}
 ${cardCSS}
-/* ====== HERO SIZE OVERRIDE ====== */
+/* ====== CUSTOM OVERRIDES ====== */
 ${heroSizeCSS}
-/* ====== BACKGROUND PATTERN ====== */
-${bgPatternCSS}
-/* ====== CORNER RADIUS OVERRIDE ====== */
 ${cornerRadiusCSS}
+${bodyCSS}
 </style>
 </head>
 <body>
@@ -1459,7 +1462,11 @@ ${settings.hide_hero ? '' : `
   
   ${uniqueCategories.length > 0 ? `
     <div class="category-filters">
-      ${uniqueCategories.map(cat => `<button class="category-btn" data-category="${esc(cat.toLowerCase())}">${esc(cat)}</button>`).join('')}
+      ${uniqueCategories.map(cat => {
+        const catData = globalCats.find(c => c.name === cat);
+        const imgHtml = catData && catData.image_url ? `<img src="${esc(catData.image_url)}" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;display:inline-block">` : '';
+        return `<button class="category-btn" data-category="${esc(cat.toLowerCase())}">${imgHtml}${esc(cat)}</button>`;
+      }).join('')}
     </div>
   ` : ''}
 
