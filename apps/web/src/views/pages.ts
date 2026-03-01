@@ -7,8 +7,8 @@ function pageShell(title: string, description: string, appUrl: string, content: 
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${title} — SHOPUBLISH</title>
 <meta name="description" content="${description}">
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <meta property="og:title" content="${title} — SHOPUBLISH">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${appUrl}/logo.png">

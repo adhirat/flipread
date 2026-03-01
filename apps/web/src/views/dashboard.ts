@@ -26,8 +26,8 @@ export function dashboardPage(appUrl: string): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHOPUBLISH Dashboard</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
   <meta property="og:title" content="SHOPUBLISH Dashboard">
   <meta property="og:description" content="Manage your premium flipbooks and bookstore.">
   <meta property="og:image" content="${appUrl}/logo.png">

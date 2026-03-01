@@ -243,3 +243,19 @@ CREATE TABLE IF NOT EXISTS analytics_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_analytics_book_date ON analytics_events(book_id, created_at);
+
+
+-- Reviews Table
+CREATE TABLE IF NOT EXISTS reviews (
+    id TEXT PRIMARY KEY,
+    book_id TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review_text TEXT,
+    media_key TEXT,
+    media_type TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_book ON reviews(book_id);

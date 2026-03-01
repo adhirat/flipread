@@ -57,8 +57,8 @@ export function getWebViewerBase(options: WebViewerOptions): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${safeTitle} — Web View</title>
-    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+    <link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
+    <link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
     <meta property="og:title" content="${safeTitle} — SHOPUBLISH">
     <meta property="og:description" content="Read this interactive content on SHOPUBLISH.">
     <meta property="og:image" content="${coverUrl || logoUrl || '/logo.png'}">

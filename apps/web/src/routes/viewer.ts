@@ -291,4 +291,69 @@ viewer.get('/api/hero/:userId', async (c) => {
   });
 });
 
+
+// GET /api/reviews/:bookId — get reviews
+viewer.get('/api/reviews/:bookId', async (c) => {
+  const bookId = c.req.param('bookId');
+  const reviews = await c.env.DB.prepare(
+    'SELECT id, user_name, rating, review_text, media_key, media_type, created_at FROM reviews WHERE book_id = ? ORDER BY created_at DESC LIMIT 50'
+  ).bind(bookId).all();
+  
+  if (!reviews.success) return c.json({ error: 'Failed to fetch' }, 500);
+  return c.json(reviews.results);
+});
+
+// POST /api/reviews/:bookId — post a review
+viewer.post('/api/reviews/:bookId', async (c) => {
+  const bookId = c.req.param('bookId');
+  const body = await c.req.parseBody();
+  const user_name = body['user_name'] as string;
+  const ratingStr = body['rating'];
+  const rating = typeof ratingStr === 'string' ? parseInt(ratingStr) : 0;
+  const review_text = body['review_text'] as string;
+  const media = body['media'] as File | undefined;
+  
+  if (!user_name || !rating || rating < 1 || rating > 5) {
+    return c.json({ error: 'Invalid data' }, 400);
+  }
+  
+  const id = crypto.randomUUID();
+  let mediaKey = null;
+  let mediaType = null;
+  
+  if (media && media.size > 0) {
+    const ext = media.name.split('.').pop() || 'jpg';
+    mediaKey = `reviews/${id}/media.${ext}`;
+    mediaType = media.type;
+    const storage = new StorageService(c.env.BUCKET);
+    await storage.upload(mediaKey, await media.arrayBuffer(), mediaType);
+  }
+  
+  await c.env.DB.prepare(
+    'INSERT INTO reviews (id, book_id, user_name, rating, review_text, media_key, media_type) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).bind(id, bookId, user_name, rating, review_text || '', mediaKey, mediaType).run();
+  
+  return c.json({ success: true });
+});
+
+// GET /api/reviews/media/:id/:filename
+viewer.get('/api/reviews/media/:id/:filename', async (c) => {
+  const id = c.req.param('id');
+  const filename = c.req.param('filename');
+  const key = `reviews/${id}/${filename}`;
+  
+  const storage = new StorageService(c.env.BUCKET);
+  const obj = await storage.getObject(key);
+  if (!obj) return c.text('Not found', 404);
+  
+  const record = await c.env.DB.prepare('SELECT media_type FROM reviews WHERE id = ?').bind(id).first<{media_type: string}>();
+  
+  return new Response(obj.body, {
+    headers: {
+      'Content-Type': record?.media_type || 'application/octet-stream',
+      'Cache-Control': 'public, max-age=86400',
+    }
+  });
+});
+
 export default viewer;

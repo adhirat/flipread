@@ -99,11 +99,6 @@ app.get("/api/health", (c) =>
 
 // Static Assets (for Logo/Icons)
 app.get("/logo.png", serveStatic({ path: "./logo.png", manifest }));
-app.get("/favicon.png", serveStatic({ path: "./favicon.png", manifest }));
-app.get(
-  "/apple-touch-icon.png",
-  serveStatic({ path: "./apple-touch-icon.png", manifest }),
-);
 
 // API Routes
 app.route("/api/auth", authRoutes);
@@ -227,8 +222,8 @@ function landingPage(appUrl: string): string {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SHOPUBLISH — Turn Your PDFs & EPUBs into Beautiful Flipbooks</title>
 <meta name="description" content="Upload PDFs or EPUBs and generate shareable flipbook links. Free to start.">
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <meta property="og:title" content="SHOPUBLISH — Your Digital Flipbook Library">
 <meta property="og:description" content="Convert any PDF or EPUB into a professional, interactive flipbook in seconds.">
 <meta property="og:image" content="${appUrl}/logo.png">

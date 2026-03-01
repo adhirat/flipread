@@ -57,6 +57,8 @@ export interface Book {
   categories?: string;
   created_at: string;
   updated_at: string;
+  avg_rating?: number;
+  review_count?: number;
 }
 
 export interface Subscription {

@@ -6,8 +6,8 @@ export function passwordPage(slug: string, logoUrl: string = ''): string {
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Password Required — SHOPUBLISH</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-<link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
+<link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
 <meta property="og:title" content="Password Required — SHOPUBLISH">
 <meta property="og:image" content="${logoUrl || '/logo.png'}">
 <style>
@@ -27,8 +27,8 @@ export function errorPage(title: string, message: string, logoUrl: string = ''):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeTitle} — SHOPUBLISH</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-<link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
+<link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
 <meta property="og:title" content="${safeTitle} — SHOPUBLISH">
 <meta property="og:image" content="${logoUrl || '/logo.png'}">
 <style>
@@ -45,8 +45,8 @@ export function memberAccessPage(storeName: string, logoUrl: string = '', homeUr
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName} — Login</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-<link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
+<link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
 <meta property="og:title" content="${safeName} — Login">
 <style>
   :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
@@ -165,7 +165,7 @@ export function memberRegisterPage(storeName: string, logoUrl: string = '', home
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName} — Join</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
 <style>
   :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
   [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
@@ -284,7 +284,7 @@ export function memberForgotPage(storeName: string, logoUrl: string = '', homeUr
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName} — Reset Access</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
 <style>
   :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
   [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }
@@ -366,7 +366,7 @@ export function verificationSuccessPage(storeName: string, logoUrl: string = '',
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Account Verified — ${safeName}</title>
-<link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
+<link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
 <style>
   :root { --bg:#f9fafb; --text:#111827; --card:#ffffff; --border:#e5e7eb; --input-border:#d1d5db; --text-muted:#4b5563; --link:#6b7280; --link-hover:#374151; }
   [data-theme="dark"] { --bg:#0f172a; --text:#f8fafc; --card:#1e293b; --border:rgba(255,255,255,0.1); --input-border:#334155; --text-muted:#94a3b8; --link:#94a3b8; --link-hover:#e2e8f0; }

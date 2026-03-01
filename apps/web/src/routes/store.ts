@@ -72,8 +72,7 @@ For inquiries, please reach out to us at:
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
-     FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories, (SELECT AVG(rating) FROM reviews WHERE book_id = books.id) as avg_rating, (SELECT COUNT(id) FROM reviews WHERE book_id = books.id) as review_count FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
 
@@ -107,8 +106,7 @@ store.get('/:username/gallery', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
-     FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories, (SELECT AVG(rating) FROM reviews WHERE book_id = books.id) as avg_rating, (SELECT COUNT(id) FROM reviews WHERE book_id = books.id) as review_count FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
   const navData = await getStoreNavInfo(c.env.DB, user.id);
@@ -142,8 +140,7 @@ store.get('/:username/products', async (c) => {
   }
 
   const booksResult = await c.env.DB.prepare(
-    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories
-     FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
+    `SELECT id, title, slug, type, cover_url, view_count, created_at, settings, categories, (SELECT AVG(rating) FROM reviews WHERE book_id = books.id) as avg_rating, (SELECT COUNT(id) FROM reviews WHERE book_id = books.id) as review_count FROM books WHERE user_id = ? AND is_public = 1 ORDER BY created_at DESC`
   ).bind(user.id).all<Book>();
   const books = booksResult.results || [];
   const navData = await getStoreNavInfo(c.env.DB, user.id);
@@ -457,6 +454,7 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
         <div class="bk-meta" style="margin-top: ${authorStr || descStr ? '8px' : '0' }">
           ${showViewCount ? `<span class="bk-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${b.view_count.toLocaleString()}</span>` : ''}
           <span class="bk-type">${b.type.toUpperCase()}</span>
+          ${b.review_count ? `<span class="bk-rating" onclick="event.preventDefault(); window.openProductReviews('${b.id}', '${esc(b.title)}')" style="display:flex;align-items:center;gap:3px;cursor:pointer;color:#f59e0b;font-weight:600;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${Number(b.avg_rating).toFixed(1)} (${b.review_count})</span>` : `<span class="bk-rating" onclick="event.preventDefault(); window.openProductReviews('${b.id}', '${esc(b.title)}')" style="display:flex;align-items:center;gap:3px;cursor:pointer;color:var(--text-muted);opacity:0.6;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Rate</span>`}
           ${dateStr ? `<span class="bk-date">${dateStr}</span>` : ''}
         </div>
       </div>
@@ -469,8 +467,8 @@ export function bookstorePage(user: User, books: Book[], settings: any, appUrl: 
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${safeName}</title>
 <meta name="description" content="${esc(settings.description || `Browse ${user.name}'s library on SHOPUBLISH.`)}">
-<link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
-<link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
+<link rel="icon" type="image/png" href="${user.store_logo_url || '/logo.png'}">
+<link rel="apple-touch-icon" href="${user.store_logo_url || '/logo.png'}">
 <meta property="og:title" content="${safeName}">
 <meta property="og:description" content="${esc(settings.description || `Browse ${user.name}'s library on SHOPUBLISH.`)}">
 <meta property="og:image" content="${user.store_logo_url || appUrl + '/logo.png'}">
@@ -1562,8 +1560,169 @@ ${showSearch || uniqueCategories.length > 0 ? `(function(){
       filterCards();
     };
   });
+  });
 })();` : ''}
+
+// Reviews logic
+window.openProductReviews = function(bookId, title) {
+  var modal = document.getElementById('reviews-modal');
+  var header = document.getElementById('reviews-title');
+  var list = document.getElementById('reviews-list');
+  var bookIdInput = document.getElementById('review-book-id');
+  
+  if(modal && header && list && bookIdInput) {
+    header.innerText = 'Reviews for ' + title;
+    bookIdInput.value = bookId;
+    list.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5;">Loading reviews...</div>';
+    
+    // reset form
+    document.getElementById('review-form').reset();
+    document.getElementById('review-form-container').style.display = 'none';
+    
+    // open
+    modal.style.display = 'flex';
+    
+    // fetch
+    fetch('/read/api/reviews/' + bookId)
+      .then(r => r.json())
+      .then(data => {
+        if(!data || data.length === 0) {
+          list.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5;">No reviews yet. Be the first!</div>';
+        } else {
+          list.innerHTML = data.map(r => {
+            let mediaHtml = '';
+            if (r.media_key) {
+               const mediaUrl = '/read/api/reviews/media/' + r.id + '/' + r.media_key.split('/').pop();
+               if (r.media_type && r.media_type.startsWith('video/')) {
+                  mediaHtml = '<video src="' + mediaUrl + '" controls style="max-width:100%; max-height:200px; border-radius:8px; margin-top:10px;"></video>';
+               } else {
+                  mediaHtml = '<img src="' + mediaUrl + '" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:10px; object-fit:cover;">';
+               }
+            }
+            return '<div style="padding:12px 0; border-bottom:1px solid var(--border);"><div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>' + escHtml(r.user_name) + '</strong><span style="color:#f59e0b">' + '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) + '</span></div><div style="font-size:13px; color:var(--text-secondary);">' + escHtml(r.review_text) + '</div>' + mediaHtml + '</div>';
+          }).join('');
+        }
+      })
+      .catch(e => {
+        list.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5;">Failed to load reviews.</div>';
+      });
+  }
+};
+
+window.closeProductReviews = function() {
+  var modal = document.getElementById('reviews-modal');
+  if(modal) modal.style.display = 'none';
+};
+
+window.showReviewForm = function() {
+  document.getElementById('review-form-container').style.display = 'block';
+};
+
+window.submitReview = function(e) {
+  e.preventDefault();
+  var bookId = document.getElementById('review-book-id').value;
+  var name = document.getElementById('review-name').value;
+  var rating = document.querySelector('input[name="rating"]:checked');
+  var text = document.getElementById('review-text').value;
+  var mediaInput = document.getElementById('review-media');
+  
+  if(!name || !rating) return alert('Please provide a name and rating.');
+  
+  var btn = document.getElementById('submit-review-btn');
+  btn.disabled = true;
+  btn.innerText = 'Submitting...';
+  
+  var formData = new FormData();
+  formData.append('user_name', name);
+  formData.append('rating', rating.value);
+  formData.append('review_text', text);
+  if (mediaInput && mediaInput.files && mediaInput.files[0]) {
+    formData.append('media', mediaInput.files[0]);
+  }
+  
+  fetch('/read/api/reviews/' + bookId, {
+    method: 'POST',
+    body: formData
+  }).then(r => r.json()).then(res => {
+    btn.disabled = false;
+    btn.innerText = 'Submit Review';
+    if(res.success) {
+      document.getElementById('review-form-container').style.display = 'none';
+      window.openProductReviews(bookId, document.getElementById('reviews-title').innerText.replace('Reviews for ', ''));
+    } else {
+      alert('Error: ' + res.error);
+    }
+  }).catch(e => {
+    btn.disabled = false;
+    btn.innerText = 'Submit Review';
+    alert('Failed to submit.');
+  });
+};
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+}
 </script>
+
+<!-- Reviews Modal HTML -->
+<div id="reviews-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);">
+  <div style="background:var(--bg-surface); color:var(--text-primary); border-radius:12px; width:100%; max-width:500px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="reviews-title" style="margin:0; font-size:18px; font-weight:700;">Reviews</h3>
+      <button onclick="window.closeProductReviews()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; line-height:1;">&times;</button>
+    </div>
+    <div style="padding:20px; overflow-y:auto; flex:1;" id="reviews-list">
+    </div>
+    <div style="padding:20px; border-top:1px solid var(--border); background:var(--bg-elevated); border-bottom-left-radius:12px; border-bottom-right-radius:12px;">
+      <button onclick="window.showReviewForm()" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Write a Review</button>
+      
+      <div id="review-form-container" style="display:none; margin-top:20px;">
+        <form id="review-form" onsubmit="window.submitReview(event)">
+          <input type="hidden" id="review-book-id">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600; color:var(--text-secondary);">Your Name</label>
+            <input type="text" id="review-name" required style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; background:var(--bg-default); color:var(--text-primary);">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600; color:var(--text-secondary);">Rating</label>
+            <div style="display:flex; gap:10px; font-size:18px; color:#f59e0b;" class="rating-stars-input">
+              <label><input type="radio" name="rating" value="1" required style="display:none">★</label>
+              <label><input type="radio" name="rating" value="2" style="display:none">★</label>
+              <label><input type="radio" name="rating" value="3" style="display:none">★</label>
+              <label><input type="radio" name="rating" value="4" style="display:none">★</label>
+              <label><input type="radio" name="rating" value="5" style="display:none">★</label>
+            </div>
+            <style>
+              .rating-stars-input label { cursor:pointer; filter:grayscale(1); opacity:0.4; transition:0.2s; }
+              .rating-stars-input label:hover,
+              .rating-stars-input label:has(input:checked),
+              .rating-stars-input:has(label:hover) label:has(~ label:hover),
+              .rating-stars-input label:has(~ label input:checked) { filter:grayscale(0); opacity:1; }
+            </style>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600; color:var(--text-secondary);">Review</label>
+            <textarea id="review-text" rows="3" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; background:var(--bg-default); color:var(--text-primary); resize:vertical;"></textarea>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600; color:var(--text-secondary);">Attach Image or Video (Optional)</label>
+            <input type="file" id="review-media" accept="image/*,video/*" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; background:var(--bg-default); color:var(--text-primary); font-size: 13px;">
+          </div>
+          <button type="submit" id="submit-review-btn" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Submit Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 </body></html>`;
 }
 
@@ -1654,8 +1813,8 @@ export function contentPage(user: User, title: string, content: string, appUrl: 
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(title)} — ${esc(storeName)}</title>
-<link rel="icon" type="image/png" href="${user.store_logo_url || '/favicon.png'}">
-<link rel="apple-touch-icon" href="${user.store_logo_url || '/apple-touch-icon.png'}">
+<link rel="icon" type="image/png" href="${user.store_logo_url || '/logo.png'}">
+<link rel="apple-touch-icon" href="${user.store_logo_url || '/logo.png'}">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script>
 (function(){var t=localStorage.getItem('shopublish-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark')}else{document.documentElement.setAttribute('data-theme','light')}})();
@@ -1972,7 +2131,7 @@ function mdToHtml(md: string): string {
 }
 
 function notFoundPage(msg = 'Store not found'): string {
-  return `<!DOCTYPE html><html><head><title>Not Found — SHOPUBLISH</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to SHOPUBLISH</a></body></html>`;
+  return `<!DOCTYPE html><html><head><title>Not Found — SHOPUBLISH</title><link rel="icon" type="image/png" href="/logo.png"><link rel="apple-touch-icon" href="/logo.png"></head><body style="font-family:system-ui,sans-serif;text-align:center;padding:100px 20px;background:#f9fafb;color:#374151"><h1>404</h1><p>${msg}</p><a href="/" style="color:#4f46e5;text-decoration:none;font-weight:600">Back to SHOPUBLISH</a></body></html>`;
 }
 
 function esc(s: string): string {

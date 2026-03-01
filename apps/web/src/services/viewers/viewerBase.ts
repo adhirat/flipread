@@ -59,8 +59,8 @@ export function getViewerBase(options: ViewerOptions): string {
     <title>${safeTitle} - SHOPUBLISH</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="${logoUrl || '/favicon.png'}">
-    <link rel="apple-touch-icon" href="${logoUrl || '/apple-touch-icon.png'}">
+    <link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
+    <link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
 
     <!-- Dependencies -->
     ${depScripts}
