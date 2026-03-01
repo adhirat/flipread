@@ -364,6 +364,13 @@ async function logout() {
   currentUser = null; showAuth();
 }
 
+// Ensure globally accessible for inline handlers
+window.checkAuth = checkAuth;
+window.submitAuth = submitAuth;
+window.toggleAuthMode = toggleAuthMode;
+window.setAuthMode = setAuthMode;
+window.logout = logout;
+
 // Book Logic
 async function loadBooks() {
   try {

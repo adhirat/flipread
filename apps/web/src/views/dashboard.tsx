@@ -69,7 +69,7 @@ export function dashboardPage(appUrl: string) {
 
         {authView()}
 
-        <div class="layout" id="dash-view" x-data="{ currentView: 'dashboard', sidebarCollapsed: false }" x-init="const h = window.location.hash.replace('#',''); if(h && ['composer','docs','utilities','products','orders','categories','promotions','store','members','inquiries','subscription','knowledge','settings','integrations'].includes(h)) currentView = h;" style="display:none" x-show="true">
+        <div class="layout" id="dash-view" x-data="{ currentView: 'dashboard', sidebarCollapsed: false }" x-init="const h = window.location.hash.replace('#',''); if(h && ['composer','docs','utilities','products','orders','categories','promotions','store','members','inquiries','subscription','knowledge','settings','integrations'].includes(h)) currentView = h;" style="display:none">
           {sidebar()}
           <main class="content">
             <div x-show="currentView === 'dashboard'">{dashboardOverview()}</div>
