@@ -1,3 +1,4 @@
+/** @jsxImportSource hono/jsx */
 import { escapeHtml } from './viewerUtils';
 import { getSidebarStyles, getSidebarHtml, getSidebarScripts } from './sidebarCentral';
 
@@ -24,51 +25,195 @@ export interface ViewerOptions {
     showNightShift?: boolean;
 }
 
-export function getViewerBase(options: ViewerOptions): string {
-    const { 
-        title, 
-        fileUrl, 
-        coverUrl, 
-        settings, 
-        showBranding, 
-        logoUrl = '', 
-        storeUrl = '/',
-        extraStyles = '', 
-        extraHtml = '', 
-        extraScripts = '', 
-        settingsHtml = '', 
-        dependencies = [],
-        showZoom = false,
-        showWebViewLink = true,
-        footerHtml = '',
-        showTTS = false,
-        storeName = 'SHOPUBLISH',
-        showHighlights = true,
-        showFullMode = false,
-        showNightShift = false
-    } = options;
-    
-    const safeTitle = escapeHtml(title);
-    const depScripts = dependencies.map(dep => `<script src="${dep}"></script>`).join('\n    ');
+// ─── Sub-Components ─────────────────────────────────────────────
 
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>${safeTitle} - SHOPUBLISH</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="${logoUrl || '/logo.png'}">
-    <link rel="apple-touch-icon" href="${logoUrl || '/logo.png'}">
+const ViewerHeader = ({ 
+    safeTitle, showBranding, logoUrl, storeUrl, 
+    showTTS, showFullMode, showNightShift, showZoom, showWebViewLink 
+}: {
+    safeTitle: string; showBranding: boolean; logoUrl: string; storeUrl: string;
+    showTTS: boolean; showFullMode: boolean; showNightShift: boolean; showZoom: boolean; showWebViewLink: boolean;
+}) => (
+    <header class="header" id="main-header">
+        <div class="header-left">
+            <button class="header-icon" id="index-btn" title="Table of Contents">
+                <i class="fas fa-list"></i>
+            </button>
+            {showBranding && logoUrl && (
+                <a href={storeUrl} style="pointer-events: auto;">
+                    <img src={logoUrl} alt="Logo" class="header-logo" />
+                </a>
+            )}
+        </div>
+        <div class="header-name" dangerouslySetInnerHTML={{ __html: safeTitle }} />
 
-    <!-- Dependencies -->
-    ${depScripts}
-    <script src="https://cdn.tailwindcss.com"></script>
+        <div class="header-icons" id="header-icons">
+            {/* TTS Controls */}
+            {showTTS && (
+                <>
+                    <div id="tts-ctrls" class="hidden">
+                        <button onclick="window.togglePlayPauseTTS()" class="header-icon" title="Play/Pause TTS">
+                            <i id="tts-pp-i" class="fas fa-pause"></i>
+                        </button>
+                    </div>
+                    <button class="header-icon" id="tts-btn" onclick="window.toggleTTS()" title="Listen (TTS)">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </>
+            )}
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
+            {/* Full Mode Toggle */}
+            {showFullMode && (
+                <button class="header-icon" id="full-mode-btn" title="Toggle Full Mode">
+                    <i class="fas fa-expand"></i>
+                </button>
+            )}
+
+            {/* Night Shift Toggle */}
+            {showNightShift && (
+                <button class="header-icon" id="night-shift-btn" title="Night Shift">
+                    <i class="fas fa-moon"></i>
+                </button>
+            )}
+
+            {/* Social Actions */}
+            <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
+            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
+            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
+
+            {/* Web View Link */}
+            {showWebViewLink && (
+                <a href="?mode=web" class="header-icon" id="web-view-icon-hdr" title="Web View">
+                    <i class="fas fa-globe"></i>
+                </a>
+            )}
+
+            <div class="h-divider"></div>
+
+            {/* Settings & Notes */}
+            <button class="header-icon" id="bg-settings-btn" title="Appearance">
+                <i class="fas fa-palette"></i>
+            </button>
+            <button class="header-icon" id="notes-btn" title="Notes">
+                <i class="fas fa-pen-fancy"></i>
+            </button>
+
+            {/* Zoom Controls */}
+            {showZoom && (
+                <div class="zoom-controls-inline" id="zoom-controls">
+                    <button class="header-icon" id="zoom-out" style="width:28px; height:28px; font-size:12px">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <div class="zoom-text" id="zoom-text">100%</div>
+                    <button class="header-icon" id="zoom-in" style="width:28px; height:28px; font-size:12px">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            )}
+        </div>
+    </header>
+);
+
+const IndexModal = () => (
+    <div class="index-modal" id="index-modal">
+        <div class="index-content">
+            <div class="index-header">
+                <div style="font-weight:600">Contents</div>
+                <button class="header-icon" id="index-close-btn" style="width:30px; height:30px">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="index-list-container">
+                <div id="index-list"></div>
+            </div>
+        </div>
+    </div>
+);
+
+const SettingsModal = ({ settingsHtml }: { settingsHtml: string }) => (
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-content">
+            <div class="set-header">
+                <div style="font-weight:600; text-transform:uppercase; letter-spacing:1px; font-size:12px;">Settings</div>
+                <button class="header-icon" id="settings-close-btn" style="width:28px; height:28px">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="set-body">
+                <div style="margin-bottom: 10px; font-weight: 600; font-size:11px; color:#888; text-transform:uppercase;">Background</div>
+                <div class="bg-grid">
+                    <div class="bg-option active" style="background: #1a1a1a;" data-bg="#1a1a1a" title="Dark"></div>
+                    <div class="bg-option" style="background: #333333;" data-bg="#333333" title="Charcoal"></div>
+                    <div class="bg-option" style="background: #0d1b2a;" data-bg="#0d1b2a" title="Midnight"></div>
+                    <div class="bg-option" style="background: #f5f5f5;" data-bg="#f5f5f5" title="Light"></div>
+                    <div class="bg-option" style="background: #e0e0e0;" data-bg="#e0e0e0" title="Grey"></div>
+                    <div class="bg-option" style="background: #d7ccc8;" data-bg="#d7ccc8" title="Paper"></div>
+                    <div class="bg-option" style="background: #fff8e1;" data-bg="#fff8e1" title="Cream"></div>
+                    <div class="bg-option" style="background: linear-gradient(to bottom right, #2c3e50, #000000);" data-bg="linear-gradient(to bottom right, #2c3e50, #000000)" title="Gradient"></div>
+                </div>
+
+                <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                    <div class="set-opt-row">
+                        <span class="set-label">Paper Texture</span>
+                        <button id="tex-toggle" class="header-icon" style="width:auto; padding:0 12px; border-radius:15px; font-size:11px; background:#444;">OFF</button>
+                    </div>
+                </div>
+
+                {settingsHtml && <div dangerouslySetInnerHTML={{ __html: settingsHtml }} />}
+            </div>
+        </div>
+    </div>
+);
+
+const QRModal = () => (
+    <div id="qr-modal" class="settings-modal" style="justify-content: center; align-items: center;">
+        <div class="settings-content" style="height: auto; border-radius: 20px; width: 340px; transform: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div class="set-header">
+                <div style="font-weight:600">Scan QR Code</div>
+                <button class="header-icon" onclick="window.toggleModal('qr-modal', false)" style="width:28px; height:28px">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="set-body" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px;">
+                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px;"></div>
+                <p style="text-align: center; font-size: 13px; color: #aaa;">Scan this code with your phone to open this book on the go.</p>
+                <button class="header-icon" style="width: 100%; justify-content: center; border-radius: 10px; background: var(--accent); color: white; padding: 10px; font-weight: 600;" onclick="window.toggleModal('qr-modal', false)">Close</button>
+            </div>
+        </div>
+    </div>
+);
+
+const FooterControls = ({ footerHtml, showWebViewLink }: { footerHtml: string; showWebViewLink: boolean }) => (
+    <div class="controls" id="main-footer">
+        {/* Desktop */}
+        <div class="desktop-controls" dangerouslySetInnerHTML={{ __html: footerHtml }} />
+
+        {/* Mobile */}
+        <div class="mobile-controls">
+            <button class="nav-btn-mob" id="mobile-prev-btn" onclick="if(window.prev)window.prev()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="mobile-icons-center">
+                <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
+                <button class="header-icon" id="qr-btn-mob" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
+                <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
+                {showWebViewLink && (
+                    <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>
+                )}
+                <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
+                <button class="header-icon" id="notes-btn-mob"><i class="fas fa-pen-fancy"></i></button>
+            </div>
+
+            <button class="nav-btn-mob" id="mobile-next-btn" onclick="if(window.next)window.next()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+);
+
+// ─── Main CSS (remains as template string) ──────────────────────
+const getViewerStyles = (sidebarStyles: string, extraStyles: string): string => `
         * {
             margin: 0;
             padding: 0;
@@ -467,7 +612,7 @@ export function getViewerBase(options: ViewerOptions): string {
         .bg-option:hover { transform: scale(1.1); border-color: white; }
         .bg-option.active { border-color: #4CAF50; box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3); }
 
-        ${getSidebarStyles('#6366f1')}
+        ${sidebarStyles}
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -576,181 +721,10 @@ export function getViewerBase(options: ViewerOptions): string {
         }
 
         ${extraStyles}
-    </style>
-</head>
+`;
 
-<body>
-    <header class="header" id="main-header">
-        <div class="header-left">
-            <button class="header-icon" id="index-btn" title="Table of Contents">
-                <i class="fas fa-list"></i>
-            </button>
-            ${showBranding && logoUrl ? `<a href="${storeUrl}" style="pointer-events: auto;"><img src="${logoUrl}" alt="Logo" class="header-logo"></a>` : ''}
-        </div>
-        <div class="header-name">${safeTitle}</div>
-
-        <div class="header-icons" id="header-icons">
-            ${showTTS ? `
-            <div id="tts-ctrls" class="hidden">
-                <button onclick="window.togglePlayPauseTTS()" class="header-icon" title="Play/Pause TTS">
-                    <i id="tts-pp-i" class="fas fa-pause"></i>
-                </button>
-            </div>
-            <button class="header-icon" id="tts-btn" onclick="window.toggleTTS()" title="Listen (TTS)">
-                <i class="fas fa-volume-up"></i>
-            </button>
-            ` : ''}
-
-            ${showFullMode ? `
-            <button class="header-icon" id="full-mode-btn" title="Toggle Full Mode">
-                <i class="fas fa-expand"></i>
-            </button>
-            ` : ''}
-
-            ${showNightShift ? `
-            <button class="header-icon" id="night-shift-btn" title="Night Shift">
-                <i class="fas fa-moon"></i>
-            </button>
-            ` : ''}
-
-            <button class="header-icon" onclick="window.shareBook()" title="Share"><i class="fas fa-share-alt"></i></button>
-            <button class="header-icon" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
-            <button class="header-icon" onclick="window.copyLink()" title="Copy Link"><i class="fas fa-link"></i></button>
-            
-            ${showWebViewLink ? `
-            <a href="?mode=web" class="header-icon" id="web-view-icon-hdr" title="Web View">
-                <i class="fas fa-globe"></i>
-            </a>
-            ` : ''}
-
-            <div class="h-divider"></div>
-
-            <button class="header-icon" id="bg-settings-btn" title="Appearance">
-                <i class="fas fa-palette"></i>
-            </button>
-            <button class="header-icon" id="notes-btn" title="Notes">
-                <i class="fas fa-pen-fancy"></i>
-            </button>
-
-            ${showZoom ? `
-            <div class="zoom-controls-inline" id="zoom-controls">
-                <button class="header-icon" id="zoom-out" style="width:28px; height:28px; font-size:12px">
-                    <i class="fas fa-minus"></i>
-                </button>
-                <div class="zoom-text" id="zoom-text">100%</div>
-                <button class="header-icon" id="zoom-in" style="width:28px; height:28px; font-size:12px">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-            ` : ''}
-
-
-        </div>
-    </header>
-
-    <div id="texture-overlay"></div>
-    
-    <div class="main-content" id="main-content">
-        <div class="loading" id="loading">
-            <i class="fas fa-circle-notch fa-spin"></i> Loading...
-        </div>
-        ${extraHtml}
-    </div>
-
-    <!-- Index Modal -->
-    <div class="index-modal" id="index-modal">
-        <div class="index-content">
-            <div class="index-header">
-                <div style="font-weight:600">Contents</div>
-                <button class="header-icon" id="index-close-btn" style="width:30px; height:30px">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="index-list-container">
-                <div id="index-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modern Settings Modal -->
-    <div class="settings-modal" id="settings-modal">
-        <div class="settings-content">
-            <div class="set-header">
-                <div style="font-weight:600; text-transform:uppercase; letter-spacing:1px; font-size:12px;">Settings</div>
-                <button class="header-icon" id="settings-close-btn" style="width:28px; height:28px">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="set-body">
-                <div style="margin-bottom: 10px; font-weight: 600; font-size:11px; color:#888; text-transform:uppercase;">Background</div>
-                <div class="bg-grid">
-                    <div class="bg-option active" style="background: #1a1a1a;" data-bg="#1a1a1a" title="Dark"></div>
-                    <div class="bg-option" style="background: #333333;" data-bg="#333333" title="Charcoal"></div>
-                    <div class="bg-option" style="background: #0d1b2a;" data-bg="#0d1b2a" title="Midnight"></div>
-                    <div class="bg-option" style="background: #f5f5f5;" data-bg="#f5f5f5" title="Light"></div>
-                    <div class="bg-option" style="background: #e0e0e0;" data-bg="#e0e0e0" title="Grey"></div>
-                    <div class="bg-option" style="background: #d7ccc8;" data-bg="#d7ccc8" title="Paper"></div>
-                    <div class="bg-option" style="background: #fff8e1;" data-bg="#fff8e1" title="Cream"></div>
-                    <div class="bg-option" style="background: linear-gradient(to bottom right, #2c3e50, #000000);" data-bg="linear-gradient(to bottom right, #2c3e50, #000000)" title="Gradient"></div>
-                </div>
-
-                <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                    <div class="set-opt-row">
-                        <span class="set-label">Paper Texture</span>
-                        <button id="tex-toggle" class="header-icon" style="width:auto; padding:0 12px; border-radius:15px; font-size:11px; background:#444;">OFF</button>
-                    </div>
-                </div>
-                
-                ${settingsHtml}
-            </div>
-        </div>
-    </div>
-
-    <!-- QR Modal -->
-    <div id="qr-modal" class="settings-modal" style="justify-content: center; align-items: center;">
-        <div class="settings-content" style="height: auto; border-radius: 20px; width: 340px; transform: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-            <div class="set-header">
-                <div style="font-weight:600">Scan QR Code</div>
-                <button class="header-icon" onclick="window.toggleModal('qr-modal', false)" style="width:28px; height:28px">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="set-body" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px;">
-                <div id="qrcode-container" style="background: white; padding: 15px; border-radius: 12px;"></div>
-                <p style="text-align: center; font-size: 13px; color: #aaa;">Scan this code with your phone to open this book on the go.</p>
-                <button class="header-icon" style="width: 100%; justify-content: center; border-radius: 10px; background: var(--accent); color: white; padding: 10px; font-weight: 600;" onclick="window.toggleModal('qr-modal', false)">Close</button>
-            </div>
-        </div>
-    </div>
-
-    ${getSidebarHtml(showHighlights)}
-
-    <div class="controls" id="main-footer">
-        <!-- Desktop: external footer html (slider etc) -->
-        <div class="desktop-controls">
-             ${footerHtml}
-        </div>
-
-        <!-- Mobile: Nav corners + Center Icons -->
-        <div class="mobile-controls">
-            <button class="nav-btn-mob" id="mobile-prev-btn" onclick="if(window.prev)window.prev()"><i class="fas fa-chevron-left"></i></button>
-            
-            <div class="mobile-icons-center">
-                <button class="header-icon" id="share-btn-mob" onclick="window.shareBook()"><i class="fas fa-share-alt"></i></button>
-                <button class="header-icon" id="qr-btn-mob" onclick="window.showQRCode()" title="QR Code"><i class="fas fa-qrcode"></i></button>
-                <button class="header-icon" id="copy-link-btn-mob" onclick="window.copyLink()"><i class="fas fa-link"></i></button>
-                ${showWebViewLink ? `
-                <a href="?mode=web" class="header-icon" id="web-view-btn-mob"><i class="fas fa-globe"></i></a>
-                ` : ''}
-                <button class="header-icon" id="bg-settings-btn-mob"><i class="fas fa-palette"></i></button>
-                <button class="header-icon" id="notes-btn-mob"><i class="fas fa-pen-fancy"></i></button>
-            </div>
-
-            <button class="nav-btn-mob" id="mobile-next-btn" onclick="if(window.next)window.next()"><i class="fas fa-chevron-right"></i></button>
-        </div>
-    </div>
-
-    <script>
+// ─── Main Shared Script (client-side JS, stays as string) ───────
+const getViewerScript = (fileUrl: string, safeTitle: string, storeName: string, showHighlights: boolean, extraScripts: string): string => `
         const FILE_URL = '${fileUrl}';
         const TITLE = '${safeTitle}';
         
@@ -875,7 +849,101 @@ export function getViewerBase(options: ViewerOptions): string {
         ${getSidebarScripts(fileUrl, showHighlights)}
 
         ${extraScripts}
-    </script>
-</body>
-</html>`;
+`;
+
+// ─── Main Export ─────────────────────────────────────────────────
+export function getViewerBase(options: ViewerOptions): string {
+    const { 
+        title, 
+        fileUrl, 
+        coverUrl, 
+        settings, 
+        showBranding, 
+        logoUrl = '', 
+        storeUrl = '/',
+        extraStyles = '', 
+        extraHtml = '', 
+        extraScripts = '', 
+        settingsHtml = '', 
+        dependencies = [],
+        showZoom = false,
+        showWebViewLink = true,
+        footerHtml = '',
+        showTTS = false,
+        storeName = 'SHOPUBLISH',
+        showHighlights = true,
+        showFullMode = false,
+        showNightShift = false
+    } = options;
+    
+    const safeTitle = escapeHtml(title);
+    const depScripts = dependencies.map(dep => `<script src="${dep}"></script>`).join('\n    ');
+    const sidebarStyles = getSidebarStyles('#6366f1');
+    const sidebarHtml = getSidebarHtml(showHighlights);
+    const viewerStyles = getViewerStyles(sidebarStyles, extraStyles);
+    const viewerScript = getViewerScript(fileUrl, safeTitle, storeName, showHighlights, extraScripts);
+
+    const page = (
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <title>{safeTitle} - SHOPUBLISH</title>
+
+            {/* Favicon */}
+            <link rel="icon" type="image/png" href={logoUrl || '/logo.png'} />
+            <link rel="apple-touch-icon" href={logoUrl || '/logo.png'} />
+
+            {/* Dependencies */}
+            {depScripts && <div dangerouslySetInnerHTML={{ __html: depScripts }} />}
+            <script src="https://cdn.tailwindcss.com"></script>
+
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+            <style dangerouslySetInnerHTML={{ __html: viewerStyles }} />
+        </head>
+
+        <body>
+            <ViewerHeader 
+                safeTitle={safeTitle}
+                showBranding={showBranding}
+                logoUrl={logoUrl}
+                storeUrl={storeUrl}
+                showTTS={!!showTTS}
+                showFullMode={!!showFullMode}
+                showNightShift={!!showNightShift}
+                showZoom={!!showZoom}
+                showWebViewLink={!!showWebViewLink}
+            />
+
+            <div id="texture-overlay"></div>
+
+            <div class="main-content" id="main-content">
+                <div class="loading" id="loading">
+                    <i class="fas fa-circle-notch fa-spin"></i> Loading...
+                </div>
+                {extraHtml && <div dangerouslySetInnerHTML={{ __html: extraHtml }} />}
+            </div>
+
+            {/* Index Modal */}
+            <IndexModal />
+
+            {/* Settings Modal */}
+            <SettingsModal settingsHtml={settingsHtml} />
+
+            {/* QR Modal */}
+            <QRModal />
+
+            {/* Notes Sidebar */}
+            <div dangerouslySetInnerHTML={{ __html: sidebarHtml }} />
+
+            {/* Footer Controls */}
+            <FooterControls footerHtml={footerHtml} showWebViewLink={!!showWebViewLink} />
+
+            <script dangerouslySetInnerHTML={{ __html: viewerScript }} />
+        </body>
+        </html>
+    );
+
+    return '<!DOCTYPE html>' + page.toString();
 }

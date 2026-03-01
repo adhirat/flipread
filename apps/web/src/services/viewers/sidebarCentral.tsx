@@ -1,5 +1,7 @@
+/** @jsxImportSource hono/jsx */
 
-export const getSidebarStyles = (accent: string) => `
+// ─── Sidebar Styles ─────────────────────────────────────────────
+export const getSidebarStyles = (accent: string): string => `
     #chat-w { position: fixed; right: -100vw; top: 0; bottom: 0; width: 100vw; background: rgba(255,255,255,0.99); backdrop-filter: blur(25px); z-index: 2500; border-left: 1px solid rgba(0,0,0,0.15); transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: none; transform: none !important; }
     @media (min-width: 640px) { #chat-w { width: 420px; right: -450px; } }
     #chat-w.o { right: 0; box-shadow: -25px 0 60px rgba(0,0,0,0.15); }
@@ -23,41 +25,67 @@ export const getSidebarStyles = (accent: string) => `
     .chat-s:active { transform: scale(0.95); }
 `;
 
-export const getSidebarHtml = (showHighlights: boolean) => `
-    <div id="chat-w">
-        <div class="chat-h">
-            <span class="text-[11px] font-black uppercase tracking-[0.1em] opacity-90">Personal Desk</span>
-            <button onclick="window.toggleChat()" class="opacity-60 hover:opacity-100 transition-opacity p-2 -mr-2"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-            <span class="text-[10px] font-bold text-gray-400 tracking-wider">SYNCED LOCALLY</span>
-            <button onclick="window.exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
-                <i class="fas fa-file-export text-[11px]"></i> EXPORT ALL
-            </button>
-        </div>
-        ${showHighlights ? `
-        <div class="chat-tabs">
-            <div class="chat-tab active" data-tab="chat-notes" onclick="window.switchSidebarTab(this)">Notes</div>
-            <div class="chat-tab" data-tab="chat-highlights" onclick="window.switchSidebarTab(this)">Highlights</div>
-        </div>
-        ` : ''}
-        <div class="chat-b">
-            <div id="chat-notes" class="chat-tab-c active"></div>
-            ${showHighlights ? `
-            <div id="chat-highlights" class="chat-tab-c">
-                <p class="text-xs text-center opacity-40 py-10 leading-relaxed font-medium">Select text in the content to<br>capture a highlight.</p>
-                <div id="hi-list" class="flex flex-col"></div>
-            </div>
-            ` : ''}
-        </div>
-        <div class="chat-f" id="chat-footer">
-            <textarea id="note-input" placeholder="Type your realization here..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.sendNote()}"></textarea>
-            <button onclick="window.sendNote()" class="chat-s" id="send-note-btn"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-`;
+// ─── Sidebar HTML (JSX) ─────────────────────────────────────────
+interface SidebarProps {
+  showHighlights: boolean;
+}
 
-export const getSidebarScripts = (fileUrl: string, showHighlights: boolean) => `
+const SidebarPanel = ({ showHighlights }: SidebarProps) => (
+  <div id="chat-w">
+    {/* Header */}
+    <div class="chat-h">
+      <span class="text-[11px] font-black uppercase tracking-[0.1em] opacity-90">Personal Desk</span>
+      <button onclick="window.toggleChat()" class="opacity-60 hover:opacity-100 transition-opacity p-2 -mr-2">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    {/* Sync Bar */}
+    <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+      <span class="text-[10px] font-bold text-gray-400 tracking-wider">SYNCED LOCALLY</span>
+      <button onclick="window.exportData()" class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-all active:scale-95 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+        <i class="fas fa-file-export text-[11px]"></i> EXPORT ALL
+      </button>
+    </div>
+
+    {/* Tabs (conditional) */}
+    {showHighlights && (
+      <div class="chat-tabs">
+        <div class="chat-tab active" data-tab="chat-notes" onclick="window.switchSidebarTab(this)">Notes</div>
+        <div class="chat-tab" data-tab="chat-highlights" onclick="window.switchSidebarTab(this)">Highlights</div>
+      </div>
+    )}
+
+    {/* Content Body */}
+    <div class="chat-b">
+      <div id="chat-notes" class="chat-tab-c active"></div>
+      {showHighlights && (
+        <div id="chat-highlights" class="chat-tab-c">
+          <p class="text-xs text-center opacity-40 py-10 leading-relaxed font-medium">
+            Select text in the content to<br />capture a highlight.
+          </p>
+          <div id="hi-list" class="flex flex-col"></div>
+        </div>
+      )}
+    </div>
+
+    {/* Footer Input */}
+    <div class="chat-f" id="chat-footer">
+      <textarea id="note-input" placeholder="Type your realization here..." class="chat-i" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.sendNote()}"></textarea>
+      <button onclick="window.sendNote()" class="chat-s" id="send-note-btn">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+);
+
+export const getSidebarHtml = (showHighlights: boolean): string => {
+  return (<SidebarPanel showHighlights={showHighlights} />).toString();
+};
+
+// ─── Sidebar Scripts ────────────────────────────────────────────
+// These remain as template strings since they are client-side JS
+export const getSidebarScripts = (fileUrl: string, showHighlights: boolean): string => `
     const SB_FU = '${fileUrl.split('?')[0]}';
     window.editingNoteIndex = -1;
     
